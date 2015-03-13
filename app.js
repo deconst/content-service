@@ -90,6 +90,24 @@ server.put('/content', function(req, res, next) {
   dest.end(JSON.stringify(req.body.body));
 });
 
+/**
+ * @description Delete a piece of content by id
+ */
+server.del('/content/:id', function (req, res, next) {
+  client.removeFile(process.env.RACKSPACE_CONTAINER, encodeURIComponent(req.params.id), function(err) {
+    if (err) {
+      res.status(err.statusCode);
+      res.send();
+      next();
+      return;
+    }
+
+    res.status(200);
+    res.send();
+    next();
+  });
+});
+
 server.listen(8080, function () {
   console.log('%s listening at %s', server.name, server.url);
 });

@@ -19,6 +19,10 @@ Running the content service requires the following environment variables to be c
 - `RACKSPACE_REGION` region for the content service to use
 - `RACKSPACE_CONTAINER` container to use for the content service
 
+You can optionally set a default log level by using the environment variable `CONTENT_LOG_LEVEL`.
+
+The valid levels are: `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and `ERROR`.
+
 ### Start
 
 To start the process, simply invoke `npm start`.
@@ -27,5 +31,5 @@ To start the process, simply invoke `npm start`.
 
 ```
 $ npm start
-restify listening at http://0.0.0.0:8080
+2015-03-13T15:14:33.055Z - info: content-service listening at http://0.0.0.0:8080
 ```

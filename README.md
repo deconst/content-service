@@ -5,12 +5,14 @@ A basic content storage and retrieval service. Requires Docker to run.
 ### Setup
 
 ```
-$ docker build -t content-service .
+$ npm run docker-build
 ```
 
-This will install the basic dependencies required to run the content service.
+This will install the basic dependencies required to run the content service. Before you run however, you'll have to configure your environment
 
 ### Environment
+
+In order to configure your environment, you'll need to setup your environment variables. There is a sample in `environment.sample.sh` that you can copy, or you can set them up manually.
 
 Running the content service requires the following environment variables to be passed to Docker:
 
@@ -23,18 +25,13 @@ You can optionally set a default log level by using the environment variable `CO
 
 The valid levels are: `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and `ERROR`.
 
+
 ### Start
 
 To start the process, invoke docker:
 
 ```
-docker run -it --rm --name content-service-running -p 80:8080
-    -e RACKSPACE_USERNAME=my-user-name
-    -e RACKSPACE_API_KEY=my-api-key
-    -e RACKSPACE_REGION=iad
-    -e RACKSPACE_CONTAINER=content-service
-    -e CONTENT_LOG_LEVEL=debug
-    content-service
+npm run docker-run
 ```
 
 ### Output

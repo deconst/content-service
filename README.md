@@ -28,7 +28,7 @@ The valid levels are: `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and
 To start the process, invoke docker:
 
 ```
-docker run -it --rm --name content-service-running
+docker run -it --rm --name content-service-running -p 80:8080
     -e RACKSPACE_USERNAME=my-user-name
     -e RACKSPACE_API_KEY=my-api-key
     -e RACKSPACE_REGION=iad

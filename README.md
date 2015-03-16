@@ -17,7 +17,7 @@ In order to configure your environment, you'll need to setup your environment va
 Running the content service requires the following environment variables to be passed to Docker:
 
 - `RACKSPACE_USERNAME` the username for your Rackspace account
-- `RACKSPACE_API_KEY` the api key for your Rackspace account
+- `RACKSPACE_APIKEY` the api key for your Rackspace account
 - `RACKSPACE_REGION` region for the content service to use
 - `RACKSPACE_CONTAINER` container to use for the content service
 

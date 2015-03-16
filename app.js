@@ -21,7 +21,7 @@ server.name = info.name;
 
 // validate we've got a properly setup environment
 if (!process.env.RACKSPACE_USERNAME
-  || !process.env.RACKSPACE_API_KEY
+  || !process.env.RACKSPACE_APIKEY
   || !process.env.RACKSPACE_REGION
   || !process.env.RACKSPACE_CONTAINER) {
   throw new Error('Required parameters not provided from the environment');
@@ -29,7 +29,7 @@ if (!process.env.RACKSPACE_USERNAME
 
 var client = pkgcloud.providers.rackspace.storage.createClient({
   username: process.env.RACKSPACE_USERNAME,
-  apiKey: process.env.RACKSPACE_API_KEY,
+  apiKey: process.env.RACKSPACE_APIKEY,
   region: process.env.RACKSPACE_REGION
 });
 

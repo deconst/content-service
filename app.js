@@ -32,10 +32,8 @@ routes.client.createContainer({
   if (err) {
     throw new Error('Error creating Cloud Files container')
   }
-});
-
-// Setup some ghetto middleware
-server
+  // Setup some ghetto middleware
+  server
   .use(function foo(req, res, next) {
     log.verbose(req.method + ' ' + req.url);
     next();
@@ -43,9 +41,10 @@ server
   .use(restify.fullResponse())
   .use(restify.bodyParser());
 
-// this is kind of hacky, but for now it keeps our routes a bit less messy
-routes.loadRoutes(server, info);
+  // this is kind of hacky, but for now it keeps our routes a bit less messy
+  routes.loadRoutes(server, info);
 
-server.listen(8080, function () {
-  log.info('%s listening at %s', server.name, server.url);
+  server.listen(8080, function () {
+    log.info('%s listening at %s', server.name, server.url);
+  });
 });

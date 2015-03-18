@@ -7,7 +7,6 @@
 
 var async = require('async'),
   logging = require('./src/logging'),
-  pkgcloud = require('pkgcloud'),
   restify = require('restify'),
   routes = require('./src/routes'),
   info = require('./package.json');
@@ -26,12 +25,6 @@ if (!process.env.RACKSPACE_USERNAME
   || !process.env.RACKSPACE_CONTAINER) {
   throw new Error('Required parameters not provided from the environment');
 }
-
-var client = pkgcloud.providers.rackspace.storage.createClient({
-  username: process.env.RACKSPACE_USERNAME,
-  apiKey: process.env.RACKSPACE_APIKEY,
-  region: process.env.RACKSPACE_REGION
-});
 
 // Setup some ghetto middleware
 server

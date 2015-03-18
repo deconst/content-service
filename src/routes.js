@@ -1,6 +1,14 @@
+var pkgcloud = require('pkgcloud');
 
+var client;
 
 exports.loadRoutes = function(server, info) {
+  client = pkgcloud.providers.rackspace.storage.createClient({
+    username: process.env.RACKSPACE_USERNAME,
+    apiKey: process.env.RACKSPACE_APIKEY,
+    region: process.env.RACKSPACE_REGION
+  });
+  
   /**
    }
    * @description gets the version of the current service

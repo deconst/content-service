@@ -26,6 +26,14 @@ if (!process.env.RACKSPACE_USERNAME
   throw new Error('Required parameters not provided from the environment');
 }
 
+routes.client.createContainer({
+  name: process.env.RACKSPACE_CONTAINER
+}, function(err, container) {
+  if (err) {
+    throw new Error('Error creating Cloud Files container')
+  }
+});
+
 // Setup some ghetto middleware
 server
   .use(function foo(req, res, next) {

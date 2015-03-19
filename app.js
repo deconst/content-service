@@ -26,8 +26,16 @@ if (!process.env.RACKSPACE_USERNAME
   throw new Error('Required parameters not provided from the environment');
 }
 
-// Setup some ghetto middleware
-server
+// Instead of checking if the container exists first, we try to create it, and
+// if it already exists, we get a no-op (202) and move on.
+routes.client.createContainer({
+  name: process.env.RACKSPACE_CONTAINER
+}, function(err, container) {
+  if (err) {
+    throw new Error('Error creating Cloud Files container')
+  }
+  // Setup some ghetto middleware
+  server
   .use(function foo(req, res, next) {
     log.verbose(req.method + ' ' + req.url);
     next();
@@ -35,9 +43,10 @@ server
   .use(restify.fullResponse())
   .use(restify.bodyParser());
 
-// this is kind of hacky, but for now it keeps our routes a bit less messy
-routes.loadRoutes(server, info);
+  // this is kind of hacky, but for now it keeps our routes a bit less messy
+  routes.loadRoutes(server, info);
 
-server.listen(8080, function () {
-  log.info('%s listening at %s', server.name, server.url);
+  server.listen(8080, function () {
+    log.info('%s listening at %s', server.name, server.url);
+  });
 });

@@ -26,6 +26,8 @@ if (!process.env.RACKSPACE_USERNAME
   throw new Error('Required parameters not provided from the environment');
 }
 
+// Instead of checking if the container exists first, we try to create it, and
+// if it already exists, we get a no-op (202) and move on.
 routes.client.createContainer({
   name: process.env.RACKSPACE_CONTAINER
 }, function(err, container) {

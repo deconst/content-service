@@ -1,4 +1,5 @@
-var pkgcloud = require('pkgcloud');
+var pkgcloud = require('pkgcloud'),
+  logging = require('./logging');
 
 var client = pkgcloud.providers.rackspace.storage.createClient({
   username: process.env.RACKSPACE_USERNAME,
@@ -6,6 +7,8 @@ var client = pkgcloud.providers.rackspace.storage.createClient({
   region: process.env.RACKSPACE_REGION
 });
 exports.client = client
+
+var log = logging.getLogger(process.env.CONTENT_LOG_LEVEL || 'info');
 
 exports.loadRoutes = function(server, info) {
 
@@ -21,6 +24,8 @@ exports.loadRoutes = function(server, info) {
    * @description Allows retrieving content from the content service
    */
   server.get('/content/:id', function (req, res, next) {
+    log.debug("Requesting content ID: [" + req.params.id + "]");
+
     var source = client.download({
       container: process.env.RACKSPACE_CONTAINER,
       remote: encodeURIComponent(req.params.id)
@@ -40,12 +45,14 @@ exports.loadRoutes = function(server, info) {
    * Payload must be in the form of:
    *
    * {
-   *   id: "https://github.com/deconst/deconst-docs/issues/16" // Full url of content
+   *   id: "https://github.com/deconst/deconst-docs/issues/16", // Full url of content
    *   body: { }
    * }
    *
    */
   server.put('/content', function (req, res, next) {
+    log.info("Storing content with ID: [" + req.body.id + "]");
+
     var dest = client.upload({
       container: process.env.RACKSPACE_CONTAINER,
       remote: encodeURIComponent(req.body.id)
@@ -66,6 +73,8 @@ exports.loadRoutes = function(server, info) {
    * @description Delete a piece of content by id
    */
   server.del('/content/:id', function (req, res, next) {
+    log.info("Deleting content with ID [" + req.params.id + "]")
+
     client.removeFile(process.env.RACKSPACE_CONTAINER, encodeURIComponent(req.params.id), function (err) {
       if (err) {
         res.status(err.statusCode);

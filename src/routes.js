@@ -10,7 +10,6 @@ exports.client = client
 exports.loadRoutes = function(server, info) {
 
   /**
-   }
    * @description gets the version of the current service
    */
   server.get('/version', function (req, res, next) {
@@ -41,9 +40,9 @@ exports.loadRoutes = function(server, info) {
    * Payload must be in the form of:
    *
    * {
- *   id: "https://github.com/deconst/deconst-docs/issues/16" // Full url of content
- *   body: { }
- * }
+   *   id: "https://github.com/deconst/deconst-docs/issues/16" // Full url of content
+   *   body: { }
+   * }
    *
    */
   server.put('/content', function (req, res, next) {

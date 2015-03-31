@@ -2,7 +2,7 @@
 content:
   build: .
   ports:
-  - "80:8080"
+  - "9000:8080"
   environment:
     RACKSPACE_USERNAME:
     RACKSPACE_APIKEY:

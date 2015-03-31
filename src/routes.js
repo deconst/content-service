@@ -16,7 +16,11 @@ exports.loadRoutes = function(server, info) {
    * @description gets the version of the current service
    */
   server.get('/version', function (req, res, next) {
-    res.send(info.version);
+    res.send({
+      service: info.name,
+      version: info.version,
+      commit: info.commit
+    });
     next();
   });
 

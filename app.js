@@ -9,11 +9,13 @@ var async = require('async'),
   logging = require('./src/logging'),
   restify = require('restify'),
   routes = require('./src/routes'),
-  info = require('./package.json');
+  info = require('./package.json'),
+  child_process = require("child_process");
 
 var server = restify.createServer(),
   log = logging.getLogger(process.env.CONTENT_LOG_LEVEL || 'info');
 
+info.commit = child_process.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
 server.name = info.name;
 
 // TODO fully rationalize a strategy for ensuring configuration is correct

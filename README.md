@@ -2,6 +2,8 @@
 
 A basic content storage and retrieval service. Requires Docker to run.
 
+[![Build Status](https://travis-ci.org/deconst/content-service.svg?branch=master)](https://travis-ci.org/deconst/content-service)
+
 ### Setup
 
 ```

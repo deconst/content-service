@@ -6,7 +6,7 @@ var client = pkgcloud.providers.rackspace.storage.createClient({
   apiKey: process.env.RACKSPACE_APIKEY,
   region: process.env.RACKSPACE_REGION
 });
-exports.client = client
+exports.client = client;
 
 var log = logging.getLogger(process.env.CONTENT_LOG_LEVEL || 'info');
 
@@ -77,7 +77,7 @@ exports.loadRoutes = function(server, info) {
    * @description Delete a piece of content by id
    */
   server.del('/content/:id', function (req, res, next) {
-    log.info("Deleting content with ID [" + req.params.id + "]")
+    log.info("Deleting content with ID [" + req.params.id + "]");
 
     client.removeFile(process.env.RACKSPACE_CONTAINER, encodeURIComponent(req.params.id), function (err) {
       if (err) {

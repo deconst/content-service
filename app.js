@@ -22,7 +22,7 @@ var
 
 server.name = config.info.name;
 
-setup(function (err) {
+setup(config, function (err) {
   if (err) {
     throw err;
   }

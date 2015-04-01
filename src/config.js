@@ -5,6 +5,7 @@ var configuration = {
   rackspace_apikey: null,
   rackspace_region: null,
   rackspace_container: null,
+  content_log_level: "info"
 };
 
 /**
@@ -21,11 +22,11 @@ exports.configure = function (env) {
 
   for (var name in configuration) {
     var upper = name.toUpperCase();
-    var value = process.env[upper];
+    var value = env[upper];
 
-    configuration[name] = value;
+    configuration[name] = value || configuration[name];
 
-    if (!value) {
+    if (!configuration[name]) {
       missing.push(upper);
     }
   }

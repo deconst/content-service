@@ -12,16 +12,13 @@ config.configure();
 var
   async = require('async'),
   restify = require('restify'),
-  child_process = require("child_process"),
   logging = require('./src/logging'),
-  routes = require('./src/routes'),
-  info = require('./package.json');
+  routes = require('./src/routes');
 
 var
   server = restify.createServer(),
   log = logging.getLogger(config.content_log_level());
 
-info.commit = child_process.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
 server.name = info.name;
 
 // Instead of checking if the container exists first, we try to create it, and
@@ -42,8 +39,7 @@ routes.client.createContainer({
     .use(restify.fullResponse())
     .use(restify.bodyParser());
 
-  // this is kind of hacky, but for now it keeps our routes a bit less messy
-  routes.loadRoutes(server, info);
+  routes.loadRoutes(server);
 
   server.listen(8080, function () {
     log.info('%s listening at %s', server.name, server.url);

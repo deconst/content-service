@@ -1,16 +1,18 @@
-var pkgcloud = require('pkgcloud'),
+var
+  pkgcloud = require('pkgcloud'),
+  config = require('./config'),
   logging = require('./logging');
 
 var client = pkgcloud.providers.rackspace.storage.createClient({
-  username: process.env.RACKSPACE_USERNAME,
-  apiKey: process.env.RACKSPACE_APIKEY,
-  region: process.env.RACKSPACE_REGION
+  username: config.rackspace_username(),
+  apiKey: config.rackspace_apikey(),
+  region: config.rackspace_region()
 });
 exports.client = client;
 
-var log = logging.getLogger(process.env.CONTENT_LOG_LEVEL || 'info');
+var log = logging.getLogger(config.content_log_level());
 
-exports.loadRoutes = function(server, info) {
+exports.loadRoutes = function(server) {
 
   /**
    * @description gets the version of the current service
@@ -31,7 +33,7 @@ exports.loadRoutes = function(server, info) {
     log.debug("Requesting content ID: [" + req.params.id + "]");
 
     var source = client.download({
-      container: process.env.RACKSPACE_CONTAINER,
+      container: config.rackspace_container(),
       remote: encodeURIComponent(req.params.id)
     });
 
@@ -79,7 +81,7 @@ exports.loadRoutes = function(server, info) {
   server.del('/content/:id', function (req, res, next) {
     log.info("Deleting content with ID [" + req.params.id + "]");
 
-    client.removeFile(process.env.RACKSPACE_CONTAINER, encodeURIComponent(req.params.id), function (err) {
+    client.removeFile(config.rackspace_container(), encodeURIComponent(req.params.id), function (err) {
       if (err) {
         res.status(err.statusCode);
         res.send();

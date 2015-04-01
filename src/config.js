@@ -1,5 +1,9 @@
 // Read configuration from the environment, reporting anything that's missing.
 
+var
+  child_process = require('child_process'),
+  info = require('../package.json');
+
 var configuration = {
   rackspace_username: null,
   rackspace_apikey: null,
@@ -7,6 +11,8 @@ var configuration = {
   rackspace_container: null,
   content_log_level: "info"
 };
+
+var commit = "unknown";
 
 /**
  * @description Create a getter function for the named function.
@@ -42,9 +48,18 @@ exports.configure = function (env) {
 
     throw new Error("Inadequate configuration");
   }
+
+  // Read the current git commit.
+  commit = child_process.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
 };
 
 // Export "getter" functions for each configuration option.
 for (var name in configuration) {
   exports[name] = make_getter(name);
 }
+
+// Re-export the package.json data.
+exports.info = function () { return info; };
+
+// Export the current git commit.
+exports.commit = function () { return commit; };

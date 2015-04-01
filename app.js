@@ -7,7 +7,7 @@
 
 var config = require('./src/config');
 
-config.configure();
+config.configure(process.env);
 
 var
   async = require('async'),

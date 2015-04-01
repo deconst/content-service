@@ -11,11 +11,11 @@ config.configure();
 
 var
   async = require('async'),
-  logging = require('./src/logging'),
   restify = require('restify'),
+  child_process = require("child_process"),
+  logging = require('./src/logging'),
   routes = require('./src/routes'),
-  info = require('./package.json'),
-  child_process = require("child_process");
+  info = require('./package.json');
 
 var
   server = restify.createServer(),

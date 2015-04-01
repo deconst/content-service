@@ -21,10 +21,10 @@ server.name = info.name;
 // TODO fully rationalize a strategy for ensuring configuration is correct
 
 // validate we've got a properly setup environment
-if (!process.env.RACKSPACE_USERNAME
-  || !process.env.RACKSPACE_APIKEY
-  || !process.env.RACKSPACE_REGION
-  || !process.env.RACKSPACE_CONTAINER) {
+if (!process.env.RACKSPACE_USERNAME ||
+  !process.env.RACKSPACE_APIKEY ||
+  !process.env.RACKSPACE_REGION ||
+  !process.env.RACKSPACE_CONTAINER) {
   throw new Error('Required parameters not provided from the environment');
 }
 
@@ -34,7 +34,7 @@ routes.client.createContainer({
   name: process.env.RACKSPACE_CONTAINER
 }, function(err, container) {
   if (err) {
-    throw new Error('Error creating Cloud Files container')
+    throw new Error('Error creating Cloud Files container');
   }
   // Setup some ghetto middleware
   server

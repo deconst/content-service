@@ -19,9 +19,9 @@ exports.loadRoutes = function(server) {
    */
   server.get('/version', function (req, res, next) {
     res.send({
-      service: config.info().name,
-      version: config.info().version,
-      commit: config.commit()
+      service: config.info.name,
+      version: config.info.version,
+      commit: config.commit
     });
     next();
   });

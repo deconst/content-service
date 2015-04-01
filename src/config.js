@@ -12,7 +12,7 @@ var configuration = {
   content_log_level: "info"
 };
 
-var commit = "unknown";
+var commit = child_process.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
 
 /**
  * @description Create a getter function for the named function.
@@ -48,9 +48,6 @@ exports.configure = function (env) {
 
     throw new Error("Inadequate configuration");
   }
-
-  // Read the current git commit.
-  commit = child_process.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
 };
 
 // Export "getter" functions for each configuration option.
@@ -58,8 +55,6 @@ for (var name in configuration) {
   exports[name] = make_getter(name);
 }
 
-// Re-export the package.json data.
-exports.info = function () { return info; };
-
-// Export the current git commit.
-exports.commit = function () { return commit; };
+// Re-export the package.json data and the current git commit.
+exports.info = info;
+exports.commit = commit;

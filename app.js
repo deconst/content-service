@@ -19,7 +19,7 @@ var
   server = restify.createServer(),
   log = logging.getLogger(config.content_log_level());
 
-server.name = info.name;
+server.name = config.info.name;
 
 // Instead of checking if the container exists first, we try to create it, and
 // if it already exists, we get a no-op (202) and move on.

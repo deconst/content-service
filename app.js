@@ -13,7 +13,8 @@ var
   async = require('async'),
   restify = require('restify'),
   logging = require('./src/logging'),
-  routes = require('./src/routes');
+  routes = require('./src/routes'),
+  setup = require('./src/setup');
 
 var
   server = restify.createServer(),
@@ -21,16 +22,11 @@ var
 
 server.name = config.info.name;
 
-// Instead of checking if the container exists first, we try to create it, and
-// if it already exists, we get a no-op (202) and move on.
-routes.client.createContainer({
-  name: config.rackspace_container()
-}, function(err, container) {
+setup(function (err) {
   if (err) {
-    throw new Error('Error creating Cloud Files container');
+    throw err;
   }
 
-  // Setup some ghetto middleware
   server
     .use(function (req, res, next) {
       log.verbose(req.method + ' ' + req.url);

@@ -5,48 +5,41 @@
  *
  */
 
-var async = require('async'),
-  logging = require('./src/logging'),
+var config = require('./src/config');
+
+config.configure(process.env);
+
+var
+  async = require('async'),
   restify = require('restify'),
-  routes = require('./src/routes'),
-  info = require('./package.json'),
-  child_process = require("child_process");
+  logging = require('./src/logging'),
+  routes = require('./src/routes');
 
-var server = restify.createServer(),
-  log = logging.getLogger(process.env.CONTENT_LOG_LEVEL || 'info');
+var
+  server = restify.createServer(),
+  log = logging.getLogger(config.content_log_level());
 
-info.commit = child_process.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
-server.name = info.name;
-
-// TODO fully rationalize a strategy for ensuring configuration is correct
-
-// validate we've got a properly setup environment
-if (!process.env.RACKSPACE_USERNAME ||
-  !process.env.RACKSPACE_APIKEY ||
-  !process.env.RACKSPACE_REGION ||
-  !process.env.RACKSPACE_CONTAINER) {
-  throw new Error('Required parameters not provided from the environment');
-}
+server.name = config.info.name;
 
 // Instead of checking if the container exists first, we try to create it, and
 // if it already exists, we get a no-op (202) and move on.
 routes.client.createContainer({
-  name: process.env.RACKSPACE_CONTAINER
+  name: config.rackspace_container()
 }, function(err, container) {
   if (err) {
     throw new Error('Error creating Cloud Files container');
   }
+
   // Setup some ghetto middleware
   server
-  .use(function foo(req, res, next) {
-    log.verbose(req.method + ' ' + req.url);
-    next();
-  })
-  .use(restify.fullResponse())
-  .use(restify.bodyParser());
+    .use(function (req, res, next) {
+      log.verbose(req.method + ' ' + req.url);
+      next();
+    })
+    .use(restify.fullResponse())
+    .use(restify.bodyParser());
 
-  // this is kind of hacky, but for now it keeps our routes a bit less messy
-  routes.loadRoutes(server, info);
+  routes.loadRoutes(server);
 
   server.listen(8080, function () {
     log.info('%s listening at %s', server.name, server.url);

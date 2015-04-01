@@ -1,6 +1,7 @@
 // Read configuration from the environment, reporting anything that's missing.
 
 var
+  pkgcloud = require('pkgcloud'),
   child_process = require('child_process'),
   info = require('../package.json');
 
@@ -48,6 +49,13 @@ exports.configure = function (env) {
 
     throw new Error("Inadequate configuration");
   }
+
+  // Authenticate to Rackspace with the credentials we just read.
+  exports.client = pkgcloud.providers.rackspace.storage.createClient({
+    username: configuration.rackspace_username,
+    apiKey: configuration.rackspace_apikey,
+    region: configuration.rackspace_region
+  });
 };
 
 // Export "getter" functions for each configuration option.

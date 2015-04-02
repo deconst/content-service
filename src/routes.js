@@ -1,7 +1,8 @@
 var
   pkgcloud = require('pkgcloud'),
   config = require('./config'),
-  logging = require('./logging');
+  logging = require('./logging'),
+  assets = require('./assets');
 
 var log = logging.getLogger(config.content_log_level());
 
@@ -88,4 +89,5 @@ exports.loadRoutes = function (server) {
     });
   });
 
+  server.post('/assets', assets.accept);
 };

@@ -7,6 +7,6 @@ content:
     RACKSPACE_USERNAME:
     RACKSPACE_APIKEY:
     RACKSPACE_REGION: DFW
-    CONTENT_CONTAINER: content-service-dev
-    ASSET_CONTAINER: assets-dev
+    CONTENT_CONTAINER: deconst-dev-content
+    ASSET_CONTAINER: deconst-dev-assets
     CONTENT_LOG_LEVEL: debug

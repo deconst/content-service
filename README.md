@@ -28,8 +28,11 @@ The content service is configured by passing environment variables to the Docker
  * `RACKSPACE_USERNAME`: **(Required)** the username for your Rackspace account.
  * `RACKSPACE_APIKEY`: **(Required)** the API key for your Rackspace account.
  * `RACKSPACE_REGION`: **(Required)** the Rackspace region for the content service to use.
- * `RACKSPACE_CONTAINER`: **(Required)** container name to use for the content service.
+ * `CONTENT_CONTAINER`: **(Required)** container name to use for the stored metadata envelopes.
+ * `ASSET_CONTAINER`: **(Required)** container name to use for published assets.
  * `CONTENT_LOG_LEVEL`: Optional logging level. The valid levels are `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and `ERROR`.
+
+Both Cloud Files containers will be created and configured on application launch if they do not already exist.
 
 In development mode, docker-compose provides defaults for everything but `RACKSPACE_USERNAME` and `RACKSPACE_APIKEY`.
 
@@ -81,3 +84,20 @@ The exact JSON document provided to `PUT /content` will be returned.
 *Response: Unsuccessful*
 
 An HTTP status of 404 will be returned if the content ID isn't recognized.
+
+### `POST /asset`
+
+Fingerprint and publish one or more static assets to a CDN-enabled Cloud Files container. Return the full URLs to the published assets.
+
+*Request*
+
+The request payload must be a `multipart/form-data` file upload containing the assets to upload. The content type of each file must be set appropriately.
+
+*Response*
+
+```json
+{
+  "file1.jpg": "https://assets.horse/url/for/file1-38be7d1b981f2fb6a4a0a052453f887373dc1fe8.jpg",
+  "file2.css": "https://assets.horse/url/for/file2-d2da57e04b0818f7e3dd18da3b73c9b54a73cbe5.css"
+}
+```

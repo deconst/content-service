@@ -5,7 +5,7 @@ var
 
 var log = logging.getLogger(config.content_log_level());
 
-exports.loadRoutes = function(server) {
+exports.loadRoutes = function (server) {
 
   /**
    * @description gets the version of the current service

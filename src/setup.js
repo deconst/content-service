@@ -13,5 +13,5 @@ function make_container_creator(config, container_name) {
 }
 
 module.exports = function (config, callback) {
-  make_container_creator(config, config.rackspace_container())(callback);
+  make_container_creator(config, config.content_container())(callback);
 };

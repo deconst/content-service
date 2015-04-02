@@ -26,7 +26,7 @@ exports.loadRoutes = function (server) {
     log.debug("Requesting content ID: [" + req.params.id + "]");
 
     var source = config.client.download({
-      container: config.rackspace_container(),
+      container: config.content_container(),
       remote: encodeURIComponent(req.params.id)
     });
 
@@ -53,7 +53,7 @@ exports.loadRoutes = function (server) {
     log.info("Storing content with ID: [" + req.body.id + "]");
 
     var dest = config.client.upload({
-      container: config.rackspace_container(),
+      container: config.content_container(),
       remote: encodeURIComponent(req.body.id)
     });
 
@@ -74,7 +74,7 @@ exports.loadRoutes = function (server) {
   server.del('/content/:id', function (req, res, next) {
     log.info("Deleting content with ID [" + req.params.id + "]");
 
-    config.client.removeFile(config.rackspace_container(), encodeURIComponent(req.params.id), function (err) {
+    config.client.removeFile(config.content_container(), encodeURIComponent(req.params.id), function (err) {
       if (err) {
         res.status(err.statusCode);
         res.send();

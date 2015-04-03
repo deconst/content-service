@@ -38,11 +38,11 @@ exports.retrieve = function (req, res, next) {
  *
  */
 exports.store = function (req, res, next) {
-  log.info("Storing content with ID: [" + req.body.id + "]");
+  log.info("Storing content with ID: [" + req.params.id + "]");
 
   var dest = connection.client.upload({
     container: config.content_container(),
-    remote: encodeURIComponent(req.body.id)
+    remote: encodeURIComponent(req.params.id)
   });
 
   dest.on('success', function () {
@@ -51,9 +51,9 @@ exports.store = function (req, res, next) {
     next();
   });
 
-  // For now we're just going to JSON.stringify the body directly up to cloud files
+  // For now we're just going to write the body directly up to cloud files
   // longer term we might do multi-plexing or async.parallel to different stores
-  dest.end(JSON.stringify(req.body.body));
+  req.pipe(dest);
 };
 
 /**

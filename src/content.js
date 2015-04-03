@@ -45,7 +45,7 @@ exports.store = function (req, res, next) {
 
   // For now, we're just going to write the body directly up to Cloud Files.
   // Longer term, we'll validate its structure and use async.parallel to upload it to different stores.
-  dest.end(req.body);
+  req.pipe(dest);
 };
 
 /**

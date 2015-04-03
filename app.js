@@ -14,7 +14,7 @@ var
   restify = require('restify'),
   logging = require('./src/logging'),
   routes = require('./src/routes'),
-  setup = require('./src/setup');
+  connection = require('./src/connection');
 
 var
   server = restify.createServer(),
@@ -22,7 +22,7 @@ var
 
 server.name = config.info.name;
 
-setup(config, function (err) {
+connection.setup(config, function (err) {
   if (err) {
     throw err;
   }

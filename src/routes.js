@@ -1,6 +1,7 @@
 var
   pkgcloud = require('pkgcloud'),
   config = require('./config'),
+  connection = require('./connection'),
   logging = require('./logging'),
   assets = require('./assets');
 
@@ -26,7 +27,7 @@ exports.loadRoutes = function (server) {
   server.get('/content/:id', function (req, res, next) {
     log.debug("Requesting content ID: [" + req.params.id + "]");
 
-    var source = config.client.download({
+    var source = connection.client.download({
       container: config.content_container(),
       remote: encodeURIComponent(req.params.id)
     });
@@ -53,7 +54,7 @@ exports.loadRoutes = function (server) {
   server.put('/content', function (req, res, next) {
     log.info("Storing content with ID: [" + req.body.id + "]");
 
-    var dest = config.client.upload({
+    var dest = connection.client.upload({
       container: config.content_container(),
       remote: encodeURIComponent(req.body.id)
     });
@@ -75,7 +76,7 @@ exports.loadRoutes = function (server) {
   server.del('/content/:id', function (req, res, next) {
     log.info("Deleting content with ID [" + req.params.id + "]");
 
-    config.client.removeFile(config.content_container(), encodeURIComponent(req.params.id), function (err) {
+    connection.client.removeFile(config.content_container(), encodeURIComponent(req.params.id), function (err) {
       if (err) {
         res.status(err.statusCode);
         res.send();

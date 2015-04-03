@@ -7,6 +7,7 @@ var
   path = require('path'),
   crypto = require('crypto'),
   config = require('./config'),
+  connection = require('./connection'),
   logging = require('./logging');
 
 var log = logging.getLogger(config.content_log_level());
@@ -50,7 +51,7 @@ function fingerprint(asset, callback) {
  * @description Upload an asset's contents to the asset container.
  */
 function publish(asset, callback) {
-  var up = config.client.upload({
+  var up = connection.client.upload({
     container: config.asset_container(),
     remote: asset.filename,
     contentType: asset.type,

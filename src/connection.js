@@ -1,4 +1,4 @@
-// Actions to be performed on application launch.
+// Manage a connection to the Rackspace cloud. Retain and export handles to created resources.
 
 var
   async = require('async'),

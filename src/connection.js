@@ -10,27 +10,20 @@ var
  */
 function make_container_creator(client, container_name, logical_name, cdn) {
   return function (callback) {
+    var report_back = function (err, container) {
+      exports[logical_name] = container;
+      callback(null, container);
+    };
+
+    var cdn_enable = function (err, container) {
+      container.enableCdn(container);
+    };
+
+    var handle_creation = cdn ? cdn_enable : report_back;
+
     // Instead of checking if the container exists first, we try to create it, and
     // if it already exists, we get a no-op (202) and move on.
-    client.createContainer({ name: container_name, ttl: 31556940 }, function (err, container) {
-      if (err) {
-        callback(err);
-        return;
-      }
-
-      if (cdn) {
-        container.enableCdn(function (err) {
-          if (err) {
-            callback(err);
-            return;
-          }
-
-          refresh(client, container_name, logical_name, callback);
-        });
-      } else {
-        refresh(client, container_name, logical_name, callback);
-      }
-    });
+    client.createContainer({ name: container_name, ttl: 31556940 }, handle_creation);
   };
 }
 

@@ -3,6 +3,7 @@
 A content storage and retrieval service for deconst.
 
 [![Build Status](https://travis-ci.org/deconst/content-service.svg?branch=master)](https://travis-ci.org/deconst/content-service)
+[![Docker Repository on Quay.io](https://quay.io/repository/deconst/content-service/status "Docker Repository on Quay.io")](https://quay.io/repository/deconst/content-service)
 
 ## Setup
 

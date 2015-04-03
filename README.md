@@ -54,18 +54,17 @@ Report the service name, version, and git commit.
 }
 ```
 
-### `PUT /content`
+### `PUT /content/:id`
 
 Store and index content with a specific URL-encoded *content ID*.
 
 *Request*
 
-The request payload must be a JSON document matching the following schema:
+The request payload must be a valid Deconst metadata envelope in JSON form.
 
 ```json
 {
-  "id": "https://github.com/deconst/deconst-docs/content/id/here",
-  "body": { }
+  "body": "<h1>page content</h1> <p>as raw HTML</p>"
 }
 ```
 

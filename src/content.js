@@ -28,14 +28,6 @@ exports.retrieve = function (req, res, next) {
 
 /**
  * @description Store new content into the content service.
- *
- * Payload must be in the form of:
- *
- * {
- *   id: "https://github.com/deconst/deconst-docs/issues/16", // Full url of content
- *   body: { }
- * }
- *
  */
 exports.store = function (req, res, next) {
   log.info("Storing content with ID: [" + req.params.id + "]");
@@ -51,9 +43,9 @@ exports.store = function (req, res, next) {
     next();
   });
 
-  // For now we're just going to write the body directly up to cloud files
-  // longer term we might do multi-plexing or async.parallel to different stores
-  req.pipe(dest);
+  // For now, we're just going to write the body directly up to Cloud Files.
+  // Longer term, we'll validate its structure and use async.parallel to upload it to different stores.
+  dest.end(req.body);
 };
 
 /**

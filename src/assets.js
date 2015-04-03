@@ -75,7 +75,7 @@ function publish(asset, callback) {
 /**
  * @description Process a single asset.
  */
-function handleAsset(asset, callback) {
+function handle_asset(asset, callback) {
   log.debug("Processing uploaded asset [" + asset.name + "].");
 
   async.waterfall([
@@ -90,11 +90,11 @@ function handleAsset(asset, callback) {
  *   map of the provided filenames to their final, public URLs.
  */
 exports.accept = function (req, res, next) {
-  var assetData = Object.getOwnPropertyNames(req.files).map(function (key) {
+  var asset_data = Object.getOwnPropertyNames(req.files).map(function (key) {
     return req.files[key];
   });
 
-  async.map(assetData, handleAsset, function (err, results) {
+  async.map(asset_data, handle_asset, function (err, results) {
     if (err) {
       log.error("Unable to process an asset.", err);
 

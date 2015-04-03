@@ -9,7 +9,8 @@ var configuration = {
   rackspace_username: null,
   rackspace_apikey: null,
   rackspace_region: null,
-  rackspace_container: null,
+  content_container: null,
+  asset_container: null,
   content_log_level: "info"
 };
 
@@ -49,13 +50,6 @@ exports.configure = function (env) {
 
     throw new Error("Inadequate configuration");
   }
-
-  // Authenticate to Rackspace with the credentials we just read.
-  exports.client = pkgcloud.providers.rackspace.storage.createClient({
-    username: configuration.rackspace_username,
-    apiKey: configuration.rackspace_apikey,
-    region: configuration.rackspace_region
-  });
 };
 
 // Export "getter" functions for each configuration option.

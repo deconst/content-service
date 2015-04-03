@@ -1,11 +1,13 @@
 var
   pkgcloud = require('pkgcloud'),
   config = require('./config'),
-  logging = require('./logging');
+  connection = require('./connection'),
+  logging = require('./logging'),
+  assets = require('./assets');
 
 var log = logging.getLogger(config.content_log_level());
 
-exports.loadRoutes = function(server) {
+exports.loadRoutes = function (server) {
 
   /**
    * @description gets the version of the current service
@@ -25,8 +27,8 @@ exports.loadRoutes = function(server) {
   server.get('/content/:id', function (req, res, next) {
     log.debug("Requesting content ID: [" + req.params.id + "]");
 
-    var source = config.client.download({
-      container: config.rackspace_container(),
+    var source = connection.client.download({
+      container: config.content_container(),
       remote: encodeURIComponent(req.params.id)
     });
 
@@ -52,8 +54,8 @@ exports.loadRoutes = function(server) {
   server.put('/content', function (req, res, next) {
     log.info("Storing content with ID: [" + req.body.id + "]");
 
-    var dest = config.client.upload({
-      container: config.rackspace_container(),
+    var dest = connection.client.upload({
+      container: config.content_container(),
       remote: encodeURIComponent(req.body.id)
     });
 
@@ -74,7 +76,7 @@ exports.loadRoutes = function(server) {
   server.del('/content/:id', function (req, res, next) {
     log.info("Deleting content with ID [" + req.params.id + "]");
 
-    config.client.removeFile(config.rackspace_container(), encodeURIComponent(req.params.id), function (err) {
+    connection.client.removeFile(config.content_container(), encodeURIComponent(req.params.id), function (err) {
       if (err) {
         res.status(err.statusCode);
         res.send();
@@ -88,4 +90,5 @@ exports.loadRoutes = function(server) {
     });
   });
 
+  server.post('/assets', assets.accept);
 };

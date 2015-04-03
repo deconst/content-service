@@ -1,46 +1,103 @@
-## Content-Service
+# Content Service
 
-A basic content storage and retrieval service. Requires Docker to run.
+A content storage and retrieval service for deconst.
 
 [![Build Status](https://travis-ci.org/deconst/content-service.svg?branch=master)](https://travis-ci.org/deconst/content-service)
 
-### Setup
+## Setup
 
-```
-$ npm run docker-build
-```
+To develop locally, you'll need to install:
 
-This will install the basic dependencies required to run the content service. Before you run however, you'll have to configure your environment
+ * [Docker](https://docs.docker.com/installation/#installation) to build and launch the container.
+ * [docker-compose](https://docs.docker.com/compose/install/) to manage the container's configuration.
 
-### Environment
+Then, you can build and run the service with:
 
-In order to configure your environment, you'll need to setup your environment variables. There is a sample in `environment.sample.sh` that you can copy, or you can set them up manually.
+```bash
+# See below for service configuration.
+export RACKSPACE_USERNAME=...
+export RACKSPACE_APIKEY=...
 
-Running the content service requires the following environment variables to be passed to Docker:
-
-- `RACKSPACE_USERNAME` the username for your Rackspace account
-- `RACKSPACE_APIKEY` the api key for your Rackspace account
-- `RACKSPACE_REGION` region for the content service to use
-- `RACKSPACE_CONTAINER` container to use for the content service
-
-You can optionally set a default log level by using the environment variable `CONTENT_LOG_LEVEL`.
-
-The valid levels are: `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and `ERROR`.
-
-
-### Start
-
-To start the process, invoke docker:
-
-```
-npm run docker-run
+docker-compose build && docker-compose up -d
 ```
 
-### Output
+## Configuration
 
+The content service is configured by passing environment variables to the Docker container. These are the available configuration options:
+
+ * `RACKSPACE_USERNAME`: **(Required)** the username for your Rackspace account.
+ * `RACKSPACE_APIKEY`: **(Required)** the API key for your Rackspace account.
+ * `RACKSPACE_REGION`: **(Required)** the Rackspace region for the content service to use.
+ * `CONTENT_CONTAINER`: **(Required)** container name to use for the stored metadata envelopes.
+ * `ASSET_CONTAINER`: **(Required)** container name to use for published assets.
+ * `CONTENT_LOG_LEVEL`: Optional logging level. The valid levels are `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and `ERROR`.
+
+Both Cloud Files containers will be created and configured on application launch if they do not already exist.
+
+In development mode, docker-compose provides defaults for everything but `RACKSPACE_USERNAME` and `RACKSPACE_APIKEY`.
+
+## API
+
+The content service exposes the following API endpoints:
+
+### `GET /version`
+
+Report the service name, version, and git commit.
+
+*Response*
+
+```json
+{
+    "commit": "e2af254",
+    "service": "content-service",
+    "version": "1.0.0"
+}
 ```
-> content-service@1.0.0 start /usr/src/app
-> node app.js
 
-2015-03-13T15:48:14.839Z - info: content-service listening at http://0.0.0.0:8080
+### `PUT /content`
+
+Store and index content with a specific URL-encoded *content ID*.
+
+*Request*
+
+The request payload must be a JSON document matching the following schema:
+
+```json
+{
+  "id": "https://github.com/deconst/deconst-docs/content/id/here",
+  "body": { }
+}
+```
+
+*Response: Successful*
+
+An HTTP status of 200 and an empty response body will be returned when content is accepted successfully.
+
+### `GET /content/:id`
+
+Access previously stored content by its URL-encoded *content ID*.
+
+*Response: Successful*
+
+The exact JSON document provided to `PUT /content` will be returned.
+
+*Response: Unsuccessful*
+
+An HTTP status of 404 will be returned if the content ID isn't recognized.
+
+### `POST /asset`
+
+Fingerprint and publish one or more static assets to a CDN-enabled Cloud Files container. Return the full URLs to the published assets.
+
+*Request*
+
+The request payload must be a `multipart/form-data` file upload containing the assets to upload. The content type of each file must be set appropriately.
+
+*Response*
+
+```json
+{
+  "file1.jpg": "https://assets.horse/url/for/file1-38be7d1b981f2fb6a4a0a052453f887373dc1fe8.jpg",
+  "file2.css": "https://assets.horse/url/for/file2-d2da57e04b0818f7e3dd18da3b73c9b54a73cbe5.css"
+}
 ```

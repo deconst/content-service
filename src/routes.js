@@ -8,7 +8,7 @@ exports.loadRoutes = function (server) {
   server.get('/version', version.report);
 
   server.get('/content/:id', content.retrieve);
-  server.put('/content', content.store);
+  server.put('/content/:id', content.store);
   server.del('/content/:id', content.delete);
 
   server.post('/assets', assets.accept);

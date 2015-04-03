@@ -94,6 +94,12 @@ exports.accept = function (req, res, next) {
     return req.files[key];
   });
 
+  var base_uri = connection.asset_container.cdnSslUri;
+
+  if (! base_uri) {
+    log.error("Asset container does not have a CDN URI. Is it CDN-enabled?");
+  }
+
   async.map(asset_data, handle_asset, function (err, results) {
     if (err) {
       log.error("Unable to process an asset.", err);
@@ -107,8 +113,7 @@ exports.accept = function (req, res, next) {
 
     var summary = {};
     results.forEach(function (result) {
-      // FIXME derive this from the asset_container object.
-      var public_url = "wat";
+      var public_url = base_uri + '/' + encodeURIComponent(result.filename);
 
       summary[result.original] = public_url;
     });

@@ -18,15 +18,37 @@ function make_container_creator(client, container_name, logical_name, cdn) {
         return;
       }
 
-      exports[logical_name] = container;
-
       if (cdn) {
-        container.enableCdn(callback);
+        container.enableCdn(function (err) {
+          if (err) {
+            callback(err);
+            return;
+          }
+
+          refresh(client, container_name, logical_name, callback);
+        });
       } else {
-        callback(null);
+        refresh(client, container_name, logical_name, callback);
       }
     });
   };
+}
+
+/**
+ * @description Utility function to ensure that the exported Container model includes CDN URIs when
+ *   it's supposed to.
+ */
+function refresh(client, container_name, logical_name, callback) {
+  client.getContainer(container_name, function (err, container) {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    exports[logical_name] = container;
+
+    callback(null);
+  });
 }
 
 exports.setup = function (config, callback) {

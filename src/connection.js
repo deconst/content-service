@@ -12,7 +12,7 @@ function make_container_creator(client, container_name, logical_name, cdn) {
   return function (callback) {
     // Instead of checking if the container exists first, we try to create it, and
     // if it already exists, we get a no-op (202) and move on.
-    client.createContainer({ name: container_name }, function (err, container) {
+    client.createContainer({ name: container_name, ttl: 31556940 }, function (err, container) {
       if (err) {
         callback(err);
         return;

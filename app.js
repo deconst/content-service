@@ -32,8 +32,7 @@ connection.setup(config, function (err) {
       log.verbose(req.method + ' ' + req.url);
       next();
     })
-    .use(restify.fullResponse())
-    .use(restify.bodyParser());
+    .use(restify.fullResponse());
 
   routes.loadRoutes(server);
 

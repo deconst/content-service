@@ -66,9 +66,10 @@ function publish(asset, callback) {
     callback(null, asset);
   });
 
-  for (var chunk in asset.chunks) {
+  asset.chunks.forEach(function (chunk) {
     up.write(chunk);
-  }
+  });
+
   up.end();
 }
 

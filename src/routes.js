@@ -2,24 +2,18 @@ var
   pkgcloud = require('pkgcloud'),
   config = require('./config'),
   connection = require('./connection'),
-  logging = require('./logging'),
+  logging = require('./logging');
+
+// Handlers
+var
+  version = require('./version'),
   assets = require('./assets');
 
 var log = logging.getLogger(config.content_log_level());
 
 exports.loadRoutes = function (server) {
 
-  /**
-   * @description gets the version of the current service
-   */
-  server.get('/version', function (req, res, next) {
-    res.send({
-      service: config.info.name,
-      version: config.info.version,
-      commit: config.commit
-    });
-    next();
-  });
+  server.get('/version', version.report);
 
   /**
    * @description Allows retrieving content from the content service

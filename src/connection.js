@@ -2,7 +2,11 @@
 
 var
   async = require('async'),
-  pkgcloud = require('pkgcloud');
+  pkgcloud = require('pkgcloud'),
+  config = require('./config'),
+  logging = require('./logging');
+
+var log = logging.getLogger(config.content_log_level());
 
 /**
  * @description Create a function that asynchronously creates a Rackspace container if it
@@ -12,18 +16,25 @@ function make_container_creator(client, container_name, logical_name, cdn) {
   return function (callback) {
     var report_back = function (err, container) {
       exports[logical_name] = container;
+
+      log.debug("Container [" + container.name + "] now exists.");
+
       callback(null, container);
     };
 
     var cdn_enable = function (err, container) {
-      container.enableCdn(container);
+      log.debug("Enabling CDN on container [" + container.name + "].");
+
+      client.setCdnEnabled(container, { ttl: 31536000, enabled: true }, report_back);
     };
 
     var handle_creation = cdn ? cdn_enable : report_back;
 
+    log.info("Ensuring that container [" + container_name + "] exists.");
+
     // Instead of checking if the container exists first, we try to create it, and
     // if it already exists, we get a no-op (202) and move on.
-    client.createContainer({ name: container_name, ttl: 31556940 }, handle_creation);
+    client.createContainer({ name: container_name }, handle_creation);
   };
 }
 

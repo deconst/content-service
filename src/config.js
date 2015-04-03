@@ -50,13 +50,6 @@ exports.configure = function (env) {
 
     throw new Error("Inadequate configuration");
   }
-
-  // Authenticate to Rackspace with the credentials we just read.
-  exports.client = pkgcloud.providers.rackspace.storage.createClient({
-    username: configuration.rackspace_username,
-    apiKey: configuration.rackspace_apikey,
-    region: configuration.rackspace_region
-  });
 };
 
 // Export "getter" functions for each configuration option.

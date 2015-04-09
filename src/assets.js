@@ -39,6 +39,7 @@ function fingerprint_asset(asset, callback) {
     log.debug("Fingerprinted asset [" + asset.name + "] as [" + fingerprinted + "].");
 
     callback(null, {
+      key: asset.key,
       original: asset.name,
       chunks: chunks,
       filename: fingerprinted,
@@ -81,7 +82,7 @@ function publish_asset(asset, callback) {
  *   layouts.
  */
 function name_asset(asset, callback) {
-  log.debug("Naming asset [" + asset.name + "] as [" + asset.key + "].");
+  log.debug("Naming asset [" + asset.original + "] as [" + asset.key + "].");
 
   connection.db.collection("layout_assets").updateOne(
     { key: asset.key },

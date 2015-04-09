@@ -16,7 +16,7 @@ var log = logging.getLogger(config.content_log_level());
  * @description Calculate a checksum of an uploaded file's contents to generate
  *   the fingerprinted asset name.
  */
-function fingerprint(asset, callback) {
+function fingerprint_asset(asset, callback) {
   var
     sha256sum = crypto.createHash('sha256'),
     asset_file = fs.createReadStream(asset.path),
@@ -50,7 +50,7 @@ function fingerprint(asset, callback) {
 /**
  * @description Upload an asset's contents to the asset container.
  */
-function publish(asset, callback) {
+function publish_asset(asset, callback) {
   var up = connection.client.upload({
     container: config.asset_container(),
     remote: asset.filename,
@@ -74,15 +74,32 @@ function publish(asset, callback) {
 }
 
 /**
+ * @description Give this asset a name. The final name and CDL URI of this
+ *   asset will be included in all outgoing metadata envelopes, for use by
+ *   layouts.
+ */
+function name_asset(name, asset, callback) {
+  log.debug("Naming asset [" + asset.name + "] as [" + name + "].");
+
+  callback(null, asset);
+}
+
+/**
  * @description Process a single asset.
  */
-function handle_asset(asset, callback) {
+function handle_asset(name, asset, callback) {
   log.debug("Processing uploaded asset [" + asset.name + "].");
 
-  async.waterfall([
-    async.apply(fingerprint, asset),
-    publish
-  ], callback);
+  var steps = [
+    async.apply(fingerprint_asset, asset),
+    publish_asset
+  ];
+
+  if (name) {
+    steps.push(async.apply(name_asset, name));
+  }
+
+  async.waterfall(steps, callback);
 }
 
 /**
@@ -101,7 +118,7 @@ exports.accept = function (req, res, next) {
     log.error("Asset container does not have a CDN URI. Is it CDN-enabled?");
   }
 
-  async.map(asset_data, handle_asset, function (err, results) {
+  async.map(asset_data, async.apply(handle_asset, req.query.name), function (err, results) {
     if (err) {
       log.error("Unable to process an asset.", err);
 

@@ -3,6 +3,7 @@
 var
   async = require('async'),
   pkgcloud = require('pkgcloud'),
+  mongo = require('mongodb'),
   config = require('./config'),
   logging = require('./logging');
 
@@ -55,7 +56,23 @@ function refresh(client, container_name, logical_name, callback) {
   });
 }
 
-exports.setup = function (config, callback) {
+/**
+ * @description Authenticate to MongoDB and export the active MongoDB connection as "db".
+ */
+function mongo_auth(callback) {
+  mongo.MongoClient.connect(config.mongodb_url(), function (err, db) {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    exports.db = db;
+
+    callback(null);
+  });
+}
+
+exports.setup = function (callback) {
   var client = pkgcloud.providers.rackspace.storage.createClient({
     username: config.rackspace_username(),
     apiKey: config.rackspace_apikey(),
@@ -66,5 +83,6 @@ exports.setup = function (config, callback) {
   async.parallel([
     make_container_creator(client, config.content_container(), "content_container", false),
     make_container_creator(client, config.asset_container(), "asset_container", true),
+    mongo_auth
   ], callback);
 };

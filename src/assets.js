@@ -11,6 +11,7 @@ var
   logging = require('./logging');
 
 var log = logging.getLogger(config.content_log_level());
+var base_uri = connection.asset_container.cdnSslUri;
 
 /**
  * @description Calculate a checksum of an uploaded file's contents to generate
@@ -63,6 +64,7 @@ function publish_asset(asset, callback) {
   up.on('finish', function () {
     log.debug("Successfully uploaded asset [" + asset.filename + "].");
 
+    asset.public_url = base_uri + '/' + encodeURIComponent(asset.filename);
     callback(null, asset);
   });
 
@@ -79,9 +81,14 @@ function publish_asset(asset, callback) {
  *   layouts.
  */
 function name_asset(name, asset, callback) {
-  log.debug("Naming asset [" + asset.name + "] as [" + name + "].");
+  log.debug("Naming asset [" + asset.name + "].");
 
-  callback(null, asset);
+  connection.db.collection("layout_assets").updateOne(
+    { name: asset.name },
+    { $set: { name: asset.name, public_url: asset.public_url } },
+    { upsert: true },
+    function (err) { callback(err, asset); }
+  );
 }
 
 /**
@@ -112,12 +119,6 @@ exports.accept = function (req, res, next) {
     return req.files[key];
   });
 
-  var base_uri = connection.asset_container.cdnSslUri;
-
-  if (! base_uri) {
-    log.error("Asset container does not have a CDN URI. Is it CDN-enabled?");
-  }
-
   async.map(asset_data, async.apply(handle_asset, req.query.name), function (err, results) {
     if (err) {
       log.error("Unable to process an asset.", err);
@@ -131,9 +132,7 @@ exports.accept = function (req, res, next) {
 
     var summary = {};
     results.forEach(function (result) {
-      var public_url = base_uri + '/' + encodeURIComponent(result.filename);
-
-      summary[result.original] = public_url;
+      summary[result.original] = result.public_url;
     });
     log.debug("All assets have been processed succesfully.", summary);
 

@@ -66,6 +66,8 @@ function mongo_auth(callback) {
       return;
     }
 
+    log.debug("Connected to MongoDB database at [" + config.mongodb_url() + "].");
+
     exports.db = db;
 
     callback(null);

@@ -11,7 +11,6 @@ var
   logging = require('./logging');
 
 var log = logging.getLogger(config.content_log_level());
-var base_uri = connection.asset_container.cdnSslUri;
 
 /**
  * @description Calculate a checksum of an uploaded file's contents to generate
@@ -64,6 +63,7 @@ function publish_asset(asset, callback) {
   up.on('finish', function () {
     log.debug("Successfully uploaded asset [" + asset.filename + "].");
 
+    var base_uri = connection.asset_container.cdnSslUri;
     asset.public_url = base_uri + '/' + encodeURIComponent(asset.filename);
     callback(null, asset);
   });
@@ -80,33 +80,35 @@ function publish_asset(asset, callback) {
  *   asset will be included in all outgoing metadata envelopes, for use by
  *   layouts.
  */
-function name_asset(name, asset, callback) {
-  log.debug("Naming asset [" + asset.name + "].");
+function name_asset(asset, callback) {
+  log.debug("Naming asset [" + asset.name + "] as [" + asset.key + "].");
 
   connection.db.collection("layout_assets").updateOne(
-    { name: asset.name },
-    { $set: { name: asset.name, public_url: asset.public_url } },
+    { key: asset.key },
+    { $set: { key: asset.key, public_url: asset.public_url } },
     { upsert: true },
     function (err) { callback(err, asset); }
   );
 }
 
 /**
- * @description Process a single asset.
+ * @description Create and return a function that processes a single asset.
  */
-function handle_asset(name, asset, callback) {
-  log.debug("Processing uploaded asset [" + asset.name + "].");
+function make_asset_handler(should_name) {
+  return function(asset, callback) {
+    log.debug("Processing uploaded asset [" + asset.name + "].");
 
-  var steps = [
-    async.apply(fingerprint_asset, asset),
-    publish_asset
-  ];
+    var steps = [
+      async.apply(fingerprint_asset, asset),
+      publish_asset
+    ];
 
-  if (name) {
-    steps.push(async.apply(name_asset, name));
-  }
+    if (should_name) {
+      steps.push(name_asset);
+    }
 
-  async.waterfall(steps, callback);
+    async.waterfall(steps, callback);
+  };
 }
 
 /**
@@ -116,10 +118,12 @@ function handle_asset(name, asset, callback) {
  */
 exports.accept = function (req, res, next) {
   var asset_data = Object.getOwnPropertyNames(req.files).map(function (key) {
-    return req.files[key];
+    var asset = req.files[key];
+    asset.key = key;
+    return asset;
   });
 
-  async.map(asset_data, async.apply(handle_asset, req.query.name), function (err, results) {
+  async.map(asset_data, make_asset_handler(req.query.layout), function (err, results) {
     if (err) {
       log.error("Unable to process an asset.", err);
 

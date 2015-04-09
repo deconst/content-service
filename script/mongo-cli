@@ -1,0 +1,4 @@
+#!/bin/bash
+
+exec docker-compose run --rm mongo \
+  sh -c 'exec mongo "${MONGO_PORT_27017_TCP_ADDR}:${MONGO_PORT_27017_TCP_PORT}/content"'

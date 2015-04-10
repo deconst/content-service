@@ -1,6 +1,7 @@
 // Store, retrieve, and delete metadata envelopes.
 
 var
+  async = require('async'),
   config = require('./config'),
   connection = require('./connection'),
   logging = require('./logging');
@@ -8,22 +9,83 @@ var
 var log = logging.getLogger(config.content_log_level());
 
 /**
+ * @description Download the raw metadata envelope from Cloud Files.
+ */
+function download_content(content_id, callback) {
+  var source = connection.client.download({
+    container: config.content_container(),
+    remote: encodeURIComponent(req.params.id)
+  });
+  var chunks = [];
+
+  source.on('error', function (err) {
+    callback(err);
+  });
+
+  source.on('data', function (chunk) {
+    chunks.push(chunk);
+  });
+
+  source.on('end', function () {
+    var
+      complete = Buffer.concat(chunks),
+      envelope = JSON.parse(complete);
+
+    callback(null, envelope);
+  });
+}
+
+/**
+ * @description Inject asset variables included from the /assets endpoint into
+ *   an outgoing metadata envelope.
+ */
+function inject_asset_vars(envelope, callback) {
+  log.debug("Collecting asset variables to inject into the envelope.");
+
+  connection.db.collection("layout_assets").find().toArray(function (err, asset_vars) {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    log.debug("Injecting " + asset_vars.length + " variables into the envelope.");
+
+    var assets = {};
+
+    asset_vars.forEach(function (asset_var) {
+      assets[asset_var.key] = asset_var.public_url;
+    });
+
+    envelope.assets = assets;
+
+    callback(null, envelope);
+  });
+}
+
+/**
  * @description Retrieve content from the store by content ID.
  */
 exports.retrieve = function (req, res, next) {
   log.debug("Requesting content ID: [" + req.params.id + "]");
 
-  var source = connection.client.download({
-    container: config.content_container(),
-    remote: encodeURIComponent(req.params.id)
+  async.waterfall([
+    async.apply(download_content, req.params.id),
+    inject_asset_vars
+  ], function (err, envelope) {
+    if (err) {
+      log.error("Failed to retrieve a metadata envelope", err);
+
+      res.status(err.statusCode || 500);
+      res.send();
+      next();
+
+      return;
+    }
+
+    res.status(200);
+    res.json(envelope);
+    next();
   });
-
-  // This directly sends the response to the caller, long term we'll
-  // probably not want to do this, but it allows the prototype to get functional
-  //
-  source.pipe(res);
-
-  next();
 };
 
 /**

@@ -14,7 +14,7 @@ var log = logging.getLogger(config.content_log_level());
 function download_content(content_id, callback) {
   var source = connection.client.download({
     container: config.content_container(),
-    remote: encodeURIComponent(req.params.id)
+    remote: encodeURIComponent(content_id)
   });
   var chunks = [];
 

@@ -22,7 +22,7 @@ var
 
 server.name = config.info.name;
 
-connection.setup(config, function (err) {
+connection.setup(function (err) {
   if (err) {
     throw err;
   }

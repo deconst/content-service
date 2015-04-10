@@ -16,7 +16,7 @@ var log = logging.getLogger(config.content_log_level());
  * @description Calculate a checksum of an uploaded file's contents to generate
  *   the fingerprinted asset name.
  */
-function fingerprint(asset, callback) {
+function fingerprint_asset(asset, callback) {
   var
     sha256sum = crypto.createHash('sha256'),
     asset_file = fs.createReadStream(asset.path),
@@ -39,6 +39,7 @@ function fingerprint(asset, callback) {
     log.debug("Fingerprinted asset [" + asset.name + "] as [" + fingerprinted + "].");
 
     callback(null, {
+      key: asset.key,
       original: asset.name,
       chunks: chunks,
       filename: fingerprinted,
@@ -50,7 +51,7 @@ function fingerprint(asset, callback) {
 /**
  * @description Upload an asset's contents to the asset container.
  */
-function publish(asset, callback) {
+function publish_asset(asset, callback) {
   var up = connection.client.upload({
     container: config.asset_container(),
     remote: asset.filename,
@@ -63,6 +64,8 @@ function publish(asset, callback) {
   up.on('finish', function () {
     log.debug("Successfully uploaded asset [" + asset.filename + "].");
 
+    var base_uri = connection.asset_container.cdnSslUri;
+    asset.public_url = base_uri + '/' + encodeURIComponent(asset.filename);
     callback(null, asset);
   });
 
@@ -74,15 +77,39 @@ function publish(asset, callback) {
 }
 
 /**
- * @description Process a single asset.
+ * @description Give this asset a name. The final name and CDL URI of this
+ *   asset will be included in all outgoing metadata envelopes, for use by
+ *   layouts.
  */
-function handle_asset(asset, callback) {
-  log.debug("Processing uploaded asset [" + asset.name + "].");
+function name_asset(asset, callback) {
+  log.debug("Naming asset [" + asset.original + "] as [" + asset.key + "].");
 
-  async.waterfall([
-    async.apply(fingerprint, asset),
-    publish
-  ], callback);
+  connection.db.collection("layout_assets").updateOne(
+    { key: asset.key },
+    { $set: { key: asset.key, public_url: asset.public_url } },
+    { upsert: true },
+    function (err) { callback(err, asset); }
+  );
+}
+
+/**
+ * @description Create and return a function that processes a single asset.
+ */
+function make_asset_handler(should_name) {
+  return function(asset, callback) {
+    log.debug("Processing uploaded asset [" + asset.name + "].");
+
+    var steps = [
+      async.apply(fingerprint_asset, asset),
+      publish_asset
+    ];
+
+    if (should_name) {
+      steps.push(name_asset);
+    }
+
+    async.waterfall(steps, callback);
+  };
 }
 
 /**
@@ -92,16 +119,12 @@ function handle_asset(asset, callback) {
  */
 exports.accept = function (req, res, next) {
   var asset_data = Object.getOwnPropertyNames(req.files).map(function (key) {
-    return req.files[key];
+    var asset = req.files[key];
+    asset.key = key;
+    return asset;
   });
 
-  var base_uri = connection.asset_container.cdnSslUri;
-
-  if (! base_uri) {
-    log.error("Asset container does not have a CDN URI. Is it CDN-enabled?");
-  }
-
-  async.map(asset_data, handle_asset, function (err, results) {
+  async.map(asset_data, make_asset_handler(req.query.named), function (err, results) {
     if (err) {
       log.error("Unable to process an asset.", err);
 
@@ -114,9 +137,7 @@ exports.accept = function (req, res, next) {
 
     var summary = {};
     results.forEach(function (result) {
-      var public_url = base_uri + '/' + encodeURIComponent(result.filename);
-
-      summary[result.original] = public_url;
+      summary[result.original] = result.public_url;
     });
     log.debug("All assets have been processed succesfully.", summary);
 

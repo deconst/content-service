@@ -11,6 +11,7 @@ var configuration = {
   rackspace_region: null,
   content_container: null,
   asset_container: null,
+  mongodb_url: null,
   content_log_level: "info"
 };
 

@@ -85,13 +85,15 @@ The exact JSON document provided to `PUT /content` will be returned.
 
 An HTTP status of 404 will be returned if the content ID isn't recognized.
 
-### `POST /asset`
+### `POST /asset[?named=true]`
 
 Fingerprint and publish one or more static assets to a CDN-enabled Cloud Files container. Return the full URLs to the published assets.
 
 *Request*
 
 The request payload must be a `multipart/form-data` file upload containing the assets to upload. The content type of each file must be set appropriately.
+
+If the query parameter `named=true` is provided, each asset's CDN URI will also be persisted in the *layout asset map* with a key derived from its form name and inserted in the `assets` object of every outgoing metadata envelope.
 
 *Response*
 

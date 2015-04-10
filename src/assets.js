@@ -124,7 +124,7 @@ exports.accept = function (req, res, next) {
     return asset;
   });
 
-  async.map(asset_data, make_asset_handler(req.query.layout), function (err, results) {
+  async.map(asset_data, make_asset_handler(req.query.named), function (err, results) {
     if (err) {
       log.error("Unable to process an asset.", err);
 

@@ -65,6 +65,7 @@ The request payload must be a valid Deconst metadata envelope in JSON form.
 
 ```json
 {
+  "title": "Optional page title",
   "body": "<h1>page content</h1> <p>as raw HTML</p>"
 }
 ```
@@ -79,7 +80,14 @@ Access previously stored content by its URL-encoded *content ID*.
 
 *Response: Successful*
 
-The exact JSON document provided to `PUT /content` will be returned.
+```json
+{
+  "assets": {},
+  "envelope": {}
+}
+```
+
+`"envelope"` will be the exact JSON document provided to `PUT /content`. `"assets"` will contain a set of site-wide layout asset variables.
 
 *Response: Unsuccessful*
 

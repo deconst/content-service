@@ -31,7 +31,7 @@ function download_content(content_id, callback) {
       complete = Buffer.concat(chunks),
       envelope = JSON.parse(complete);
 
-    callback(null, envelope);
+    callback(null, {envelope: envelope});
   });
 }
 
@@ -39,7 +39,7 @@ function download_content(content_id, callback) {
  * @description Inject asset variables included from the /assets endpoint into
  *   an outgoing metadata envelope.
  */
-function inject_asset_vars(envelope, callback) {
+function inject_asset_vars(doc, callback) {
   log.debug("Collecting asset variables to inject into the envelope.");
 
   connection.db.collection("layout_assets").find().toArray(function (err, asset_vars) {
@@ -56,9 +56,9 @@ function inject_asset_vars(envelope, callback) {
       assets[asset_var.key] = asset_var.public_url;
     });
 
-    envelope.assets = assets;
+    doc.assets = assets;
 
-    callback(null, envelope);
+    callback(null, doc);
   });
 }
 
@@ -71,7 +71,7 @@ exports.retrieve = function (req, res, next) {
   async.waterfall([
     async.apply(download_content, req.params.id),
     inject_asset_vars
-  ], function (err, envelope) {
+  ], function (err, doc) {
     if (err) {
       log.error("Failed to retrieve a metadata envelope", err);
 
@@ -83,7 +83,7 @@ exports.retrieve = function (req, res, next) {
     }
 
     res.status(200);
-    res.json(envelope);
+    res.json(doc);
     next();
   });
 };

@@ -4,7 +4,7 @@
   "description": "A content service for storing and retreiving content",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "docker-build": "docker build -t content-service .",
     "docker-run": "sh -c \"docker run -it --rm --name content-service-running -p 80:8080 -e RACKSPACE_USERNAME=$RACKSPACE_USERNAME -e RACKSPACE_APIKEY=$RACKSPACE_APIKEY -e RACKSPACE_REGION=$RACKSPACE_REGION -e RACKSPACE_CONTAINER=$RACKSPACE_CONTAINER -e CONTENT_LOG_LEVEL=$CONTENT_LOG_LEVEL content-service\"",
     "start": "node app.js"

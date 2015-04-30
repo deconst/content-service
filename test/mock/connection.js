@@ -2,13 +2,24 @@
  * Mock the Rackspace and MongoDB connections.
  */
 
-var Writable = require("stream").Writable;
+var
+  util = require("util"),
+  Writable = require("stream").Writable;
 
-var sink = Writable();
+util.inherits(Sink, Writable);
 
-sink._write = function (chunk, enc, next) {
-  next();
-};
+function Sink(options) {
+  Writable.call(this, options);
+  var self = this;
+
+  this._write = function (chunk, enc, next) {
+    next();
+  };
+
+  this.on("finish", function () {
+    self.emit("success");
+  });
+}
 
 exports.install = function (connection) {
   // Mock Rackspace Cloud Files client.
@@ -16,11 +27,15 @@ exports.install = function (connection) {
     uploaded: [],
     upload: function (params) {
       this.uploaded.push(params);
-      return sink;
+      return new Sink();
     },
   };
 
   connection.client = mock_client;
+
+  connection.content_container = {
+    name: "the_content_container"
+  };
 
   connection.asset_container = {
     cdnSslUri: "https://example.com/fake/cdn/url"

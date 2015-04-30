@@ -28,6 +28,7 @@ exports.install = function (connection) {
   var mock_client = {
     uploaded: [],
     downloaded: [],
+    deleted: [],
     content: {},
 
     upload: function (params) {
@@ -41,6 +42,12 @@ exports.install = function (connection) {
       rs.push(this.content[params.remote]);
       rs.push(null);
       return rs;
+    },
+
+    removeFile: function (container, name, callback) {
+      this.deleted.push(name);
+      delete this.content[name];
+      callback(null);
     }
   };
 

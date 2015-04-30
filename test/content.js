@@ -51,18 +51,29 @@ describe("content", function () {
         .expect({
           assets: [],
           envelope: { expected: "json" }
-        })
-        .end(function (err, res) {
-          if (err) return done(err);
-          done();
-        });
+        }, done);
     });
 
   });
 
   describe("#delete", function () {
 
-    it("deletes content from Cloud Files");
+    it("deletes content from Cloud Files", function (done) {
+      mocks.mock_client.content["foo%26bar"] = '{ "existing": "json" }';
+
+      request(server.create())
+        .delete("/content/foo%26bar")
+        .expect(200)
+        .end(function (err, res) {
+          if (err) return done(err);
+
+          var deletions = mocks.mock_client.deleted;
+          expect(deletions).to.have.length(1);
+          expect(deletions[0]).to.equal("foo%26bar");
+
+          done();
+        });
+    });
 
   });
 });

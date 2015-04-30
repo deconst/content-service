@@ -46,6 +46,7 @@ describe("content", function () {
 
       request(server.create())
         .get("/content/foo%26bar")
+        .expect("Content-Type", "application/json")
         .expect(200)
         .expect({
           assets: [],

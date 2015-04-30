@@ -51,10 +51,33 @@ exports.install = function (connection) {
   };
 
   connection.asset_container = {
+    name: "the_asset_container",
     cdnSslUri: "https://example.com/fake/cdn/url"
   };
 
+  var mock_db = {
+    collections: {},
+
+    add_collection: function (name, contents) {
+      var collection = {
+        find: function () { return collection; },
+        toArray: function (callback) { callback(null, contents); }
+      };
+      this.collections[name] = collection;
+    },
+
+    collection: function (name) {
+      if (!this.collections[name]) {
+        this.add_collection(name, []);
+      }
+      return this.collections[name];
+    }
+  };
+
+  connection.db = mock_db;
+
   return {
-    mock_client: mock_client
+    mock_client: mock_client,
+    mock_db: mock_db
   };
 };

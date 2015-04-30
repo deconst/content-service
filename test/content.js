@@ -41,7 +41,21 @@ describe("content", function () {
 
   describe("#retrieve", function () {
 
-    it("retrieves existing content from Cloud Files");
+    it("retrieves existing content from Cloud Files", function (done) {
+      mocks.mock_client.content["foo%26bar"] = '{ "expected": "json" }';
+
+      request(server.create())
+        .get("/content/foo%26bar")
+        .expect(200)
+        .expect({
+          assets: [],
+          envelope: { expected: "json" }
+        })
+        .end(function (err, res) {
+          if (err) return done(err);
+          done();
+        });
+    });
 
   });
 

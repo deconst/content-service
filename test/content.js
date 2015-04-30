@@ -10,7 +10,7 @@ var
   connmocks = require("./mock/connection"),
   server = require("../src/server");
 
-describe("content", function () {
+describe("/content", function () {
   var mocks;
 
   beforeEach(function () {

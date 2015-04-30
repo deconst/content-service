@@ -2,13 +2,13 @@
  * Unit tests for the content service.
  */
 
- var
-   restify = require("restify"),
-   request = require("supertest"),
-   expect = require("chai").expect,
-   connection = require("../src/connection"),
-   connmocks = require("./mock/connection"),
-   server = require("../src/server");
+var
+  restify = require("restify"),
+  request = require("supertest"),
+  expect = require("chai").expect,
+  connection = require("../src/connection"),
+  connmocks = require("./mock/connection"),
+  server = require("../src/server");
 
 describe("content", function () {
   var mocks;

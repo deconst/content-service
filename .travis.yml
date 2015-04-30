@@ -4,5 +4,7 @@ node_js:
 - "0.12.1"
 install:
 - npm install -g jshint
+- npm install .
 script:
+- npm test
 - jshint .

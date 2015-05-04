@@ -4,7 +4,8 @@ var restify = require('restify');
 var
   version = require('./version'),
   content = require('./content'),
-  assets = require('./assets');
+  assets = require('./assets'),
+  keys = require('./keys');
 
 exports.loadRoutes = function (server) {
   server.get('/version', version.report);
@@ -14,4 +15,7 @@ exports.loadRoutes = function (server) {
   server.del('/content/:id', content.delete);
 
   server.post('/assets', restify.bodyParser(), restify.queryParser(), assets.accept);
+
+  server.post('/keys', restify.queryParser(), keys.issue);
+  server.del('/keys/:key', keys.revoke);
 };

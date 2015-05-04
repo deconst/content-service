@@ -12,6 +12,7 @@ describe("config", function () {
       RACKSPACE_USERNAME: "me",
       RACKSPACE_APIKEY: "12345",
       RACKSPACE_REGION: "space",
+      ADMIN_APIKEY: "12345",
       CONTENT_CONTAINER: "the-content-container",
       ASSET_CONTAINER: "the-asset-container",
       MONGODB_URL: "mongodb-url",
@@ -21,6 +22,7 @@ describe("config", function () {
     expect(config.rackspace_username()).to.equal("me");
     expect(config.rackspace_apikey()).to.equal("12345");
     expect(config.rackspace_region()).to.equal("space");
+    expect(config.admin_apikey()).to.equal("12345");
     expect(config.content_container()).to.equal("the-content-container");
     expect(config.asset_container()).to.equal("the-asset-container");
     expect(config.mongodb_url()).to.equal("mongodb-url");

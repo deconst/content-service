@@ -10,6 +10,7 @@ var configuration = {
   rackspace_apikey: null,
   rackspace_region: null,
   content_container: null,
+  admin_apikey: null,
   asset_container: null,
   mongodb_url: null,
   content_log_level: "info"

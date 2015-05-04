@@ -3,7 +3,6 @@
  */
 
 var
-  restify = require("restify"),
   request = require("supertest"),
   expect = require("chai").expect,
   connection = require("../src/connection"),

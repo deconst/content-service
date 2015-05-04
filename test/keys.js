@@ -29,7 +29,6 @@ describe("/keys", function () {
   });
 
   describe("POST", function () {
-    it("requires authentication");
 
     it("allows an admin to issue a new key", function (done) {
       request(server.create())
@@ -39,9 +38,31 @@ describe("/keys", function () {
         .expect("Content-Type", "application/json")
         .expect(function (res) {
           if (!("apikey" in res.body)) throw new Error("No API key issued");
+
+          var
+            apikey = res.body.apikey,
+            found = false,
+            issued = mocks.mock_db.collection("api_keys").find().toArray();
+
+          issued.forEach(function (each) {
+            if (each.apikey === apikey && each.name === "someone") {
+              found = true;
+            }
+          });
+
+          if (!found) throw new Error("Issued API key not found in database");
         })
         .end(done);
     });
+
+    it("requires a key name", function (done) {
+      request(server.create())
+        .post("/keys")
+        .set("Authorization", 'deconst apikey="12345"')
+        .expect(400, done);
+    });
+
+    it("requires authentication");
 
     it("prevents non-admins from issuing keys");
   });

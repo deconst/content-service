@@ -68,7 +68,15 @@ exports.install = function (connection) {
     add_collection: function (name, contents) {
       var collection = {
         find: function () { return collection; },
-        toArray: function (callback) { callback(null, contents); }
+        insertOne: function (doc, callback) {
+          contents.push(doc);
+
+          callback(null, mock_db);
+        },
+        toArray: function (callback) {
+          if (callback) callback(null, contents);
+          return contents;
+        }
       };
       this.collections[name] = collection;
     },

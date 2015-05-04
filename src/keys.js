@@ -33,16 +33,25 @@ function store_key(name, result, callback) {
   });
 }
 
+/**
+ * @description Remove an API key from Mongo.
+ */
+function remove_key(key, callback) {
+  connection.db.collection("api_keys").deleteOne({ apikey: key}, function (err) {
+    if (err) return callback(err);
+
+    callback(null);
+  });
+}
+
 exports.issue = function(req, res, next) {
   var name = req.query.named;
 
   if (!name) {
     log.warn("Attempt to issue an API key without a name.");
 
-    res.status(400);
-    res.json({ error: "You must specify a name for the API key" });
-
-    next();
+    res.json(400, { error: "You must specify a name for the API key" });
+    return next();
   }
 
   log.info("Issuing an API key for [" + name + "]");
@@ -54,13 +63,11 @@ exports.issue = function(req, res, next) {
     if (err) {
       log.error("Unable to issue an API key.", err);
 
-      res.status(500);
-      res.json({ error: "Unable to issue an API key!" });
-      next();
+      res.json(500, { error: "Unable to issue an API key!" });
+      return next();
     }
 
-    res.status(200);
-    res.json({ apikey: result.apikey });
+    res.json(200, { apikey: result.apikey });
     next();
   });
 };
@@ -68,8 +75,15 @@ exports.issue = function(req, res, next) {
 exports.revoke = function(req, res, next) {
   log.info("Revoking an API key");
 
-  res.status(200);
-  res.send();
+  remove_key(req.params.key, function (err) {
+    if (err) {
+      log.error("Unable to revoke an API key.", err);
 
-  next();
+      res.json(500, { error: "Unable to revoke an API key"});
+      return next();
+    }
+
+    res.send(204);
+    next();
+  });
 };

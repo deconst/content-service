@@ -68,8 +68,31 @@ describe("/keys", function () {
   });
 
   describe("DELETE", function () {
+
+    it("allows an admin to revoke an existing key", function (done) {
+      mocks.mock_db.collection("api_keys").insertOne({ name: "torevoke", apikey: "54321" });
+
+      request(server.create())
+        .delete("/keys/54321")
+        .set("Authorization", 'deconst apikey="12345"')
+        .expect(204)
+        .expect(function () {
+          var
+            found = false,
+            issued = mocks.mock_db.collection("api_keys").find().toArray();
+
+          issued.forEach(function (each) {
+            if (each.apikey === "54321" && each.name === "torevoke") {
+              found = true;
+            }
+          });
+
+          if (found) throw new Error("Revoked API key is still present in the database");
+        })
+        .end(done);
+    });
+
     it("requires authentication");
-    it("allows an admin to revoke an existing key");
     it("prevents non-admins from revoking keys");
     it("doesn't allow admins to revoke their own key");
   });

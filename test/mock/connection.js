@@ -71,7 +71,21 @@ exports.install = function (connection) {
         insertOne: function (doc, callback) {
           contents.push(doc);
 
-          callback(null, mock_db);
+          if (callback) callback(null, mock_db);
+        },
+        deleteOne: function (filter, callback) {
+          var resultIndex = -1;
+          contents.forEach(function (each, index) {
+            if (filter.apikey === each.apikey) {
+              resultIndex = index;
+            }
+          });
+
+          if (resultIndex !== -1) {
+            contents.splice(resultIndex, 1);
+          }
+
+          if (callback) callback(null);
         },
         toArray: function (callback) {
           if (callback) callback(null, contents);

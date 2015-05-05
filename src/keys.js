@@ -13,7 +13,7 @@ var log = logging.getLogger(config.content_log_level());
  * @description Generate a fresh API key.
  */
 function generate_key(callback) {
-  crypto.randomBytes(1024, function (err, buf) {
+  crypto.randomBytes(128, function (err, buf) {
     if (err) return callback(err);
 
     callback(null, { apikey: buf.toString('hex')});

@@ -7,6 +7,7 @@ var
   request = require("supertest"),
   connection = require("../src/connection"),
   connmocks = require("./mock/connection"),
+  authhelper = require("./helpers/auth"),
   server = require("../src/server");
 
 describe("/assets", function() {
@@ -14,6 +15,7 @@ describe("/assets", function() {
 
   beforeEach(function () {
     mocks = connmocks.install(connection);
+    authhelper.install();
   });
 
   it("accepts an asset file and produces a fingerprinted filename", function(done) {
@@ -24,9 +26,19 @@ describe("/assets", function() {
 
     request(server.create())
       .post("/assets")
+      .set("Authorization", authhelper.AUTH_USER)
       .attach("first", "test/fixtures/asset-file.txt")
       .expect(200)
       .expect("Content-Type", /json/)
       .expect({ "asset-file.txt": final_name }, done);
   });
+
+  it("requires authentication", function(done) {
+    authhelper.ensureAuthIsRequired(
+      request(server.create())
+        .post("/assets")
+        .attach("first", "test/fixtures/asset-file.txt"),
+      done);
+  });
+
 });

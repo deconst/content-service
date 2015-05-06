@@ -127,6 +127,8 @@ An HTTP status of 404 will be returned if the content ID isn't recognized.
 
 ### `POST /asset[?named=true]`
 
+**(Authorization required: any user)**
+
 Fingerprint and publish one or more static assets to a CDN-enabled Cloud Files container. Return the full URLs to the published assets.
 
 *Request*

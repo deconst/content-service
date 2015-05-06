@@ -15,7 +15,11 @@ exports.loadRoutes = function (server) {
   server.put('/content/:id', auth.require_key, content.store);
   server.del('/content/:id', auth.require_key, content.delete);
 
-  server.post('/assets', restify.bodyParser(), restify.queryParser(), assets.accept);
+  server.post('/assets',
+    auth.require_key,
+    restify.bodyParser(),
+    restify.queryParser(),
+    assets.accept);
 
   server.post('/keys', auth.require_admin, restify.queryParser(), keys.issue);
   server.del('/keys/:key', auth.require_admin, keys.revoke);

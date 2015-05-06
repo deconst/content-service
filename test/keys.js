@@ -91,8 +91,18 @@ describe("/keys", function () {
         .end(done);
     });
 
-    it("requires authentication");
-    it("prevents non-admins from revoking keys");
+    it("requires authentication", function (done) {
+      authhelper.ensureAuthIsRequired(
+        request(server.create()).delete("/keys/54321"),
+        done);
+    });
+
+    it("prevents non-admins from revoking keys", function (done) {
+      authhelper.ensureAdminIsRequired(
+        request(server.create()).delete("/keys/54321"),
+        done);
+    });
+
     it("doesn't allow admins to revoke their own key");
   });
 });

@@ -53,7 +53,7 @@ Authorization: deconst apikey="12345"
 Valid API keys include:
 
  * The admin API key, as specified by [the service configuration.](#configuration)
- * User keys issued by the [`POST /keys`](#post-keys) endpoint.
+ * User keys issued by the [`POST /keys`](#post-keysnamedname) endpoint.
 
 The content service exposes the following API endpoints:
 

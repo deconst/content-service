@@ -7,35 +7,16 @@ var
   expect = require("chai").expect,
   connection = require("../src/connection"),
   connmocks = require("./mock/connection"),
+  authhelper = require("./helpers/auth"),
   config = require("../src/config"),
   server = require("../src/server");
-
-/*
- * Test helper to ensure that a route fails if no valid API key is given.
- */
-var ensureAuthIsRequired = function (action, done) {
-  action
-    .expect(401)
-    .expect("Content-Type", "application/json")
-    .expect({ code: "UnauthorizedError", message: "An API key is required for this endpoint." }, done);
-};
 
 describe("/keys", function () {
   var mocks;
 
   beforeEach(function () {
-    config.configure({
-      RACKSPACE_USERNAME: "me",
-      RACKSPACE_APIKEY: "12345",
-      RACKSPACE_REGION: "space",
-      ADMIN_APIKEY: "12345",
-      CONTENT_CONTAINER: "the-content-container",
-      ASSET_CONTAINER: "the-asset-container",
-      MONGODB_URL: "mongodb-url",
-      CONTENT_LOG_LEVEL: "debug"
-    });
-
     mocks = connmocks.install(connection);
+    authhelper.install();
   });
 
   describe("POST", function () {
@@ -73,7 +54,7 @@ describe("/keys", function () {
     });
 
     it("requires authentication", function (done) {
-      ensureAuthIsRequired(
+      authhelper.ensureAuthIsRequired(
         request(server.create()).post("/keys?named=mine"),
         done);
     });

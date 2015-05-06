@@ -29,6 +29,7 @@ The content service is configured by passing environment variables to the Docker
  * `RACKSPACE_USERNAME`: **(Required)** the username for your Rackspace account.
  * `RACKSPACE_APIKEY`: **(Required)** the API key for your Rackspace account.
  * `RACKSPACE_REGION`: **(Required)** the Rackspace region for the content service to use.
+ * `ADMIN_APIKEY`: **(Required)** an API key that can be used by administrators or other internal services to issue and revoke API keys.
  * `CONTENT_CONTAINER`: **(Required)** container name to use for the stored metadata envelopes.
  * `ASSET_CONTAINER`: **(Required)** container name to use for published assets.
  * `CONTENT_LOG_LEVEL`: Optional logging level. The valid levels are `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and `ERROR`.
@@ -38,6 +39,21 @@ Both Cloud Files containers will be created and configured on application launch
 In development mode, docker-compose provides defaults for everything but `RACKSPACE_USERNAME` and `RACKSPACE_APIKEY`.
 
 ## API
+
+### Authorization
+
+Endpoints that require authorization *must* be accompanied by a valid API key. Set the API key in
+an `Authorization` header.
+
+```
+PUT /content/https%3A%2F%2Fgithub.com%2Fsomeuser%2Fsomerepo%2Fsomeid
+Authorization: deconst apikey="12345"
+```
+
+Valid API keys include:
+
+ * The admin API key, as specified by [the service configuration.](#configuration)
+ * User keys issued by the [`POST /keys`](#post-keys) endpoint.
 
 The content service exposes the following API endpoints:
 
@@ -56,6 +72,8 @@ Report the service name, version, and git commit.
 ```
 
 ### `PUT /content/:id`
+
+**(Authorization required: any user)**
 
 Store and index content with a specific URL-encoded *content ID*.
 

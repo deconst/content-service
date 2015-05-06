@@ -10,6 +10,16 @@ var
   config = require("../src/config"),
   server = require("../src/server");
 
+/*
+ * Test helper to ensure that a route fails if no valid API key is given.
+ */
+var ensureAuthIsRequired = function (action, done) {
+  action
+    .expect(401)
+    .expect("Content-Type", "application/json")
+    .expect({ code: "UnauthorizedError", message: "An API key is required for this endpoint." }, done);
+};
+
 describe("/keys", function () {
   var mocks;
 
@@ -62,7 +72,11 @@ describe("/keys", function () {
         .expect(400, done);
     });
 
-    it("requires authentication");
+    it("requires authentication", function (done) {
+      ensureAuthIsRequired(
+        request(server.create()).post("/keys?named=mine"),
+        done);
+    });
 
     it("prevents non-admins from issuing keys");
   });

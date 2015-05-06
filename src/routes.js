@@ -2,6 +2,7 @@ var restify = require('restify');
 
 // Handlers
 var
+  auth = require('./auth'),
   version = require('./version'),
   content = require('./content'),
   assets = require('./assets'),
@@ -16,6 +17,6 @@ exports.loadRoutes = function (server) {
 
   server.post('/assets', restify.bodyParser(), restify.queryParser(), assets.accept);
 
-  server.post('/keys', restify.queryParser(), keys.issue);
-  server.del('/keys/:key', keys.revoke);
+  server.post('/keys', auth.requireKey, restify.queryParser(), keys.issue);
+  server.del('/keys/:key', auth.requireKey, keys.revoke);
 };

@@ -3,6 +3,7 @@
 var
   crypto = require('crypto'),
   async = require('async'),
+  restify = require('restify'),
   config = require('./config'),
   connection = require('./connection'),
   logging = require('./logging');
@@ -37,7 +38,7 @@ function store_key(name, result, callback) {
  * @description Remove an API key from Mongo.
  */
 function remove_key(key, callback) {
-  connection.db.collection("api_keys").deleteOne({ apikey: key}, function (err) {
+  connection.db.collection("api_keys").deleteOne({ apikey: key }, function (err) {
     if (err) return callback(err);
 
     callback(null);
@@ -50,8 +51,7 @@ exports.issue = function(req, res, next) {
   if (!name) {
     log.warn("Attempt to issue an API key without a name.");
 
-    res.json(400, { error: "You must specify a name for the API key" });
-    return next();
+    return next(new restify.MissingParameterError("You must specify a name for the API key"));
   }
 
   log.info("Issuing an API key for [" + name + "]");
@@ -60,12 +60,7 @@ exports.issue = function(req, res, next) {
     generate_key,
     async.apply(store_key, name)
   ], function (err, result) {
-    if (err) {
-      log.error("Unable to issue an API key.", err);
-
-      res.json(500, { error: "Unable to issue an API key!" });
-      return next();
-    }
+    next.ifError(err);
 
     res.json(200, { apikey: result.apikey });
     next();
@@ -73,15 +68,16 @@ exports.issue = function(req, res, next) {
 };
 
 exports.revoke = function(req, res, next) {
-  log.info("Revoking an API key");
+  if (req.apikey === req.params.key) {
+    log.warn("Attempt to revoke the admin key.");
+
+    return next(new restify.InvalidArgumentError("You cannot revoke your own API key."));
+  }
+
+  log.info("Revoking an API key.");
 
   remove_key(req.params.key, function (err) {
-    if (err) {
-      log.error("Unable to revoke an API key.", err);
-
-      res.json(500, { error: "Unable to revoke an API key"});
-      return next();
-    }
+    next.ifError(err);
 
     res.send(204);
     next();

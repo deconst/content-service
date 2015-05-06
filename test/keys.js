@@ -50,7 +50,11 @@ describe("/keys", function () {
       request(server.create())
         .post("/keys")
         .set("Authorization", 'deconst apikey="12345"')
-        .expect(400, done);
+        .expect(409)
+        .expect({
+          code: "MissingParameter",
+          message: "You must specify a name for the API key"
+        }, done);
     });
 
     it("requires authentication", function (done) {
@@ -103,6 +107,13 @@ describe("/keys", function () {
         done);
     });
 
-    it("doesn't allow admins to revoke their own key");
+    it("doesn't allow admins to revoke their own key", function (done) {
+      request(server.create())
+        .delete("/keys/" + authhelper.APIKEY_ADMIN)
+        .set("Authorization", authhelper.AUTH_ADMIN)
+        .expect(409)
+        .expect("Content-Type", "application/json")
+        .expect({ code: "InvalidArgument", message: "You cannot revoke your own API key." }, done);
+    });
   });
 });

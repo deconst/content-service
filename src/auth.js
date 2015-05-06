@@ -38,10 +38,9 @@ var parse_auth = function (auth, callback) {
  *   recognized, or if admin_only is true but the key is not an admin key.
  */
 var locate_keyname = function (admin_only, key, callback) {
-
   // Always accept the admin's API key.
   if (key === config.admin_apikey()) {
-    return callback(null, "administrator");
+    return callback(null, { key: key, name: "administrator"});
   }
 
   if (admin_only) {
@@ -60,7 +59,7 @@ var locate_keyname = function (admin_only, key, callback) {
       log.error("Expected one API key document, but got " + docs.length + ".", docs);
     }
 
-    callback(null, docs[0].name);
+    callback(null, { key: key, name: docs[0].name});
   });
 };
 
@@ -74,11 +73,12 @@ var create_apikey_handler = function (admin_only) {
     async.waterfall([
       async.apply(parse_auth, req.authorization),
       async.apply(locate_keyname, admin_only)
-    ], function (err, name) {
+    ], function (err, result) {
       next.ifError(err);
 
-      log.debug("Request authenticated as [" + name + "]");
-      req.apikey_name = name;
+      log.debug("Request authenticated as [" + result.name + "]");
+      req.apikey = result.key;
+      req.apikey_name = result.name;
       next();
     });
   };

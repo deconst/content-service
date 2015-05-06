@@ -17,6 +17,6 @@ exports.loadRoutes = function (server) {
 
   server.post('/assets', restify.bodyParser(), restify.queryParser(), assets.accept);
 
-  server.post('/keys', auth.requireKey, restify.queryParser(), keys.issue);
-  server.del('/keys/:key', auth.requireKey, keys.revoke);
+  server.post('/keys', auth.require_admin, restify.queryParser(), keys.issue);
+  server.del('/keys/:key', auth.require_admin, keys.revoke);
 };

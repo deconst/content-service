@@ -6,7 +6,11 @@ var
 
 exports.APIKEY_ADMIN = "12345";
 
+exports.AUTH_ADMIN = 'deconst apikey="' + exports.APIKEY_ADMIN + '"';
+
 exports.APIKEY_USER = "54321";
+
+exports.AUTH_USER = 'deconst apikey="' + exports.APIKEY_USER + '"';
 
 /**
  * @description Populate the DB mock and the application environment to recognize the fixture
@@ -44,7 +48,7 @@ exports.ensureAuthIsRequired = function (action, done) {
  */
 exports.ensureAdminIsRequired = function (action, done) {
   action
-    .set("Authorization", 'deconst apikey="' + exports.APIKEY_USER + '"')
+    .set("Authorization", exports.AUTH_USER)
     .expect(401)
     .expect("Content-Type", "application/json")
     .expect({ code: "UnauthorizedError", message: "Only admins may access this endpoint." }, done);

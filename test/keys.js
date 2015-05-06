@@ -59,7 +59,11 @@ describe("/keys", function () {
         done);
     });
 
-    it("prevents non-admins from issuing keys");
+    it("prevents non-admins from issuing keys", function (done) {
+      authhelper.ensureAdminIsRequired(
+        request(server.create()).post("/keys?named=mine"),
+        done);
+    });
   });
 
   describe("DELETE", function () {
@@ -69,7 +73,7 @@ describe("/keys", function () {
 
       request(server.create())
         .delete("/keys/54321")
-        .set("Authorization", 'deconst apikey="12345"')
+        .set("Authorization", authhelper.AUTH_ADMIN)
         .expect(204)
         .expect(function () {
           var

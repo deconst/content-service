@@ -154,7 +154,7 @@ Issue a newly generated API key. The provided human-friendly name will be used t
 
 ```json
 {
-  "apikey": "6aa856c50e5c8895020ef8d359d29f5d0a41696cdc767fdbce9cabed73fa81bfd387ffea0e01d295abc3c5117e87df6bbd28e21e3314803247692bafccd8ef6b09978aacebac30b758893ec232600599aaf78f279648e8c86c35658ff24579b73884883f0af4bc5f85de25ee776307253fcbd6e5c6d9b16fa414c0f9e167478f"
+  "apikey": "6aa856c50e5c8895020ef8d35..."
 }
 ```
 

@@ -3,11 +3,11 @@
  */
 
 var
-  restify = require("restify"),
   request = require("supertest"),
   expect = require("chai").expect,
   connection = require("../src/connection"),
   connmocks = require("./mock/connection"),
+  authhelper = require("./helpers/auth"),
   server = require("../src/server");
 
 describe("/content", function () {
@@ -15,6 +15,7 @@ describe("/content", function () {
 
   beforeEach(function () {
     mocks = connmocks.install(connection);
+    authhelper.install();
   });
 
   describe("#store", function () {
@@ -22,6 +23,7 @@ describe("/content", function () {
     it("persists new content into Cloud Files", function (done) {
       request(server.create())
         .put("/content/foo%26bar")
+        .set("Authorization", authhelper.AUTH_USER)
         .set("Content-Type", "application/json")
         .set("Accept", "application/json")
         .send('{ "something": "body" }')
@@ -35,6 +37,14 @@ describe("/content", function () {
 
           done();
         });
+    });
+
+    it("requires authentication", function (done) {
+      authhelper.ensureAuthIsRequired(
+        request(server.create())
+          .put("/content/something")
+          .send({ thing: "stuff" }),
+        done);
     });
 
   });
@@ -63,7 +73,8 @@ describe("/content", function () {
 
       request(server.create())
         .delete("/content/foo%26bar")
-        .expect(200)
+        .set("Authorization", authhelper.AUTH_USER)
+        .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 
@@ -73,6 +84,13 @@ describe("/content", function () {
 
           done();
         });
+    });
+
+    it("requires authentication", function (done) {
+      authhelper.ensureAuthIsRequired(
+        request(server.create())
+          .delete("/content/foo%26bar"),
+        done);
     });
 
   });

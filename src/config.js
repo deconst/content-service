@@ -9,6 +9,7 @@ var configuration = {
   rackspace_username: null,
   rackspace_apikey: null,
   rackspace_region: null,
+  admin_apikey: null,
   content_container: null,
   asset_container: null,
   mongodb_url: null,

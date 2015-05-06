@@ -82,7 +82,6 @@ exports.retrieve = function (req, res, next) {
       return;
     }
 
-    res.status(200);
     res.json(doc);
     next();
   });
@@ -100,7 +99,6 @@ exports.store = function (req, res, next) {
   });
 
   dest.on('success', function () {
-    res.status(200);
     res.send();
     next();
   });
@@ -120,12 +118,10 @@ exports.delete = function (req, res, next) {
     if (err) {
       res.status(err.statusCode);
       res.send();
-      next();
-      return;
+      return next();
     }
 
-    res.status(200);
-    res.send();
+    res.send(204);
     next();
   });
 };

@@ -68,7 +68,29 @@ exports.install = function (connection) {
     add_collection: function (name, contents) {
       var collection = {
         find: function () { return collection; },
-        toArray: function (callback) { callback(null, contents); }
+        insertOne: function (doc, callback) {
+          contents.push(doc);
+
+          if (callback) callback(null, mock_db);
+        },
+        deleteOne: function (filter, callback) {
+          var resultIndex = -1;
+          contents.forEach(function (each, index) {
+            if (filter.apikey === each.apikey) {
+              resultIndex = index;
+            }
+          });
+
+          if (resultIndex !== -1) {
+            contents.splice(resultIndex, 1);
+          }
+
+          if (callback) callback(null);
+        },
+        toArray: function (callback) {
+          if (callback) callback(null, contents);
+          return contents;
+        }
       };
       this.collections[name] = collection;
     },

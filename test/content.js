@@ -74,7 +74,7 @@ describe("/content", function () {
       request(server.create())
         .delete("/content/foo%26bar")
         .set("Authorization", authhelper.AUTH_USER)
-        .expect(200)
+        .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 

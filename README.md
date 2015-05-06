@@ -143,3 +143,35 @@ If the query parameter `named=true` is provided, each asset's CDN URI will also 
   "file2.css": "https://assets.horse/url/for/file2-d2da57e04b0818f7e3dd18da3b73c9b54a73cbe5.css"
 }
 ```
+
+### `POST /keys?named=:name`
+
+**(Authorization required: admin only)**
+
+Issue a newly generated API key. The provided human-friendly name will be used to log actions performed with this key.
+
+*Response: Successful*
+
+```json
+{
+  "apikey": "6aa856c50e5c8895020ef8d359d29f5d0a41696cdc767fdbce9cabed73fa81bfd387ffea0e01d295abc3c5117e87df6bbd28e21e3314803247692bafccd8ef6b09978aacebac30b758893ec232600599aaf78f279648e8c86c35658ff24579b73884883f0af4bc5f85de25ee776307253fcbd6e5c6d9b16fa414c0f9e167478f"
+}
+```
+
+*Response: Unsuccessful*
+
+An HTTP status code of 401 indicates that the request did not contain a valid administrator API key.
+
+### `DELETE /keys/:apikey`
+
+**(Authorization required: admin only)**
+
+Revoke a previously issued user API key.
+
+*Response: Successful*
+
+An HTTP status code of 204 indicates that the API key will no longer be valid.
+
+*Response: Unsuccessful*
+
+An HTTP status code of 401 indicates that the request did not contain a valid administrator API key. A 409 is generated if an administrator attempts to revoke their own key.

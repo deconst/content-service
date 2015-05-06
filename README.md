@@ -92,6 +92,20 @@ The request payload must be a valid Deconst metadata envelope in JSON form.
 
 An HTTP status of 200 and an empty response body will be returned when content is accepted successfully.
 
+### `DELETE /content/:id`
+
+**(Authorization required: any user)**
+
+Delete content with a specific URL-encoded *content ID*.
+
+*Response: Successful*
+
+An HTTP status of 204 indicates that the content has been deleted successfully.
+
+*Response: Unsuccessful*
+
+An HTTP status of 404 will be returned if the content ID isn't recognized.
+
 ### `GET /content/:id`
 
 Access previously stored content by its URL-encoded *content ID*.

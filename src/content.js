@@ -91,7 +91,7 @@ exports.retrieve = function (req, res, next) {
  * @description Store new content into the content service.
  */
 exports.store = function (req, res, next) {
-  log.info("Storing content with ID: [" + req.params.id + "]");
+  log.info("(" + req.apikey_name + ") Storing content with ID: [" + req.params.id + "]");
 
   var dest = connection.client.upload({
     container: config.content_container(),
@@ -112,7 +112,7 @@ exports.store = function (req, res, next) {
  * @description Delete a piece of previously stored content by content ID.
  */
 exports.delete = function (req, res, next) {
-  log.info("Deleting content with ID [" + req.params.id + "]");
+  log.info("(" + req.apikey_name + ") Deleting content with ID [" + req.params.id + "]");
 
   connection.client.removeFile(config.content_container(), encodeURIComponent(req.params.id), function (err) {
     if (err) {

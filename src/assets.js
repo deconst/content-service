@@ -124,13 +124,14 @@ exports.accept = function (req, res, next) {
     return asset;
   });
 
+  log.info("(" + req.apikey_name + ") Accepting " + asset_data.length + " asset(s).");
+
   async.map(asset_data, make_asset_handler(req.query.named), function (err, results) {
     if (err) {
-      log.error("Unable to process an asset.", err);
+      log.error("(" + req.apikey_name + ") Unable to process an asset.", err);
 
-      res.status(500);
-      res.send({
-        error: "Unable to upload one or more assets!"
+      res.send(500, {
+        error: "(" + req.apikey_name + ") Unable to upload one or more assets!"
       });
       next();
     }
@@ -139,9 +140,8 @@ exports.accept = function (req, res, next) {
     results.forEach(function (result) {
       summary[result.original] = result.public_url;
     });
-    log.debug("All assets have been processed succesfully.", summary);
+    log.debug("(" + req.apikey_name + ") All assets have been processed succesfully.", summary);
 
-    res.status(200);
     res.send(summary);
     next();
   });

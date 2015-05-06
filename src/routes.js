@@ -12,8 +12,8 @@ exports.loadRoutes = function (server) {
   server.get('/version', version.report);
 
   server.get('/content/:id', content.retrieve);
-  server.put('/content/:id', content.store);
-  server.del('/content/:id', content.delete);
+  server.put('/content/:id', auth.require_key, content.store);
+  server.del('/content/:id', auth.require_key, content.delete);
 
   server.post('/assets', restify.bodyParser(), restify.queryParser(), assets.accept);
 

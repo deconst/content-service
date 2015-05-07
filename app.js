@@ -12,11 +12,9 @@ config.configure(process.env);
 var
   async = require('async'),
   restify = require('restify'),
-  logging = require('./src/logging'),
+  log = require('./src/logging').logger,
   connection = require('./src/connection'),
   server = require('./src/server');
-
-var log = logging.getLogger(config.content_log_level());
 
 connection.setup(function (err) {
   if (err) {

@@ -5,13 +5,11 @@
 var
   restify = require("restify"),
   config = require("./config"),
-  logging = require("./logging"),
+  log = require("./logging").logger,
   routes = require("./routes");
 
 exports.create = function () {
-  var
-    server = restify.createServer(),
-    log = logging.getLogger(config.content_log_level());
+  var server = restify.createServer();
 
   server.name = config.info.name;
 

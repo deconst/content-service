@@ -5,9 +5,7 @@ var
   pkgcloud = require('pkgcloud'),
   mongo = require('mongodb'),
   config = require('./config'),
-  logging = require('./logging');
-
-var log = logging.getLogger(config.content_log_level());
+  log = require('./logging').logger;
 
 /**
  * @description Create a function that asynchronously creates a Rackspace container if it

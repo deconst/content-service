@@ -4,9 +4,7 @@ var
   async = require('async'),
   config = require('./config'),
   connection = require('./connection'),
-  logging = require('./logging');
-
-var log = logging.getLogger(config.content_log_level());
+  log = require('./logging').logger;
 
 /**
  * @description Download the raw metadata envelope from Cloud Files.

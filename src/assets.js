@@ -8,9 +8,7 @@ var
   crypto = require('crypto'),
   config = require('./config'),
   connection = require('./connection'),
-  logging = require('./logging');
-
-var log = logging.getLogger(config.content_log_level());
+  log = require('./logging').logger;
 
 /**
  * @description Calculate a checksum of an uploaded file's contents to generate

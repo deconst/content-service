@@ -23,7 +23,9 @@ connection.setup(function (err) {
     throw err;
   }
 
-  server.create().listen(8080, function () {
-    log.info('%s listening at %s', server.name, server.url);
+  var app = server.create();
+
+  app.listen(8080, function () {
+    log.info('%s listening at %s', app.name, app.url);
   });
 });

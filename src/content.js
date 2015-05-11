@@ -2,6 +2,7 @@
 
 var
   async = require('async'),
+  _ = require('lodash'),
   config = require('./config'),
   connection = require('./connection'),
   log = require('./logging').logger;
@@ -61,6 +62,36 @@ function inject_asset_vars(doc, callback) {
 }
 
 /**
+ * @description Store an incoming metadata envelope within Cloud Files.
+ */
+function store_envelope(doc, callback) {
+  var dest = connection.client.upload({
+    container: config.content_container(),
+    remote: encodeURIComponent(doc.content_id)
+  });
+
+  dest.end(JSON.stringify(doc.envelope), function (err) {
+    if (err) return callback(err);
+
+    callback(null, doc);
+  });
+}
+
+/**
+ * @description Persist selected attributes from a metadata envelope in an indexed Mongo collection.
+ */
+function index_envelope(doc, callback) {
+  var subdoc = _.pick(doc.envelope, ["title", "publish_date", "tags", "categories"]);
+
+  subdoc.content_id = doc.content_id;
+
+  connection.db.collection("envelopes").insertOne(subdoc, function (err, db) {
+    if (err) return callback(err);
+    callback(null, doc);
+  });
+}
+
+/**
  * @description Retrieve content from the store by content ID.
  */
 exports.retrieve = function (req, res, next) {
@@ -91,19 +122,20 @@ exports.retrieve = function (req, res, next) {
 exports.store = function (req, res, next) {
   log.info("(" + req.apikey_name + ") Storing content with ID: [" + req.params.id + "]");
 
-  var dest = connection.client.upload({
-    container: config.content_container(),
-    remote: encodeURIComponent(req.params.id)
-  });
+  var doc = {
+    content_id: req.params.id,
+    envelope: req.body
+  };
 
-  dest.on('success', function () {
-    res.send();
+  async.waterfall([
+    async.apply(store_envelope, doc),
+    index_envelope
+  ], function (err, doc) {
+    next.ifError(err);
+
+    res.send(204);
     next();
   });
-
-  // For now, we're just going to write the body directly up to Cloud Files.
-  // Longer term, we'll validate its structure and use async.parallel to upload it to different stores.
-  req.pipe(dest);
 };
 
 /**

@@ -27,7 +27,7 @@ describe("/content", function () {
         .set("Content-Type", "application/json")
         .set("Accept", "application/json")
         .send('{ "something": "body" }')
-        .expect(200)
+        .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 
@@ -45,6 +45,37 @@ describe("/content", function () {
           .put("/content/something")
           .send({ thing: "stuff" }),
         done);
+    });
+
+    it("indexes content by category", function (done) {
+      var doc = {
+        title: "title goes here",
+        publish_date: "Tue, 05 Aug 2014 23:59:00 -0400",
+        body: "something",
+        tags: ["tag1", "tag2"],
+        categories: ["cat1", "cat2"]
+      };
+
+      request(server.create())
+        .put("/content/tagged")
+        .set("Authorization", authhelper.AUTH_USER)
+        .send(doc)
+        .expect(204)
+        .end(function (err, res) {
+          if (err) return done(err);
+
+          var contents = mocks.mock_db.collection("envelopes").find().toArray();
+
+          expect(contents).to.deep.include({
+            content_id: "tagged",
+            title: "title goes here",
+            publish_date: "Tue, 05 Aug 2014 23:59:00 -0400",
+            tags: ["tag1", "tag2"],
+            categories: ["cat1", "cat2"]
+          });
+
+          done();
+        });
     });
 
   });

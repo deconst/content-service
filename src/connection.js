@@ -70,8 +70,8 @@ function mongo_init(callback) {
 
     // Create indices on collections as necessary.
     async.parallel([
-      function (callback) { envelopes.createIndex("tags", callback); },
-      function (callback) { envelopes.createIndex("categories", callback); },
+      function (callback) { envelopes.createIndex("tags", { sparse: true }, callback); },
+      function (callback) { envelopes.createIndex("categories", { sparse: true }, callback); },
     ], function (err, db) {
       if (err) return callback(err);
 

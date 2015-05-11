@@ -14,20 +14,20 @@ var
  * @description Calculate a checksum of an uploaded file's contents to generate
  *   the fingerprinted asset name.
  */
-function fingerprint_asset(asset, callback) {
+function fingerprintAsset(asset, callback) {
   var
     sha256sum = crypto.createHash('sha256'),
-    asset_file = fs.createReadStream(asset.path),
+    assetFile = fs.createReadStream(asset.path),
     chunks = [];
 
-  asset_file.on('data', function (chunk) {
+  assetFile.on('data', function (chunk) {
     sha256sum.update(chunk);
     chunks.push(chunk);
   });
 
-  asset_file.on('error', callback);
+  assetFile.on('error', callback);
 
-  asset_file.on('end', function() {
+  assetFile.on('end', function() {
     var
       digest = sha256sum.digest('hex'),
       ext = path.extname(asset.name),
@@ -49,7 +49,7 @@ function fingerprint_asset(asset, callback) {
 /**
  * @description Upload an asset's contents to the asset container.
  */
-function publish_asset(asset, callback) {
+function publishAsset(asset, callback) {
   var up = connection.client.upload({
     container: config.asset_container(),
     remote: asset.filename,
@@ -79,7 +79,7 @@ function publish_asset(asset, callback) {
  *   asset will be included in all outgoing metadata envelopes, for use by
  *   layouts.
  */
-function name_asset(asset, callback) {
+function nameAsset(asset, callback) {
   log.debug("Naming asset [" + asset.original + "] as [" + asset.key + "].");
 
   connection.db.collection("layout_assets").updateOne(
@@ -93,17 +93,17 @@ function name_asset(asset, callback) {
 /**
  * @description Create and return a function that processes a single asset.
  */
-function make_asset_handler(should_name) {
+function makeAssetHandler(should_name) {
   return function(asset, callback) {
     log.debug("Processing uploaded asset [" + asset.name + "].");
 
     var steps = [
-      async.apply(fingerprint_asset, asset),
-      publish_asset
+      async.apply(fingerprintAsset, asset),
+      publishAsset
     ];
 
     if (should_name) {
-      steps.push(name_asset);
+      steps.push(nameAsset);
     }
 
     async.waterfall(steps, callback);
@@ -116,20 +116,20 @@ function make_asset_handler(should_name) {
  *   map of the provided filenames to their final, public URLs.
  */
 exports.accept = function (req, res, next) {
-  var asset_data = Object.getOwnPropertyNames(req.files).map(function (key) {
+  var assetData = Object.getOwnPropertyNames(req.files).map(function (key) {
     var asset = req.files[key];
     asset.key = key;
     return asset;
   });
 
-  log.info("(" + req.apikey_name + ") Accepting " + asset_data.length + " asset(s).");
+  log.info("(" + req.apikeyName + ") Accepting " + assetData.length + " asset(s).");
 
-  async.map(asset_data, make_asset_handler(req.query.named), function (err, results) {
+  async.map(assetData, makeAssetHandler(req.query.named), function (err, results) {
     if (err) {
-      log.error("(" + req.apikey_name + ") Unable to process an asset.", err);
+      log.error("(" + req.apikeyName + ") Unable to process an asset.", err);
 
       res.send(500, {
-        error: "(" + req.apikey_name + ") Unable to upload one or more assets!"
+        error: "(" + req.apikeyName + ") Unable to upload one or more assets!"
       });
       next();
     }

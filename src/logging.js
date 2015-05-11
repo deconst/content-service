@@ -21,7 +21,7 @@ exports.logger = new winston.Logger({
   },
   transports: [
     new winston.transports.Console({
-      level: config.content_log_level().toLowerCase(),
+      level: config.contentLogLevel().toLowerCase(),
       prettyPrint: true,
       colorize: true,
       timestamp: true

@@ -27,7 +27,7 @@ describe("/content", function () {
         .set("Content-Type", "application/json")
         .set("Accept", "application/json")
         .send('{ "something": "body" }')
-        .expect(200)
+        .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 
@@ -60,7 +60,7 @@ describe("/content", function () {
         .put("/content/tagged")
         .set("Authorization", authhelper.AUTH_USER)
         .send(doc)
-        .expect(200)
+        .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 

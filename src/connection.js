@@ -55,20 +55,30 @@ function refresh(client, container_name, logical_name, callback) {
 }
 
 /**
- * @description Authenticate to MongoDB and export the active MongoDB connection as "db".
+ * @description Authenticate to MongoDB, export the active MongoDB connection as "db", and
+ *   perform any necessary one-time initialization.
  */
-function mongo_auth(callback) {
+function mongo_init(callback) {
   mongo.MongoClient.connect(config.mongodb_url(), function (err, db) {
-    if (err) {
-      callback(err);
-      return;
-    }
+    if (err) return callback(err);
 
     log.debug("Connected to MongoDB database at [" + config.mongodb_url() + "].");
 
     exports.db = db;
 
-    callback(null);
+    var envelopes = db.collection("envelopes");
+
+    // Create indices on collections as necessary.
+    async.parallel([
+      function (callback) { envelopes.createIndex("tags", callback); },
+      function (callback) { envelopes.createIndex("categories", callback); },
+    ], function (err, db) {
+      if (err) return callback(err);
+
+      log.debug("All indices created.");
+
+      callback(null);
+    });
   });
 }
 
@@ -83,6 +93,6 @@ exports.setup = function (callback) {
   async.parallel([
     make_container_creator(client, config.content_container(), "content_container", false),
     make_container_creator(client, config.asset_container(), "asset_container", true),
-    mongo_auth
+    mongo_init
   ], callback);
 };

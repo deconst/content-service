@@ -3,14 +3,16 @@
 var _ = require('lodash');
 
 var createResultSet = function (results) {
+  var contents = results;
+
   return {
     sort: function (attr) {
       return this;
     },
 
     toArray: function (callback) {
-      if (callback) callback(null, results);
-      return results;
+      if (callback) callback(null, contents);
+      return contents;
     }
   };
 };

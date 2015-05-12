@@ -69,7 +69,7 @@ describe("/content", function () {
           var contents = mocks.mockDB.collection("envelopes").find().toArray();
 
           expect(contents).to.deep.include({
-            content_id: "tagged",
+            contentID: "tagged",
             title: "title goes here",
             publish_date: "Tue, 05 Aug 2014 23:59:00 -0400",
             tags: ["tag1", "tag2"],
@@ -107,11 +107,11 @@ describe("/content", function () {
       });
 
       mocks.mockDB.addCollection("envelopes", [
-        { categories: ["sample", "other"], title: "zero", content_id: "id0" },
-        { categories: ["sample", "blerp"], title: "one", content_id: "id1" },
-        { categories: ["nope", "none"], tags: ["uhuh"], title: "two", content_id: "id2" },
-        { tags: ["important"], title: "three", content_id: "id3" },
-        { tags: ["important", "extra"], title: "four", content_id: "id4" }
+        { categories: ["sample", "other"], title: "zero", contentID: "id0" },
+        { categories: ["sample", "blerp"], title: "one", contentID: "id1" },
+        { categories: ["nope", "none"], tags: ["uhuh"], title: "two", contentID: "id2" },
+        { tags: ["important"], title: "three", contentID: "id3" },
+        { tags: ["important", "extra"], title: "four", contentID: "id4" }
       ]);
 
       request(server.create())
@@ -125,12 +125,12 @@ describe("/content", function () {
           },
           results: {
             somename: [
-              { categories: ["sample", "other"], title: "zero", content_id: "id0" },
-              { categories: ["sample", "blerp"], title: "one", content_id: "id1" }
+              { categories: ["sample", "other"], title: "zero", contentID: "id0" },
+              { categories: ["sample", "blerp"], title: "one", contentID: "id1" }
             ],
             anothername: [
-              { tags: ["important"], title: "three", content_id: "id3" },
-              { tags: ["important", "extra"], title: "four", content_id: "id4" }
+              { tags: ["important"], title: "three", contentID: "id3" },
+              { tags: ["important", "extra"], title: "four", contentID: "id4" }
             ]
           }
         }, done);

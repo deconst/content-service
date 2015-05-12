@@ -20,6 +20,11 @@ exports.create = function () {
     })
     .use(restify.fullResponse());
 
+  server.on("uncaughtException", function (req, res, route, err) {
+    log.error(err.stack);
+    res.send(err);
+  });
+
   routes.loadRoutes(server);
 
   return server;

@@ -141,10 +141,15 @@ function indexEnvelope(doc, callback) {
 
   subdoc.contentID = doc.contentID;
 
-  connection.db.collection("envelopes").insertOne(subdoc, function (err, db) {
-    if (err) return callback(err);
-    callback(null, doc);
-  });
+  connection.db.collection("envelopes").findOneAndReplace(
+    { contentID: subdoc.contentID },
+    subdoc,
+    { upsert: true },
+    function (err) {
+      if (err) return callback(err);
+      callback(null, doc);
+    }
+  );
 }
 
 /**

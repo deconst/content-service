@@ -49,6 +49,42 @@ var createMockCollection = function (db, contents) {
       return createResultSet(results);
     },
 
+    findOneAndReplace: function (query, replacement, options, callback) {
+      var
+        results = [],
+        resultIndex = -1;
+
+      for (var i = 0; i < contents.length; i++) {
+        var each = contents[i];
+
+        var match =
+          singleMatch(each.contentID, query.contentID);
+
+        if (match) {
+          results.push(each);
+          resultIndex = i;
+        }
+      }
+
+      if (results.length > 1) {
+        console.error("Query results:", results);
+
+        return callback(new Error("Expected a single result but found multiple."));
+      }
+
+      if (resultIndex === -1) {
+        if (options.upsert) {
+          contents.push(replacement);
+          callback(null, replacement);
+        } else {
+          callback(null, null);
+        }
+      } else {
+        contents[resultIndex] = replacement;
+        callback(null, replacement);
+      }
+    },
+
     insertOne: function (doc, callback) {
       contents.push(doc);
 

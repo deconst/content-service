@@ -5,8 +5,8 @@
 var
   restify = require("restify"),
   config = require("./config"),
-  log = require("./logging").logger,
-  routes = require("./routes");
+  routes = require("./routes"),
+  log = require("./logging").getLogger();
 
 exports.create = function () {
   var server = restify.createServer();
@@ -19,6 +19,11 @@ exports.create = function () {
       next();
     })
     .use(restify.fullResponse());
+
+  server.on("uncaughtException", function (req, res, route, err) {
+    log.error(err.stack);
+    res.send(err);
+  });
 
   routes.loadRoutes(server);
 

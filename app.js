@@ -12,7 +12,7 @@ config.configure(process.env);
 var
   async = require('async'),
   restify = require('restify'),
-  log = require('./src/logging').logger,
+  log = require('./src/logging').getLogger(),
   connection = require('./src/connection'),
   server = require('./src/server');
 

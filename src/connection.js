@@ -5,35 +5,35 @@ var
   pkgcloud = require('pkgcloud'),
   mongo = require('mongodb'),
   config = require('./config'),
-  log = require('./logging').logger;
+  log = require('./logging').getLogger();
 
 /**
  * @description Create a function that asynchronously creates a Rackspace container if it
  *   doesn't already exist.
  */
-function make_container_creator(client, container_name, logical_name, cdn) {
+function makeContainerCreator(client, containerName, logicalName, cdn) {
   return function (callback) {
-    var report_back = function (err, container) {
-      exports[logical_name] = container;
+    var reportBack = function (err, container) {
+      exports[logicalName] = container;
 
       log.debug("Container [" + container.name + "] now exists.");
 
       callback(null, container);
     };
 
-    var cdn_enable = function (err, container) {
+    var cdnEnable = function (err, container) {
       log.debug("Enabling CDN on container [" + container.name + "].");
 
-      client.setCdnEnabled(container, { ttl: 31536000, enabled: true }, report_back);
+      client.setCdnEnabled(container, { ttl: 31536000, enabled: true }, reportBack);
     };
 
-    var handle_creation = cdn ? cdn_enable : report_back;
+    var handleCreation = cdn ? cdnEnable : reportBack;
 
-    log.info("Ensuring that container [" + container_name + "] exists.");
+    log.info("Ensuring that container [" + containerName + "] exists.");
 
     // Instead of checking if the container exists first, we try to create it, and
     // if it already exists, we get a no-op (202) and move on.
-    client.createContainer({ name: container_name }, handle_creation);
+    client.createContainer({ name: containerName }, handleCreation);
   };
 }
 
@@ -41,14 +41,14 @@ function make_container_creator(client, container_name, logical_name, cdn) {
  * @description Utility function to ensure that the exported Container model includes CDN URIs when
  *   it's supposed to.
  */
-function refresh(client, container_name, logical_name, callback) {
-  client.getContainer(container_name, function (err, container) {
+function refresh(client, containerName, logicalName, callback) {
+  client.getContainer(containerName, function (err, container) {
     if (err) {
       callback(err);
       return;
     }
 
-    exports[logical_name] = container;
+    exports[logicalName] = container;
 
     callback(null);
   });
@@ -58,11 +58,11 @@ function refresh(client, container_name, logical_name, callback) {
  * @description Authenticate to MongoDB, export the active MongoDB connection as "db", and
  *   perform any necessary one-time initialization.
  */
-function mongo_init(callback) {
-  mongo.MongoClient.connect(config.mongodb_url(), function (err, db) {
+function mongoInit(callback) {
+  mongo.MongoClient.connect(config.mongodbURL(), function (err, db) {
     if (err) return callback(err);
 
-    log.debug("Connected to MongoDB database at [" + config.mongodb_url() + "].");
+    log.debug("Connected to MongoDB database at [" + config.mongodbURL() + "].");
 
     exports.db = db;
 
@@ -84,15 +84,15 @@ function mongo_init(callback) {
 
 exports.setup = function (callback) {
   var client = pkgcloud.providers.rackspace.storage.createClient({
-    username: config.rackspace_username(),
-    apiKey: config.rackspace_apikey(),
-    region: config.rackspace_region()
+    username: config.rackspaceUsername(),
+    apiKey: config.rackspaceAPIKey(),
+    region: config.rackspaceRegion()
   });
   exports.client = client;
 
   async.parallel([
-    make_container_creator(client, config.content_container(), "content_container", false),
-    make_container_creator(client, config.asset_container(), "asset_container", true),
-    mongo_init
+    makeContainerCreator(client, config.contentContainer(), "content_container", false),
+    makeContainerCreator(client, config.assetContainer(), "asset_container", true),
+    mongoInit
   ], callback);
 };

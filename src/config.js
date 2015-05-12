@@ -2,28 +2,45 @@
 
 var
   pkgcloud = require('pkgcloud'),
-  child_process = require('child_process'),
+  childProcess = require('child_process'),
   info = require('../package.json');
 
 var configuration = {
-  rackspace_username: null,
-  rackspace_apikey: null,
-  rackspace_region: null,
-  admin_apikey: null,
-  content_container: null,
-  asset_container: null,
-  mongodb_url: null,
-  content_log_level: "info"
+  rackspaceUsername: {
+    env: "RACKSPACE_USERNAME"
+  },
+  rackspaceAPIKey: {
+    env: "RACKSPACE_APIKEY"
+  },
+  rackspaceRegion: {
+    env: "RACKSPACE_REGION"
+  },
+  adminAPIKey: {
+    env: "ADMIN_APIKEY"
+  },
+  contentContainer: {
+    env: "CONTENT_CONTAINER"
+  },
+  assetContainer: {
+    env: "ASSET_CONTAINER"
+  },
+  mongodbURL: {
+    env: "MONGODB_URL"
+  },
+  contentLogLevel: {
+    env: "CONTENT_LOG_LEVEL",
+    def: "info"
+  }
 };
 
-var commit = child_process.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
+var commit = childProcess.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
 
 /**
  * @description Create a getter function for the named function.
  */
-function make_getter(setting_name) {
+function makeGetter(settingName) {
   return function () {
-    return configuration[setting_name];
+    return configuration[settingName].value;
   };
 }
 
@@ -31,13 +48,13 @@ exports.configure = function (env) {
   var missing = [];
 
   for (var name in configuration) {
-    var upper = name.toUpperCase();
-    var value = env[upper];
+    var setting = configuration[name];
+    var value = env[setting.env];
 
-    configuration[name] = value || configuration[name];
+    setting.value = value || setting.def;
 
-    if (!configuration[name]) {
-      missing.push(upper);
+    if (!setting.value) {
+      missing.push(setting.env);
     }
   }
 
@@ -56,7 +73,7 @@ exports.configure = function (env) {
 
 // Export "getter" functions for each configuration option.
 for (var name in configuration) {
-  exports[name] = make_getter(name);
+  exports[name] = makeGetter(name);
 }
 
 // Re-export the package.json data and the current git commit.

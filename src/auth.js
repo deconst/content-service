@@ -3,17 +3,17 @@
 var
   async = require("async"),
   restify = require("restify"),
-  log = require("./logging").logger,
   config = require("./config"),
-  connection = require("./connection");
+  connection = require("./connection"),
+  log = require("./logging").getLogger();
 
-var credential_rx = /apikey\s*=\s*"?([^"]+)"?/;
+var credentialRx = /apikey\s*=\s*"?([^"]+)"?/;
 
 /**
  * @description Extract an API key from a request's parsed Authorization header. Emit an error if
  *  no such header is present, or if it's not formed correctly.
  */
-var parse_auth = function (auth, callback) {
+var parseAuth = function (auth, callback) {
   if (!auth || !Object.keys(auth).length) {
     return callback(new restify.UnauthorizedError("An API key is required for this endpoint."));
   }
@@ -22,7 +22,7 @@ var parse_auth = function (auth, callback) {
     return callback(new restify.InvalidHeaderError("Your Authorization header specifies an incorrect scheme."));
   }
 
-  var match = credential_rx.exec(auth.credentials);
+  var match = credentialRx.exec(auth.credentials);
 
   if (!match) {
     return callback(new restify.InvalidHeaderError("Your Authorization header does not include an 'apikey' value."));
@@ -33,20 +33,20 @@ var parse_auth = function (auth, callback) {
 
 /**
  * @description Access the name associated with an API key. Emit an error if the key is not
- *   recognized, or if admin_only is true but the key is not an admin key.
+ *   recognized, or if adminOnly is true but the key is not an admin key.
  */
-var locate_keyname = function (admin_only, key, callback) {
+var locateKeyname = function (adminOnly, key, callback) {
   // Always accept the admin's API key.
-  if (key === config.admin_apikey()) {
+  if (key === config.adminAPIKey()) {
     return callback(null, { key: key, name: "administrator"});
   }
 
-  if (admin_only) {
+  if (adminOnly) {
     return callback(new restify.UnauthorizedError("Only admins may access this endpoint."));
   }
 
   // Check Mongo for non-admin keys.
-  connection.db.collection("api_keys").find({ apikey: key }).toArray(function (err, docs) {
+  connection.db.collection("apiKeys").find({ apikey: key }).toArray(function (err, docs) {
     if (err) return callback(err);
 
     if (!docs.length) {
@@ -62,21 +62,21 @@ var locate_keyname = function (admin_only, key, callback) {
 };
 
 /**
- * @description Create a restify handler that combines parse_auth and locate_keyname to extract and
+ * @description Create a restify handler that combines parseAuth and locateKeyname to extract and
  *   validate an API key from an incoming request. If the API key is valid, its name will be
  *   attached to the request object. Otherwise, an appropriate error will be generated.
  */
-var create_apikey_handler = function (admin_only) {
+var createAPIKeyHandler = function (adminOnly) {
   return function (req, res, next) {
     async.waterfall([
-      async.apply(parse_auth, req.authorization),
-      async.apply(locate_keyname, admin_only)
+      async.apply(parseAuth, req.authorization),
+      async.apply(locateKeyname, adminOnly)
     ], function (err, result) {
       next.ifError(err);
 
       log.debug("Request authenticated as [" + result.name + "]");
       req.apikey = result.key;
-      req.apikey_name = result.name;
+      req.apikeyName = result.name;
       next();
     });
   };
@@ -85,9 +85,9 @@ var create_apikey_handler = function (admin_only) {
 /**
  * @description Require an API key on the request. Return a 401 response if no key is present.
  */
-exports.require_key = [restify.authorizationParser(), create_apikey_handler(false)];
+exports.requireKey = [restify.authorizationParser(), createAPIKeyHandler(false)];
 
 /**
  * @description Require an administrator's API key on the request.
  */
-exports.require_admin = [restify.authorizationParser(), create_apikey_handler(true)];
+exports.requireAdmin = [restify.authorizationParser(), createAPIKeyHandler(true)];

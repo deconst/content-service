@@ -2,6 +2,8 @@
  * Unit tests for the content service.
  */
 
+require("./helpers/before");
+
 var
   request = require("supertest"),
   expect = require("chai").expect,
@@ -31,7 +33,7 @@ describe("/content", function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          var uploaded = mocks.mock_client.uploaded;
+          var uploaded = mocks.mockClient.uploaded;
           expect(uploaded).to.have.length(1);
           expect(uploaded[0].container).to.equal("the-content-container");
 
@@ -64,7 +66,7 @@ describe("/content", function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          var contents = mocks.mock_db.collection("envelopes").find().toArray();
+          var contents = mocks.mockDB.collection("envelopes").find().toArray();
 
           expect(contents).to.deep.include({
             content_id: "tagged",
@@ -83,7 +85,7 @@ describe("/content", function () {
   describe("#retrieve", function () {
 
     it("retrieves existing content from Cloud Files", function (done) {
-      mocks.mock_client.content["foo%26bar"] = '{ "expected": "json" }';
+      mocks.mockClient.content["foo%26bar"] = '{ "expected": "json" }';
 
       request(server.create())
         .get("/content/foo%26bar")
@@ -100,7 +102,7 @@ describe("/content", function () {
   describe("#delete", function () {
 
     it("deletes content from Cloud Files", function (done) {
-      mocks.mock_client.content["foo%26bar"] = '{ "existing": "json" }';
+      mocks.mockClient.content["foo%26bar"] = '{ "existing": "json" }';
 
       request(server.create())
         .delete("/content/foo%26bar")
@@ -109,7 +111,7 @@ describe("/content", function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          var deletions = mocks.mock_client.deleted;
+          var deletions = mocks.mockClient.deleted;
           expect(deletions).to.have.length(1);
           expect(deletions[0]).to.equal("foo%26bar");
 

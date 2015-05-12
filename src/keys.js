@@ -6,12 +6,12 @@ var
   restify = require('restify'),
   config = require('./config'),
   connection = require('./connection'),
-  log = require('./logging').logger;
+  log = require('./logging').getLogger();
 
 /**
  * @description Generate a fresh API key.
  */
-function generate_key(callback) {
+function generateKey(callback) {
   crypto.randomBytes(128, function (err, buf) {
     if (err) return callback(err);
 
@@ -22,10 +22,10 @@ function generate_key(callback) {
 /**
  * @description Store an API key in Mongo.
  */
-function store_key(name, result, callback) {
+function storeKey(name, result, callback) {
   var doc = { name: name, apikey: result.apikey };
 
-  connection.db.collection("api_keys").insertOne(doc, function (err) {
+  connection.db.collection("apiKeys").insertOne(doc, function (err) {
     if (err) return callback(err);
 
     callback(null, { apikey: result.apikey });
@@ -35,8 +35,8 @@ function store_key(name, result, callback) {
 /**
  * @description Remove an API key from Mongo.
  */
-function remove_key(key, callback) {
-  connection.db.collection("api_keys").deleteOne({ apikey: key }, function (err) {
+function removeKey(key, callback) {
+  connection.db.collection("apiKeys").deleteOne({ apikey: key }, function (err) {
     if (err) return callback(err);
 
     callback(null);
@@ -55,8 +55,8 @@ exports.issue = function(req, res, next) {
   log.info("Issuing an API key for [" + name + "]");
 
   async.waterfall([
-    generate_key,
-    async.apply(store_key, name)
+    generateKey,
+    async.apply(storeKey, name)
   ], function (err, result) {
     next.ifError(err);
 
@@ -74,7 +74,7 @@ exports.revoke = function(req, res, next) {
 
   log.info("Revoking an API key.");
 
-  remove_key(req.params.key, function (err) {
+  removeKey(req.params.key, function (err) {
     next.ifError(err);
 
     res.send(204);

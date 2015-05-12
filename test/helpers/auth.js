@@ -30,7 +30,7 @@ exports.install = function () {
 
   var doc = { name: "user", apikey: exports.APIKEY_USER };
 
-  connection.db.collection("api_keys").insertOne(doc);
+  connection.db.collection("apiKeys").insertOne(doc);
 };
 
 /**

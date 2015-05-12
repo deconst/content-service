@@ -12,15 +12,15 @@ exports.loadRoutes = function (server) {
   server.get('/version', version.report);
 
   server.get('/content/:id', content.retrieve);
-  server.put('/content/:id', auth.require_key, restify.bodyParser(), content.store);
-  server.del('/content/:id', auth.require_key, content.delete);
+  server.put('/content/:id', auth.requireKey, restify.bodyParser(), content.store);
+  server.del('/content/:id', auth.requireKey, content.delete);
 
   server.post('/assets',
-    auth.require_key,
+    auth.requireKey,
     restify.bodyParser(),
     restify.queryParser(),
     assets.accept);
 
-  server.post('/keys', auth.require_admin, restify.queryParser(), keys.issue);
-  server.del('/keys/:key', auth.require_admin, keys.revoke);
+  server.post('/keys', auth.requireAdmin, restify.queryParser(), keys.issue);
+  server.del('/keys/:key', auth.requireAdmin, keys.revoke);
 };

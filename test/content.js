@@ -100,8 +100,8 @@ describe("/content", function () {
     it("collects related documents when a 'queries' attribute is present", function (done) {
       mocks.mockClient.content.hasqueries = JSON.stringify({
         queries: {
-          somename: { category: "sample" },
-          anothername: { tag: "important" }
+          somename: { categories: "sample" },
+          anothername: { tags: "important" }
         },
         body: ".."
       });

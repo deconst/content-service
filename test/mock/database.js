@@ -40,8 +40,8 @@ var createMockCollection = function (db, contents) {
 
         var match =
           singleMatch(each.apikey, query.apikey) ||
-          arrayMatch(each.categories, query.category) ||
-          arrayMatch(each.tags, query.tag);
+          arrayMatch(each.categories, query.categories) ||
+          arrayMatch(each.tags, query.tags);
 
         if (match) results.push(each);
       }

@@ -82,39 +82,49 @@ function handleQueries(doc, callback) {
 
   log.debug("Processing " + queries.length + " envelope queries.");
 
-  async.map(
-    queries,
-    function (query, callback) {
-      var
-        order = query.$order || { publish_date: -1 },
-        skip = query.$skip,
-        limit = query.$limit;
+  async.map(queries, handleQuery, function (err, results) {
+    if (err) return callback(err);
 
-      if (query.$query) {
-        query = query.$query;
-        delete query.$query;
-      }
-      delete query.$skip;
-      delete query.$limit;
+    doc.results = {};
+    for (var i = 0; i < results.length; i++) {
+      doc.results[queryNames[i]] = results[i];
+    }
 
-      var cursor = connection.db.collection("envelopes").find(query);
-
-      cursor.sort(order);
-      if (skip) { cursor.skip(skip); }
-      if (limit) { cursor.limit(limit); }
-
-      cursor.toArray(callback);
-    },
-    function (err, results) {
-      if (err) return callback(err);
-
-      doc.results = {};
-      for (var i = 0; i < results.length; i++) {
-        doc.results[queryNames[i]] = results[i];
-      }
-
-      callback(null, doc);
+    callback(null, doc);
   });
+}
+
+/**
+ * @description Perform a single metadata envelope related-document query.
+ */
+function handleQuery(query, callback) {
+  var
+    order = query.$order || { publish_date: -1 },
+    skip = query.$skip,
+    limit = query.$limit;
+
+  if (query.$query) {
+    query = query.$query;
+    delete query.$query;
+  }
+  delete query.$skip;
+  delete query.$limit;
+
+  var cursor = connection.db.collection("envelopes").find(query);
+
+  cursor.sort(order);
+  if (skip) { cursor.skip(skip); }
+  if (limit) { cursor.limit(limit); }
+
+  cursor.map(function (original) {
+    if (original.publish_date) {
+      original.publish_date = original.publish_date.toUTCString();
+    }
+
+    return original;
+  });
+
+  cursor.toArray(callback);
 }
 
 /**
@@ -137,9 +147,15 @@ function storeEnvelope(doc, callback) {
  * @description Persist selected attributes from a metadata envelope in an indexed Mongo collection.
  */
 function indexEnvelope(doc, callback) {
-  var subdoc = _.pick(doc.envelope, ["title", "publish_date", "tags", "categories"]);
+  var subdoc = _.pick(doc.envelope, ["title", "tags", "categories"]);
 
   subdoc.contentID = doc.contentID;
+  if (doc.envelope.publish_date) {
+    var parsed_date = Date.parse(doc.envelope.publish_date);
+    if (! Number.isNaN(parsed_date)) {
+      subdoc.publish_date = parsed_date;
+    }
+  }
 
   connection.db.collection("envelopes").findOneAndReplace(
     { contentID: subdoc.contentID },

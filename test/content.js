@@ -71,7 +71,7 @@ describe("/content", function () {
           expect(contents).to.deep.include({
             contentID: "tagged",
             title: "title goes here",
-            publish_date: "Tue, 05 Aug 2014 23:59:00 -0400",
+            publish_date: Date.parse("Tue, 05 Aug 2014 23:59:00 -0400"),
             tags: ["tag1", "tag2"],
             categories: ["cat1", "cat2"]
           });

@@ -85,7 +85,25 @@ function handleQueries(doc, callback) {
   async.map(
     queries,
     function (query, callback) {
-      connection.db.collection("envelopes").find(query).toArray(callback);
+      var
+        order = query.$order || { publish_date: -1 },
+        skip = query.$skip,
+        limit = query.$limit;
+
+      if (query.$query) {
+        query = query.$query;
+        delete query.$query;
+      }
+      delete query.$skip;
+      delete query.$limit;
+
+      var cursor = connection.db.collection("envelopes").find(query);
+
+      cursor.sort(order);
+      if (skip) { cursor.skip(skip); }
+      if (limit) { cursor.limit(limit); }
+
+      cursor.toArray(callback);
     },
     function (err, results) {
       if (err) return callback(err);

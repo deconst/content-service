@@ -91,7 +91,6 @@ function handleQueries(doc, callback) {
         var each = results[i][j];
 
         if (each.publish_date) {
-          console.log(each.publish_date);
           var d = new Date();
           d.setTime(each.publish_date);
           each.publish_date = d.toUTCString();

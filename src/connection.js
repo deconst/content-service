@@ -91,8 +91,8 @@ exports.setup = function (callback) {
   exports.client = client;
 
   async.parallel([
-    makeContainerCreator(client, config.contentContainer(), "content_container", false),
-    makeContainerCreator(client, config.assetContainer(), "asset_container", true),
+    makeContainerCreator(client, config.contentContainer(), "contentContainer", false),
+    makeContainerCreator(client, config.assetContainer(), "assetContainer", true),
     mongoInit
   ], callback);
 };

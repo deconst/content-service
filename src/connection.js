@@ -72,6 +72,7 @@ function mongoInit(callback) {
     async.parallel([
       function (callback) { envelopes.createIndex("tags", { sparse: true }, callback); },
       function (callback) { envelopes.createIndex("categories", { sparse: true }, callback); },
+      function (callback) { envelopes.createIndex("contentID", { unique: true }, callback); }
     ], function (err, db) {
       if (err) return callback(err);
 

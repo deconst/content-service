@@ -139,12 +139,17 @@ function storeEnvelope(doc, callback) {
 function indexEnvelope(doc, callback) {
   var subdoc = _.pick(doc.envelope, ["title", "publish_date", "tags", "categories"]);
 
-  subdoc.content_id = doc.contentID;
+  subdoc.contentID = doc.contentID;
 
-  connection.db.collection("envelopes").insertOne(subdoc, function (err, db) {
-    if (err) return callback(err);
-    callback(null, doc);
-  });
+  connection.db.collection("envelopes").findOneAndReplace(
+    { contentID: subdoc.contentID },
+    subdoc,
+    { upsert: true },
+    function (err) {
+      if (err) return callback(err);
+      callback(null, doc);
+    }
+  );
 }
 
 /**

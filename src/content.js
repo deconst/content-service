@@ -87,6 +87,17 @@ function handleQueries(doc, callback) {
 
     doc.results = {};
     for (var i = 0; i < results.length; i++) {
+      for (var j = 0; j < results.length; j++) {
+        var each = results[i][j];
+
+        if (each.publish_date) {
+          console.log(each.publish_date);
+          var d = new Date();
+          d.setTime(each.publish_date);
+          each.publish_date = d.toUTCString();
+        }
+      }
+
       doc.results[queryNames[i]] = results[i];
     }
 
@@ -115,14 +126,6 @@ function handleQuery(query, callback) {
   cursor.sort(order);
   if (skip) { cursor.skip(skip); }
   if (limit) { cursor.limit(limit); }
-
-  cursor.map(function (original) {
-    if (original.publish_date) {
-      original.publish_date = original.publish_date.toUTCString();
-    }
-
-    return original;
-  });
 
   cursor.toArray(callback);
 }

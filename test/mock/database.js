@@ -13,11 +13,6 @@ var createResultSet = function (results) {
     toArray: function (callback) {
       if (callback) callback(null, contents);
       return contents;
-    },
-
-    map: function (transform) {
-      contents = contents.map(transform);
-      return null;
     }
   };
 };

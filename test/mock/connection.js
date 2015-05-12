@@ -71,7 +71,7 @@ exports.install = function (connection) {
         insertOne: function (doc, callback) {
           contents.push(doc);
 
-          if (callback) callback(null, mock_db);
+          if (callback) callback(null, mockDB);
         },
         deleteOne: function (filter, callback) {
           var resultIndex = -1;

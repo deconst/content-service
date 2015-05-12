@@ -51,7 +51,7 @@ function fingerprintAsset(asset, callback) {
  */
 function publishAsset(asset, callback) {
   var up = connection.client.upload({
-    container: config.asset_container(),
+    container: config.assetContainer(),
     remote: asset.filename,
     contentType: asset.type,
     headers: { 'Access-Control-Allow-Origin': '*' }
@@ -62,7 +62,7 @@ function publishAsset(asset, callback) {
   up.on('finish', function () {
     log.debug("Successfully uploaded asset [" + asset.filename + "].");
 
-    var base_uri = connection.asset_container.cdnSslUri;
+    var base_uri = connection.assetContainer.cdnSslUri;
     asset.public_url = base_uri + '/' + encodeURIComponent(asset.filename);
     callback(null, asset);
   });

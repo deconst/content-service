@@ -37,7 +37,7 @@ var parseAuth = function (auth, callback) {
  */
 var locateKeyname = function (adminOnly, key, callback) {
   // Always accept the admin's API key.
-  if (key === config.admin_apikey()) {
+  if (key === config.adminAPIKey()) {
     return callback(null, { key: key, name: "administrator"});
   }
 

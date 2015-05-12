@@ -67,8 +67,8 @@ function injectAssetVars(doc, callback) {
  */
 function storeEnvelope(doc, callback) {
   var dest = connection.client.upload({
-    container: config.content_container(),
-    remote: encodeURIComponent(doc.content_id)
+    container: config.contentContainer(),
+    remote: encodeURIComponent(doc.contentID)
   });
 
   dest.end(JSON.stringify(doc.envelope), function (err) {
@@ -84,7 +84,7 @@ function storeEnvelope(doc, callback) {
 function indexEnvelope(doc, callback) {
   var subdoc = _.pick(doc.envelope, ["title", "publish_date", "tags", "categories"]);
 
-  subdoc.content_id = doc.content_id;
+  subdoc.content_id = doc.contentID;
 
   connection.db.collection("envelopes").insertOne(subdoc, function (err, db) {
     if (err) return callback(err);

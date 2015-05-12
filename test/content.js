@@ -97,6 +97,45 @@ describe("/content", function () {
         }, done);
     });
 
+    it("collects related documents when a 'queries' attribute is present", function (done) {
+      mocks.mockClient.content.hasqueries = JSON.stringify({
+        queries: {
+          somename: { category: "sample" },
+          anothername: { tag: "important" }
+        },
+        body: ".."
+      });
+
+      mocks.mockDB.addCollection("envelopes", [
+        { categories: ["sample", "other"], title: "zero", content_id: "id0" },
+        { categories: ["sample", "blerp"], title: "one", content_id: "id1" },
+        { categories: ["nope", "none"], tags: ["uhuh"], title: "two", content_id: "id2" },
+        { tags: ["important"], title: "three", content_id: "id3" },
+        { tags: ["important", "extra"], title: "four", content_id: "id4" }
+      ]);
+
+      request(server.create())
+        .get("/content/hasqueries")
+        .expect("Content-Type", "application/json")
+        .expect(200)
+        .expect({
+          assets: {},
+          envelope: {
+            body: ".."
+          },
+          results: {
+            somename: [
+              { categories: ["sample", "other"], title: "zero", content_id: "id0" },
+              { categories: ["sample", "blerp"], title: "one", content_id: "id1" }
+            ],
+            anothername: [
+              { tags: ["important"], title: "three", content_id: "id3" },
+              { tags: ["important", "extra"], title: "four", content_id: "id4" }
+            ]
+          }
+        }, done);
+    });
+
   });
 
   describe("#delete", function () {

@@ -63,6 +63,43 @@ function injectAssetVars(doc, callback) {
 }
 
 /**
+ * @description If the envelope contains a "query" attribute, perform each query and inject the
+ *   results into the document.
+ */
+function handleQueries(doc, callback) {
+  if (!doc.envelope.queries) {
+    log.debug("No queries present in metadata envelope.");
+    return callback(null, doc);
+  }
+
+  var queryNames = _.keys(doc.envelope.queries);
+  var queries = [];
+  for (var i = 0; i < queryNames.length; i++) {
+    queries.push(doc.envelope.queries[queryNames[i]]);
+  }
+
+  delete doc.queries;
+
+  log.debug("Processing " + queries.length + " envelope queries.");
+
+  async.map(
+    queries,
+    function (query, callback) {
+      connection.db.collection("envelopes").find(query).toArray(callback);
+    },
+    function (err, results) {
+      if (err) return callback(err);
+
+      doc.results = {};
+      for (var i = 0; i < results.length; i++) {
+        doc.results[queryNames[i]] = results[i];
+      }
+
+      callback(null, doc);
+  });
+}
+
+/**
  * @description Store an incoming metadata envelope within Cloud Files.
  */
 function storeEnvelope(doc, callback) {
@@ -100,17 +137,10 @@ exports.retrieve = function (req, res, next) {
 
   async.waterfall([
     async.apply(downloadContent, req.params.id),
-    injectAssetVars
+    injectAssetVars,
+    handleQueries
   ], function (err, doc) {
-    if (err) {
-      log.error("Failed to retrieve a metadata envelope", err);
-
-      res.status(err.statusCode || 500);
-      res.send();
-      next();
-
-      return;
-    }
+    next.ifError(err);
 
     res.json(doc);
     next();

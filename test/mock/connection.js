@@ -25,7 +25,7 @@ function Sink(options) {
 
 exports.install = function (connection) {
   // Mock Rackspace Cloud Files client.
-  var mock_client = {
+  var mockClient = {
     uploaded: [],
     downloaded: [],
     deleted: [],
@@ -51,21 +51,21 @@ exports.install = function (connection) {
     }
   };
 
-  connection.client = mock_client;
+  connection.client = mockClient;
 
-  connection.content_container = {
+  connection.contentContainer = {
     name: "the_content_container"
   };
 
-  connection.asset_container = {
+  connection.assetContainer = {
     name: "the_asset_container",
     cdnSslUri: "https://example.com/fake/cdn/url"
   };
 
-  var mock_db = {
+  var mockDB = {
     collections: {},
 
-    add_collection: function (name, contents) {
+    addCollection: function (name, contents) {
       var collection = {
         find: function () { return collection; },
         insertOne: function (doc, callback) {
@@ -97,16 +97,16 @@ exports.install = function (connection) {
 
     collection: function (name) {
       if (!this.collections[name]) {
-        this.add_collection(name, []);
+        this.addCollection(name, []);
       }
       return this.collections[name];
     }
   };
 
-  connection.db = mock_db;
+  connection.db = mockDB;
 
   return {
-    mock_client: mock_client,
-    mock_db: mock_db
+    mockClient: mockClient,
+    mockDB: mockDB
   };
 };

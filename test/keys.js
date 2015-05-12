@@ -33,7 +33,7 @@ describe("/keys", function () {
           var
             apikey = res.body.apikey,
             found = false,
-            issued = mocks.mock_db.collection("api_keys").find().toArray();
+            issued = mocks.mockDB.collection("apiKeys").find().toArray();
 
           issued.forEach(function (each) {
             if (each.apikey === apikey && each.name === "someone") {
@@ -73,7 +73,7 @@ describe("/keys", function () {
   describe("DELETE", function () {
 
     it("allows an admin to revoke an existing key", function (done) {
-      mocks.mock_db.collection("api_keys").insertOne({ name: "torevoke", apikey: "54321" });
+      mocks.mockDB.collection("apiKeys").insertOne({ name: "torevoke", apikey: "54321" });
 
       request(server.create())
         .delete("/keys/54321")
@@ -82,13 +82,14 @@ describe("/keys", function () {
         .expect(function () {
           var
             found = false,
-            issued = mocks.mock_db.collection("api_keys").find().toArray();
+            issued = mocks.mockDB.collection("apiKeys").find().toArray();
 
-          issued.forEach(function (each) {
+          for (var i = 0; i < issued.length; i++) {
+            var each = issued[i];
             if (each.apikey === "54321" && each.name === "torevoke") {
               found = true;
             }
-          });
+          }
 
           if (found) throw new Error("Revoked API key is still present in the database");
         })

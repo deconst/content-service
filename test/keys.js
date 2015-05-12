@@ -2,6 +2,8 @@
  * Unit tests for API key management.
  */
 
+require("./helpers/before");
+
 var
   request = require("supertest"),
   expect = require("chai").expect,

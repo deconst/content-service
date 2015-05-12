@@ -2,6 +2,8 @@
  * Unit tests for the /version endpoint.
  */
 
+require("./helpers/before");
+
 var
   request = require("supertest"),
   config = require("../src/config"),

@@ -2,6 +2,8 @@
  * Unit tests for the content service.
  */
 
+require("./helpers/before");
+
 var
   request = require("supertest"),
   expect = require("chai").expect,

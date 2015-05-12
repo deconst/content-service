@@ -45,14 +45,12 @@ function makeGetter(settingName) {
 }
 
 exports.configure = function (env) {
-  console.log("In configure", env);
   var missing = [];
 
   for (var name in configuration) {
     var setting = configuration[name];
     var value = env[setting.env];
 
-    console.log("Populating " + name + " from env var " + setting.env + " with value " + value);
     setting.value = value || setting.def;
 
     if (!setting.value) {

@@ -2,6 +2,8 @@
  * Tests for the environment variable configuration.
  */
 
+require("./helpers/before");
+
 var
   expect = require("chai").expect,
   config = require("../src/config");

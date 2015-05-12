@@ -2,6 +2,8 @@
  * Unit tests for the /asset endpoint.
  */
 
+require("./helpers/before");
+
 var
   restify = require("restify"),
   request = require("supertest"),

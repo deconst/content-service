@@ -1,5 +1,7 @@
 // Mock basic MongoDB functionality.
 
+var _ = require('lodash');
+
 var createResultSet = function (results) {
   return {
     toArray: function (callback) {
@@ -10,13 +12,45 @@ var createResultSet = function (results) {
 };
 
 var createMockCollection = function (db, contents) {
+  var singleMatch = function (actual, expected) {
+    if (! actual || ! expected) return false;
+
+    return actual === expected;
+  };
+
+  var arrayMatch = function (haystack, needle) {
+    if (! haystack || ! needle) return false;
+
+    return _.some(haystack, function (each) { return each === needle; });
+  };
+
   return {
-    find: function () { return createResultSet(contents); },
+    find: function (query) {
+      if (!query) {
+        return createResultSet(contents);
+      }
+
+      var results = [];
+      for (var i = 0; i < contents.length; i++) {
+        var each = contents[i];
+
+        var match =
+          singleMatch(each.apikey, query.apikey) ||
+          arrayMatch(each.categories, query.category) ||
+          arrayMatch(each.tags, query.tag);
+
+        if (match) results.push(each);
+      }
+
+      return createResultSet(results);
+    },
+
     insertOne: function (doc, callback) {
       contents.push(doc);
 
       if (callback) callback(null, db);
     },
+
     deleteOne: function (filter, callback) {
       var resultIndex = -1;
       contents.forEach(function (each, index) {

@@ -78,7 +78,7 @@ function handleQueries(doc, callback) {
     queries.push(doc.envelope.queries[queryNames[i]]);
   }
 
-  delete doc.queries;
+  delete doc.envelope.queries;
 
   log.debug("Processing " + queries.length + " envelope queries.");
 

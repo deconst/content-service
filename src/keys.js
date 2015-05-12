@@ -6,7 +6,7 @@ var
   restify = require('restify'),
   config = require('./config'),
   connection = require('./connection'),
-  log = require('./logging').logger;
+  log = require('./logging').getLogger();
 
 /**
  * @description Generate a fresh API key.

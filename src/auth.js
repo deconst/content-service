@@ -3,9 +3,9 @@
 var
   async = require("async"),
   restify = require("restify"),
-  log = require("./logging").logger,
   config = require("./config"),
-  connection = require("./connection");
+  connection = require("./connection"),
+  log = require("./logging").getLogger();
 
 var credentialRx = /apikey\s*=\s*"?([^"]+)"?/;
 

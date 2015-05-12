@@ -5,8 +5,8 @@
 var
   restify = require("restify"),
   config = require("./config"),
-  log = require("./logging").logger,
-  routes = require("./routes");
+  routes = require("./routes"),
+  log = require("./logging").getLogger();
 
 exports.create = function () {
   var server = restify.createServer();

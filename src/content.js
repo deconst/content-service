@@ -5,7 +5,7 @@ var
   _ = require('lodash'),
   config = require('./config'),
   connection = require('./connection'),
-  log = require('./logging').logger;
+  log = require('./logging').getLogger();
 
 /**
  * @description Download the raw metadata envelope from Cloud Files.

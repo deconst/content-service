@@ -136,9 +136,9 @@ exports.accept = function (req, res, next) {
 
     var summary = {};
     results.forEach(function (result) {
-      summary[result.original] = result.public_url;
+      summary[result.original] = result.publicURL;
     });
-    log.debug("(" + req.apikey_name + ") All assets have been processed succesfully.", summary);
+    log.debug("(" + req.apikeyName + ") All assets have been processed succesfully.", summary);
 
     res.send(summary);
     next();

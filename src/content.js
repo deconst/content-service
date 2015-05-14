@@ -53,7 +53,7 @@ function injectAssetVars(doc, callback) {
 
     for (i = 0; i < assetVars.length; i++) {
       var assetVar = assetVars[i];
-      assets[assetVar] = assetVar.publicURL;
+      assets[assetVar.key] = assetVar.publicURL;
     }
 
     doc.assets = assets;

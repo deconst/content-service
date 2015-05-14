@@ -62,8 +62,8 @@ function publishAsset(asset, callback) {
   up.on('finish', function () {
     log.debug("Successfully uploaded asset [" + asset.filename + "].");
 
-    var base_uri = connection.assetContainer.cdnSslUri;
-    asset.public_url = base_uri + '/' + encodeURIComponent(asset.filename);
+    var baseURI = connection.assetContainer.cdnSslUri;
+    asset.publicURL = baseURI + '/' + encodeURIComponent(asset.filename);
     callback(null, asset);
   });
 
@@ -84,7 +84,7 @@ function nameAsset(asset, callback) {
 
   connection.db.collection("layoutAssets").updateOne(
     { key: asset.key },
-    { $set: { key: asset.key, public_url: asset.public_url } },
+    { $set: { key: asset.key, publicURL: asset.publicURL } },
     { upsert: true },
     function (err) { callback(err, asset); }
   );

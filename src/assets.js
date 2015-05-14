@@ -82,7 +82,7 @@ function publishAsset(asset, callback) {
 function nameAsset(asset, callback) {
   log.debug("Naming asset [" + asset.original + "] as [" + asset.key + "].");
 
-  connection.db.collection("layout_assets").updateOne(
+  connection.db.collection("layoutAssets").updateOne(
     { key: asset.key },
     { $set: { key: asset.key, public_url: asset.public_url } },
     { upsert: true },

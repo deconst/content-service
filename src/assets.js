@@ -62,8 +62,8 @@ function publishAsset(asset, callback) {
   up.on('finish', function () {
     log.debug("Successfully uploaded asset [" + asset.filename + "].");
 
-    var base_uri = connection.assetContainer.cdnSslUri;
-    asset.public_url = base_uri + '/' + encodeURIComponent(asset.filename);
+    var baseURI = connection.assetContainer.cdnSslUri;
+    asset.publicURL = baseURI + '/' + encodeURIComponent(asset.filename);
     callback(null, asset);
   });
 
@@ -82,9 +82,9 @@ function publishAsset(asset, callback) {
 function nameAsset(asset, callback) {
   log.debug("Naming asset [" + asset.original + "] as [" + asset.key + "].");
 
-  connection.db.collection("layout_assets").updateOne(
+  connection.db.collection("layoutAssets").updateOne(
     { key: asset.key },
-    { $set: { key: asset.key, public_url: asset.public_url } },
+    { $set: { key: asset.key, publicURL: asset.publicURL } },
     { upsert: true },
     function (err) { callback(err, asset); }
   );
@@ -136,9 +136,9 @@ exports.accept = function (req, res, next) {
 
     var summary = {};
     results.forEach(function (result) {
-      summary[result.original] = result.public_url;
+      summary[result.original] = result.publicURL;
     });
-    log.debug("(" + req.apikey_name + ") All assets have been processed succesfully.", summary);
+    log.debug("(" + req.apikeyName + ") All assets have been processed succesfully.", summary);
 
     res.send(summary);
     next();

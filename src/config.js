@@ -15,6 +15,10 @@ var configuration = {
   rackspaceRegion: {
     env: "RACKSPACE_REGION"
   },
+  rackspaceServiceNet: {
+    env: "RACKSPACE_SERVICENET",
+    def: "false"
+  },
   adminAPIKey: {
     env: "ADMIN_APIKEY"
   },
@@ -57,6 +61,9 @@ exports.configure = function (env) {
       missing.push(setting.env);
     }
   }
+
+  // Normalize rackspaceServiceNet as a boolean.
+  configuration.rackspaceServiceNet.value = (configuration.rackspaceServiceNet.value === "true");
 
   if (missing.length !== 0) {
     console.error("Required configuration values are missing!");

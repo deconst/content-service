@@ -87,7 +87,8 @@ exports.setup = function (callback) {
   var client = pkgcloud.providers.rackspace.storage.createClient({
     username: config.rackspaceUsername(),
     apiKey: config.rackspaceAPIKey(),
-    region: config.rackspaceRegion()
+    region: config.rackspaceRegion(),
+    useInternal: config.rackspaceServiceNet()
   });
   exports.client = client;
 

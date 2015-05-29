@@ -10,7 +10,8 @@ content:
   environment:
     RACKSPACE_USERNAME:
     RACKSPACE_APIKEY:
-    RACKSPACE_REGION: DFW
+    RACKSPACE_REGION:
+    RACKSPACE_SERVICENET: "false"
     ADMIN_APIKEY: 12345
     CONTENT_CONTAINER: deconst-dev-content
     ASSET_CONTAINER: deconst-dev-assets

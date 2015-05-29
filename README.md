@@ -18,6 +18,7 @@ Then, you can build and run the service with:
 # See below for service configuration.
 export RACKSPACE_USERNAME=...
 export RACKSPACE_APIKEY=...
+export RACKSPACE_REGION=...
 
 docker-compose build && docker-compose up -d
 ```
@@ -29,6 +30,7 @@ The content service is configured by passing environment variables to the Docker
  * `RACKSPACE_USERNAME`: **(Required)** the username for your Rackspace account.
  * `RACKSPACE_APIKEY`: **(Required)** the API key for your Rackspace account.
  * `RACKSPACE_REGION`: **(Required)** the Rackspace region for the content service to use.
+ * `RACKSPACE_SERVICENET`: if `"true"`, connect to Cloud Files over ServiceNet rather than the public endpoint.
  * `ADMIN_APIKEY`: **(Required)** an API key that can be used by administrators or other internal services to issue and revoke API keys.
  * `CONTENT_CONTAINER`: **(Required)** container name to use for the stored metadata envelopes.
  * `ASSET_CONTAINER`: **(Required)** container name to use for published assets.
@@ -36,7 +38,7 @@ The content service is configured by passing environment variables to the Docker
 
 Both Cloud Files containers will be created and configured on application launch if they do not already exist.
 
-In development mode, docker-compose provides defaults for everything but `RACKSPACE_USERNAME` and `RACKSPACE_APIKEY`.
+In development mode, docker-compose provides defaults for everything but `RACKSPACE_USERNAME`, `RACKSPACE_APIKEY`, and `RACKSPACE_REGION`.
 
 ## API
 

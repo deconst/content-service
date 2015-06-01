@@ -90,11 +90,16 @@ exports.setup = function (callback) {
     region: config.rackspaceRegion(),
     useInternal: config.rackspaceServiceNet()
   });
-  exports.client = client;
 
-  async.parallel([
-    makeContainerCreator(client, config.contentContainer(), "contentContainer", false),
-    makeContainerCreator(client, config.assetContainer(), "assetContainer", true),
-    mongoInit
-  ], callback);
+  client.auth(function (err) {
+    if (err) throw err;
+
+    exports.client = client;
+
+    async.parallel([
+      makeContainerCreator(client, config.contentContainer(), "contentContainer", false),
+      makeContainerCreator(client, config.assetContainer(), "assetContainer", true),
+      mongoInit
+    ], callback);
+  });
 };

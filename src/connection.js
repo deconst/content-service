@@ -14,6 +14,8 @@ var
 function makeContainerCreator(client, containerName, logicalName, cdn) {
   return function (callback) {
     var reportBack = function (err, container) {
+      if (err) return callback(err);
+
       exports[logicalName] = container;
 
       log.debug("Container [" + container.name + "] now exists.");
@@ -22,6 +24,8 @@ function makeContainerCreator(client, containerName, logicalName, cdn) {
     };
 
     var cdnEnable = function (err, container) {
+      if (err) return callback(err);
+
       log.debug("Enabling CDN on container [" + container.name + "].");
 
       client.setCdnEnabled(container, { ttl: 31536000, enabled: true }, reportBack);
@@ -90,11 +94,16 @@ exports.setup = function (callback) {
     region: config.rackspaceRegion(),
     useInternal: config.rackspaceServiceNet()
   });
-  exports.client = client;
 
-  async.parallel([
-    makeContainerCreator(client, config.contentContainer(), "contentContainer", false),
-    makeContainerCreator(client, config.assetContainer(), "assetContainer", true),
-    mongoInit
-  ], callback);
+  client.auth(function (err) {
+    if (err) throw err;
+
+    exports.client = client;
+
+    async.parallel([
+      makeContainerCreator(client, config.contentContainer(), "contentContainer", false),
+      makeContainerCreator(client, config.assetContainer(), "assetContainer", true),
+      mongoInit
+    ], callback);
+  });
 };

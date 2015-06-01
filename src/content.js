@@ -3,6 +3,7 @@
 var
   async = require('async'),
   _ = require('lodash'),
+  restify = require('restify'),
   config = require('./config'),
   connection = require('./connection'),
   log = require('./logging').getLogger();
@@ -25,7 +26,21 @@ function downloadContent(contentID, callback) {
     chunks.push(chunk);
   });
 
-  source.on('end', function () {
+  source.on('complete', function (resp) {
+
+    if (resp.statusCode === 404) {
+      log.warn("No content for ID [" + contentID + "]");
+
+      return callback(new restify.NotFoundError("No content for ID [" + contentID + "]"));
+    }
+
+    if (resp.statusCode > 400) {
+      log.warn("Cloud files error.", resp);
+
+      return callback(
+        new restify.InternalServerError("Error communicating with an upstream service."));
+    }
+
     var
       complete = Buffer.concat(chunks),
       envelope = JSON.parse(complete);

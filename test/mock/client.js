@@ -42,6 +42,11 @@ exports.create = function() {
       var rs = new Readable();
       rs.push(this.content[params.remote]);
       rs.push(null);
+
+      rs.on('end', function () {
+        rs.emit('complete', { statusCode: 200 });
+      });
+
       return rs;
     },
 

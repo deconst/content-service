@@ -1,0 +1,15 @@
+#!/bin/bash
+
+[ -d /usr/src/app ] || {
+  echo "This script is intended to be executed inside the docker container."
+  echo "To develop locally, run:"
+  echo
+  echo " docker-compose up"
+  echo
+  exit 1
+}
+
+cd /usr/src/app
+
+[ -d node_modules ] || npm install .
+nodemon app.js

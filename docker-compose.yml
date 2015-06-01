@@ -17,3 +17,6 @@ content:
     ASSET_CONTAINER: deconst-dev-assets
     MONGODB_URL: mongodb://mongo:27017/content
     CONTENT_LOG_LEVEL: debug
+  volumes:
+  - ".:/usr/src/app"
+  command: script/dev

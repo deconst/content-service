@@ -12,9 +12,9 @@ content:
     RACKSPACE_APIKEY:
     RACKSPACE_REGION:
     RACKSPACE_SERVICENET: "false"
-    ADMIN_APIKEY: 12345
-    CONTENT_CONTAINER: deconst-dev-content
-    ASSET_CONTAINER: deconst-dev-assets
+    ADMIN_APIKEY:
+    CONTENT_CONTAINER:
+    ASSET_CONTAINER:
     MONGODB_URL: mongodb://mongo:27017/content
     CONTENT_LOG_LEVEL: debug
   volumes:

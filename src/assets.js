@@ -144,3 +144,25 @@ exports.accept = function (req, res, next) {
     next();
   });
 };
+
+exports.list = function (callback) {
+    log.debug("Collecting asset variables to inject into the envelope.");
+
+    connection.db.collection("layoutAssets").find().toArray(function (err, assetVars) {
+        if (err) {
+            log.error(err);
+            return;
+        }
+
+      log.debug("Injecting " + assetVars.length + " variables into the envelope.");
+
+      var assets = {};
+
+      for (i = 0; i < assetVars.length; i++) {
+        var assetVar = assetVars[i];
+        assets[assetVar.key] = assetVar.publicURL;
+      }
+
+      callback(null, assets);
+    });
+};

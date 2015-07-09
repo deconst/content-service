@@ -92,7 +92,10 @@ var createMockCollection = function (db, contents) {
 
       if (callback) callback(null, db);
     },
-
+    updateOne: function () {
+        contents.push(arguments[1].$set);
+        arguments[arguments.length - 1].call(null);
+    },
     deleteOne: function (filter, callback) {
       var resultIndex = -1;
       contents.forEach(function (each, index) {

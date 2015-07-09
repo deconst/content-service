@@ -7,6 +7,7 @@ var
   config = require('./config'),
   connection = require('./connection'),
   log = require('./logging').getLogger();
+  assets = require('./assets');
 
 /**
  * @description Download the raw metadata envelope from Cloud Files.
@@ -54,27 +55,10 @@ function downloadContent(contentID, callback) {
  *   an outgoing metadata envelope.
  */
 function injectAssetVars(doc, callback) {
-  log.debug("Collecting asset variables to inject into the envelope.");
-
-  connection.db.collection("layoutAssets").find().toArray(function (err, assetVars) {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    log.debug("Injecting " + assetVars.length + " variables into the envelope.");
-
-    var assets = {};
-
-    for (i = 0; i < assetVars.length; i++) {
-      var assetVar = assetVars[i];
-      assets[assetVar.key] = assetVar.publicURL;
-    }
-
-    doc.assets = assets;
-
-    callback(null, doc);
-  });
+    assets.list(function (err, assets) {
+        doc.assets = assets;
+        callback(null, doc);
+    });
 }
 
 /**

@@ -43,4 +43,27 @@ describe("/assets", function() {
       done);
   });
 
+  it("lists fingerprinted assets", function (done) {
+    var finalName =
+        "https://example.com/fake/cdn/url/" +
+        "asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt";
+
+    var app = server.create();
+
+    request(app)
+        .post("/assets")
+        .query({named: 'true'})
+        .set("Authorization", authhelper.AUTH_USER)
+        .attach("first", "test/fixtures/asset-file.txt")
+        .end(function (err, res) {
+            if(err) throw err;
+
+            request(app)
+                .get("/assets")
+                .expect(200)
+                .expect("Content-Type", /json/)
+                .expect('{"first":"' + finalName + '"}', done);
+        });
+  });
+
 });

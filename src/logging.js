@@ -28,7 +28,7 @@ exports.getLogger = function () {
       new winston.transports.Console({
         level: config.contentLogLevel().toLowerCase(),
         prettyPrint: true,
-        colorize: true,
+        colorize: config.contentLogColor(),
         timestamp: true
       })
     ]

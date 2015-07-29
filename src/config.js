@@ -34,6 +34,10 @@ var configuration = {
   contentLogLevel: {
     env: "CONTENT_LOG_LEVEL",
     def: "info"
+  },
+  contentLogColor: {
+    env: "CONTENT_LOG_COLOR",
+    def: "false"
   }
 };
 
@@ -62,8 +66,9 @@ exports.configure = function (env) {
     }
   }
 
-  // Normalize rackspaceServiceNet as a boolean.
+  // Normalize rackspaceServiceNet and contentLogColor as booleans.
   configuration.rackspaceServiceNet.value = (configuration.rackspaceServiceNet.value === "true");
+  configuration.contentLogColor.value = (configuration.contentLogColor.value === "true");
 
   if (missing.length !== 0) {
     console.error("Required configuration values are missing!");

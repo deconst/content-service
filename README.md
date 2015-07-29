@@ -35,6 +35,7 @@ The content service is configured by passing environment variables to the Docker
  * `CONTENT_CONTAINER`: **(Required)** container name to use for the stored metadata envelopes.
  * `ASSET_CONTAINER`: **(Required)** container name to use for published assets.
  * `CONTENT_LOG_LEVEL`: Optional logging level. The valid levels are `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and `ERROR`.
+ * `CONTENT_LOG_COLOR`: Logging colorization. Set to `"true"` to enable colorful logs.
 
 Both Cloud Files containers will be created and configured on application launch if they do not already exist.
 

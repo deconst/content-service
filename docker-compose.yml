@@ -17,6 +17,7 @@ content:
     ASSET_CONTAINER:
     MONGODB_URL: mongodb://mongo:27017/content
     CONTENT_LOG_LEVEL: debug
+    CONTENT_LOG_COLOR: "true"
   volumes:
   - ".:/usr/src/app"
   command: script/dev

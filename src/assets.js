@@ -173,15 +173,16 @@ exports.accept = function (req, res, next) {
 };
 
 exports.list = function (callback) {
-    log.debug("Collecting asset variables to inject into the envelope.");
+    log.debug("Asset list requested.");
 
     connection.db.collection("layoutAssets").find().toArray(function (err, assetVars) {
         if (err) {
-            log.error(err);
+            log.error({
+                message: "Unable to list assets.",
+                error: err.message
+            });
             return;
         }
-
-        log.debug("Injecting " + assetVars.length + " variables into the envelope.");
 
         var assets = {};
 

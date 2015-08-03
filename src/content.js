@@ -197,7 +197,7 @@ exports.retrieve = function (req, res, next) {
                 message: "Unable to retrieve content."
             });
 
-            next(err);
+            return next(err);
         }
 
         res.json(doc);
@@ -242,7 +242,7 @@ exports.store = function (req, res, next) {
                 message: "Unable to store content."
             });
 
-            next(err);
+            return next(err);
         }
 
         res.send(204);
@@ -281,7 +281,7 @@ exports.delete = function (req, res, next) {
                 message: "Unable to delete content."
             });
 
-            next(err);
+            return next(err);
         }
 
         res.send(204);

@@ -147,11 +147,12 @@ exports.accept = function (req, res, next) {
             log.error({
                 apikeyName: req.apikeyName,
                 error: err.message,
-                message: "Unable to upload an asset."
+                message: "Unable to upload one or more assets."
             });
 
             res.send(500, {
-                error: "(" + req.apikeyName + ") Unable to upload one or more assets!"
+                apikeyName: req.apikeyName,
+                error: "Unable to upload one or more assets."
             });
             next();
         }
@@ -172,7 +173,7 @@ exports.accept = function (req, res, next) {
     });
 };
 
-exports.list = function (callback) {
+exports.list = function (req, res, next) {
     log.debug("Asset list requested.");
 
     connection.db.collection("layoutAssets").find().toArray(function (err, assetVars) {
@@ -181,7 +182,7 @@ exports.list = function (callback) {
                 message: "Unable to list assets.",
                 error: err.message
             });
-            return;
+            return next(err);
         }
 
         var assets = {};
@@ -191,6 +192,7 @@ exports.list = function (callback) {
             assets[assetVar.key] = assetVar.publicURL;
         }
 
-        callback(null, assets);
+        res.send(assets);
+        next();
     });
 };

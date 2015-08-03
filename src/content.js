@@ -29,23 +29,32 @@ function downloadContent(contentID, callback) {
 
     source.on('complete', function (resp) {
         if (resp.statusCode === 404) {
-            log.warn("No content for ID [" + contentID + "]");
+            log.warn({
+                contentID: contentID,
+                message: "No content for ID."
+            });
 
             return callback(new restify.NotFoundError("No content for ID [" + contentID + "]"));
         }
 
+        var complete = Buffer.concat(chunks);
+
         if (resp.statusCode > 400) {
+            log.error({
+                contentID: contentID,
+                cloudFilesCode: resp.statusCode,
+                cloudFilesResponse: complete,
+                message: "Cloud files error."
+            });
             log.warn("Cloud files error.", resp);
 
-            return callback(
-                new restify.InternalServerError("Error communicating with an upstream service."));
-            }
+            return callback(new restify.InternalServerError("Error communicating with an upstream service."));
+        }
 
-            var complete = Buffer.concat(chunks);
-            var envelope = JSON.parse(complete);
+        var envelope = JSON.parse(complete);
 
-            callback(null, {envelope: envelope});
-        });
+        callback(null, {envelope: envelope});
+    });
 }
 
 /**
@@ -65,7 +74,6 @@ function injectAssetVars(doc, callback) {
  */
 function handleQueries(doc, callback) {
     if (!doc.envelope.queries) {
-        log.debug("No queries present in metadata envelope.");
         return callback(null, doc);
     }
 
@@ -170,16 +178,36 @@ function indexEnvelope(doc, callback) {
  * @description Retrieve content from the store by content ID.
  */
 exports.retrieve = function (req, res, next) {
-    log.debug("Requesting content ID: [" + req.params.id + "]");
+    log.debug({
+        contentID: req.params.id,
+        message: "Content ID request received."
+    });
+
+    var reqStart = Date.now();
 
     async.waterfall([
         async.apply(downloadContent, req.params.id),
         injectAssetVars,
         handleQueries
     ], function (err, doc) {
-        next.ifError(err);
+        if (err) {
+            log.error({
+                contentID: req.params.id,
+                error: err.message,
+                message: "Unable to retrieve content."
+            });
+
+            next(err);
+        }
 
         res.json(doc);
+
+        log.info({
+            contentID: req.params.id,
+            totalReqDuration: Date.now() - reqStart,
+            message: "Content request successful."
+        });
+
         next();
     });
 };

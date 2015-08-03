@@ -174,7 +174,7 @@ exports.accept = function (req, res, next) {
                 apikeyName: req.apikeyName,
                 error: "Unable to upload one or more assets."
             });
-            next();
+            return next();
         }
 
         var summary = {};

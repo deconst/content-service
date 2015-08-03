@@ -61,7 +61,7 @@ function publishAsset(asset, callback) {
 
     up.on('error', callback);
 
-    up.on('finish', function () {
+    up.on('success', function () {
         log.debug({
             assetFilename: asset.filename,
             message: "Asset uploaded successfully."

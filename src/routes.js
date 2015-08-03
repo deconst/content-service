@@ -21,11 +21,7 @@ exports.loadRoutes = function (server) {
     restify.queryParser(),
     assets.accept);
 
-  server.get('/assets', function (req, res) {
-      assets.list(function (err, assets) {
-        res.send(assets);
-      });
-  });
+  server.get('/assets', assets.list);
 
   server.post('/keys', auth.requireAdmin, restify.queryParser(), keys.issue);
   server.del('/keys/:key', auth.requireAdmin, keys.revoke);

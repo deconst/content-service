@@ -189,7 +189,7 @@ exports.retrieve = function (req, res, next) {
  */
 exports.store = function (req, res, next) {
     log.debug({
-        apiKeyName: req.apikeyName,
+        apikeyName: req.apikeyName,
         contentID: req.params.id,
         message: "Content storage request received."
     });
@@ -207,7 +207,7 @@ exports.store = function (req, res, next) {
     ], function (err, doc) {
         if (err) {
             log.error({
-                apiKeyName: req.apikeyName,
+                apikeyName: req.apikeyName,
                 contentID: req.params.id,
                 error: err.message,
                 totalReqDuration: Date.now() - reqStart,
@@ -220,7 +220,7 @@ exports.store = function (req, res, next) {
         res.send(204);
 
         log.info({
-            apiKeyName: req.apikeyName,
+            apikeyName: req.apikeyName,
             contentID: req.params.id,
             totalReqDuration: Date.now() - reqStart,
             message: "Content storage successful."
@@ -234,12 +234,37 @@ exports.store = function (req, res, next) {
  * @description Delete a piece of previously stored content by content ID.
  */
 exports.delete = function (req, res, next) {
+    log.debug({
+        apikeyName: req.apikeyName,
+        contentID: req.params.id,
+        message: "Content deletion request received."
+    });
+
+    var reqStart = Date.now();
+
     log.info("(" + req.apikeyName + ") Deleting content with ID [" + req.params.id + "]");
 
     connection.client.removeFile(config.contentContainer(), encodeURIComponent(req.params.id), function (err) {
-        next.ifError(err);
+        if (err) {
+            log.error({
+                apikeyName: req.apikeyName,
+                contentID: req.params.id,
+                totalReqDuration: Date.now() - reqStart,
+                message: "Unable to delete content."
+            });
+
+            next(err);
+        }
 
         res.send(204);
+
+        log.info({
+            apikeyName: req.apikeyName,
+            contentID: req.params.id,
+            totalReqDuration: Date.now() - reqStart,
+            message: "Content deletion successful."
+        });
+
         next();
     });
 };

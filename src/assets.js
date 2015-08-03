@@ -123,6 +123,26 @@ function makeAssetHandler(should_name) {
 }
 
 /**
+ * @description Enumerate all named assets.
+ */
+var enumerateNamed = exports.enumerateNamed = function (callback) {
+    connection.db.collection("layoutAssets").find().toArray(function (err, assetVars) {
+        if (err) {
+            return callback(err);
+        }
+
+        var assets = {};
+
+        for (i = 0; i < assetVars.length; i++) {
+            var assetVar = assetVars[i];
+            assets[assetVar.key] = assetVar.publicURL;
+        }
+
+        callback(null, assets);
+    });
+};
+
+/**
  * @description Fingerprint and upload static, binary assets to the
  *   CDN-enabled ASSET_CONTAINER. Return a JSON object containing a
  *   map of the provided filenames to their final, public URLs.
@@ -176,20 +196,13 @@ exports.accept = function (req, res, next) {
 exports.list = function (req, res, next) {
     log.debug("Asset list requested.");
 
-    connection.db.collection("layoutAssets").find().toArray(function (err, assetVars) {
+    enumerateNamed(function (err, assets) {
         if (err) {
             log.error({
                 message: "Unable to list assets.",
                 error: err.message
             });
             return next(err);
-        }
-
-        var assets = {};
-
-        for (i = 0; i < assetVars.length; i++) {
-            var assetVar = assetVars[i];
-            assets[assetVar.key] = assetVar.publicURL;
         }
 
         res.send(assets);

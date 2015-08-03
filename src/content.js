@@ -62,7 +62,7 @@ function downloadContent(contentID, callback) {
  *   an outgoing metadata envelope.
  */
 function injectAssetVars(doc, callback) {
-    assets.list(function (err, assets) {
+    assets.enumerateNamed(function (err, assets) {
         doc.assets = assets;
         callback(null, doc);
     });

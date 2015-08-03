@@ -32,7 +32,11 @@ function fingerprintAsset(asset, callback) {
         var basename = path.basename(asset.name, ext);
         var fingerprinted = basename + "-" + digest + ext;
 
-        log.debug("Fingerprinted asset [" + asset.name + "] as [" + fingerprinted + "].");
+        log.debug({
+            originalAssetName: asset.name,
+            assetFilename: fingerprinted,
+            message: "Asset fingerprinted successfully."
+        });
 
         callback(null, {
             key: asset.key,
@@ -58,7 +62,10 @@ function publishAsset(asset, callback) {
     up.on('error', callback);
 
     up.on('finish', function () {
-        log.debug("Successfully uploaded asset [" + asset.filename + "].");
+        log.debug({
+            assetFilename: asset.filename,
+            message: "Asset uploaded successfully."
+        });
 
         var baseURI = connection.assetContainer.cdnSslUri;
         asset.publicURL = baseURI + '/' + encodeURIComponent(asset.filename);
@@ -78,7 +85,11 @@ function publishAsset(asset, callback) {
  *   layouts.
  */
 function nameAsset(asset, callback) {
-    log.debug("Naming asset [" + asset.original + "] as [" + asset.key + "].");
+    log.debug({
+        originalAssetFilename: asset.original,
+        assetName: asset.key,
+        message: "Asset named successfully."
+    });
 
     connection.db.collection("layoutAssets").updateOne(
         { key: asset.key },
@@ -93,7 +104,10 @@ function nameAsset(asset, callback) {
  */
 function makeAssetHandler(should_name) {
     return function(asset, callback) {
-        log.debug("Processing uploaded asset [" + asset.name + "].");
+        log.debug({
+            originalAssetName: asset.name,
+            message: "Asset upload request received."
+        });
 
         var steps = [
             async.apply(fingerprintAsset, asset),
@@ -120,11 +134,21 @@ exports.accept = function (req, res, next) {
         return asset;
     });
 
-    log.info("(" + req.apikeyName + ") Accepting " + assetData.length + " asset(s).");
+    log.debug({
+        apikeyName: req.apikeyName,
+        assetCount: assetData.length,
+        message: "Asset upload request received."
+    });
+
+    var reqStart = Date.now();
 
     async.map(assetData, makeAssetHandler(req.query.named), function (err, results) {
         if (err) {
-            log.error("(" + req.apikeyName + ") Unable to process an asset.", err);
+            log.error({
+                apikeyName: req.apikeyName,
+                error: err.message,
+                message: "Unable to upload an asset."
+            });
 
             res.send(500, {
                 error: "(" + req.apikeyName + ") Unable to upload one or more assets!"
@@ -136,7 +160,12 @@ exports.accept = function (req, res, next) {
         results.forEach(function (result) {
             summary[result.original] = result.publicURL;
         });
-        log.debug("(" + req.apikeyName + ") All assets have been processed succesfully.", summary);
+        log.info({
+            apikeyName: req.apikeyName,
+            totalReqDuration: Date.now() - reqStart,
+            message: "All assets have been uploaded successfully.",
+            summary: summary
+        });
 
         res.send(summary);
         next();

@@ -188,7 +188,13 @@ exports.retrieve = function (req, res, next) {
  * @description Store new content into the content service.
  */
 exports.store = function (req, res, next) {
-    log.info("(" + req.apikeyName + ") Storing content with ID: [" + req.params.id + "]");
+    log.debug({
+        apiKeyName: req.apikeyName,
+        contentID: req.params.id,
+        message: "Content storage request received."
+    });
+
+    var reqStart = Date.now();
 
     var doc = {
         contentID: req.params.id,
@@ -199,9 +205,27 @@ exports.store = function (req, res, next) {
         async.apply(storeEnvelope, doc),
         indexEnvelope
     ], function (err, doc) {
-        next.ifError(err);
+        if (err) {
+            log.error({
+                apiKeyName: req.apikeyName,
+                contentID: req.params.id,
+                error: err.message,
+                totalReqDuration: Date.now() - reqStart,
+                message: "Unable to store content."
+            });
+
+            next(err);
+        }
 
         res.send(204);
+
+        log.info({
+            apiKeyName: req.apikeyName,
+            contentID: req.params.id,
+            totalReqDuration: Date.now() - reqStart,
+            message: "Content storage successful."
+        });
+
         next();
     });
 };

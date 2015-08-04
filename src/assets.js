@@ -6,6 +6,7 @@ var
     fs = require('fs'),
     path = require('path'),
     crypto = require('crypto'),
+    restify = require('restify'),
     config = require('./config'),
     connection = require('./connection'),
     log = require('./logging').getLogger();
@@ -24,7 +25,15 @@ function fingerprintAsset(asset, callback) {
         chunks.push(chunk);
     });
 
-    assetFile.on('error', callback);
+    assetFile.on('error', function (err) {
+        log.warn({
+            action: 'assetstore',
+            error: err.message,
+            message: "Error creating asset fingerprint."
+        });
+
+        callback(new restify.InternalServerError("Error creating asset fingerprint."));
+    });
 
     assetFile.on('end', function() {
         var digest = sha256sum.digest('hex');
@@ -60,7 +69,17 @@ function publishAsset(asset, callback) {
         headers: { 'Access-Control-Allow-Origin': '*' }
     });
 
-    up.on('error', callback);
+    up.on('error', function (err) {
+        log.warn({
+            action: 'assetstore',
+            error: err.message,
+            cloudFilesCode: err.statusCode,
+            assetFilename: asset.filename,
+            message: "Error uploading asset to Cloud Files."
+        });
+
+        callback(new restify.InternalServerError("Error publishing an asset to Cloud Files."));
+    });
 
     up.on('success', function () {
         log.debug({

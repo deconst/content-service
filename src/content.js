@@ -36,6 +36,7 @@ function downloadContent(contentID, callback) {
 
         if (resp.statusCode > 400) {
             log.warn({
+                action: 'contentretrieve',
                 contentID: contentID,
                 cloudFilesCode: resp.statusCode,
                 cloudFilesResponse: complete,
@@ -173,6 +174,7 @@ function indexEnvelope(doc, callback) {
  */
 exports.retrieve = function (req, res, next) {
     log.debug({
+        action: "contentretrieve",
         contentID: req.params.id,
         message: "Content ID request received."
     });
@@ -186,7 +188,8 @@ exports.retrieve = function (req, res, next) {
     ], function (err, doc) {
         if (err) {
             log.error({
-                statusCode: 500,
+                action: "contentretrieve",
+                statusCode: err.statusCode || 500,
                 contentID: req.params.id,
                 error: err.message,
                 message: "Unable to retrieve content."
@@ -198,6 +201,7 @@ exports.retrieve = function (req, res, next) {
         res.json(doc);
 
         log.info({
+            action: "contentretrieve",
             statusCode: 200,
             contentID: req.params.id,
             totalReqDuration: Date.now() - reqStart,
@@ -213,6 +217,7 @@ exports.retrieve = function (req, res, next) {
  */
 exports.store = function (req, res, next) {
     log.debug({
+        action: "contentstore",
         apikeyName: req.apikeyName,
         contentID: req.params.id,
         message: "Content storage request received."
@@ -231,7 +236,8 @@ exports.store = function (req, res, next) {
     ], function (err, doc) {
         if (err) {
             log.error({
-                statusCode: 500,
+                action: "contentstore",
+                statusCode: err.statusCode || 500,
                 apikeyName: req.apikeyName,
                 contentID: req.params.id,
                 error: err.message,
@@ -245,6 +251,7 @@ exports.store = function (req, res, next) {
         res.send(204);
 
         log.info({
+            action: "contentstore",
             statusCode: 204,
             apikeyName: req.apikeyName,
             contentID: req.params.id,
@@ -261,6 +268,7 @@ exports.store = function (req, res, next) {
  */
 exports.delete = function (req, res, next) {
     log.debug({
+        action: "contentdelete",
         apikeyName: req.apikeyName,
         contentID: req.params.id,
         message: "Content deletion request received."
@@ -268,12 +276,11 @@ exports.delete = function (req, res, next) {
 
     var reqStart = Date.now();
 
-    log.info("(" + req.apikeyName + ") Deleting content with ID [" + req.params.id + "]");
-
     connection.client.removeFile(config.contentContainer(), encodeURIComponent(req.params.id), function (err) {
         if (err) {
             log.error({
-                statusCode: 500,
+                action: "contentdelete",
+                statusCode: err.statusCode || 500,
                 apikeyName: req.apikeyName,
                 contentID: req.params.id,
                 totalReqDuration: Date.now() - reqStart,
@@ -286,6 +293,7 @@ exports.delete = function (req, res, next) {
         res.send(204);
 
         log.info({
+            action: "contentdelete",
             statusCode: 204,
             apikeyName: req.apikeyName,
             contentID: req.params.id,

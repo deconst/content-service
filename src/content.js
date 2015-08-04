@@ -29,24 +29,19 @@ function downloadContent(contentID, callback) {
 
     source.on('complete', function (resp) {
         if (resp.statusCode === 404) {
-            log.warn({
-                contentID: contentID,
-                message: "No content for ID."
-            });
-
             return callback(new restify.NotFoundError("No content for ID [" + contentID + "]"));
         }
 
         var complete = Buffer.concat(chunks);
 
         if (resp.statusCode > 400) {
-            log.error({
+            log.warn({
+                action: 'contentretrieve',
                 contentID: contentID,
                 cloudFilesCode: resp.statusCode,
                 cloudFilesResponse: complete,
-                message: "Cloud files error."
+                message: "Cloud Files error."
             });
-            log.warn("Cloud files error.", resp);
 
             return callback(new restify.InternalServerError("Error communicating with an upstream service."));
         }
@@ -179,6 +174,7 @@ function indexEnvelope(doc, callback) {
  */
 exports.retrieve = function (req, res, next) {
     log.debug({
+        action: "contentretrieve",
         contentID: req.params.id,
         message: "Content ID request received."
     });
@@ -192,6 +188,8 @@ exports.retrieve = function (req, res, next) {
     ], function (err, doc) {
         if (err) {
             log.error({
+                action: "contentretrieve",
+                statusCode: err.statusCode || 500,
                 contentID: req.params.id,
                 error: err.message,
                 message: "Unable to retrieve content."
@@ -203,6 +201,8 @@ exports.retrieve = function (req, res, next) {
         res.json(doc);
 
         log.info({
+            action: "contentretrieve",
+            statusCode: 200,
             contentID: req.params.id,
             totalReqDuration: Date.now() - reqStart,
             message: "Content request successful."
@@ -217,6 +217,7 @@ exports.retrieve = function (req, res, next) {
  */
 exports.store = function (req, res, next) {
     log.debug({
+        action: "contentstore",
         apikeyName: req.apikeyName,
         contentID: req.params.id,
         message: "Content storage request received."
@@ -235,6 +236,8 @@ exports.store = function (req, res, next) {
     ], function (err, doc) {
         if (err) {
             log.error({
+                action: "contentstore",
+                statusCode: err.statusCode || 500,
                 apikeyName: req.apikeyName,
                 contentID: req.params.id,
                 error: err.message,
@@ -248,6 +251,8 @@ exports.store = function (req, res, next) {
         res.send(204);
 
         log.info({
+            action: "contentstore",
+            statusCode: 204,
             apikeyName: req.apikeyName,
             contentID: req.params.id,
             totalReqDuration: Date.now() - reqStart,
@@ -263,6 +268,7 @@ exports.store = function (req, res, next) {
  */
 exports.delete = function (req, res, next) {
     log.debug({
+        action: "contentdelete",
         apikeyName: req.apikeyName,
         contentID: req.params.id,
         message: "Content deletion request received."
@@ -270,11 +276,11 @@ exports.delete = function (req, res, next) {
 
     var reqStart = Date.now();
 
-    log.info("(" + req.apikeyName + ") Deleting content with ID [" + req.params.id + "]");
-
     connection.client.removeFile(config.contentContainer(), encodeURIComponent(req.params.id), function (err) {
         if (err) {
             log.error({
+                action: "contentdelete",
+                statusCode: err.statusCode || 500,
                 apikeyName: req.apikeyName,
                 contentID: req.params.id,
                 totalReqDuration: Date.now() - reqStart,
@@ -287,6 +293,8 @@ exports.delete = function (req, res, next) {
         res.send(204);
 
         log.info({
+            action: "contentdelete",
+            statusCode: 204,
             apikeyName: req.apikeyName,
             contentID: req.params.id,
             totalReqDuration: Date.now() - reqStart,

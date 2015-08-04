@@ -33,6 +33,7 @@ function fingerprintAsset(asset, callback) {
         var fingerprinted = basename + "-" + digest + ext;
 
         log.debug({
+            action: 'assetstore',
             originalAssetName: asset.name,
             assetFilename: fingerprinted,
             message: "Asset fingerprinted successfully."
@@ -63,6 +64,7 @@ function publishAsset(asset, callback) {
 
     up.on('success', function () {
         log.debug({
+            action: 'assetstore',
             assetFilename: asset.filename,
             message: "Asset uploaded successfully."
         });
@@ -86,6 +88,7 @@ function publishAsset(asset, callback) {
  */
 function nameAsset(asset, callback) {
     log.debug({
+        action: 'assetstore',
         originalAssetFilename: asset.original,
         assetName: asset.key,
         message: "Asset named successfully."
@@ -105,6 +108,7 @@ function nameAsset(asset, callback) {
 function makeAssetHandler(should_name) {
     return function(asset, callback) {
         log.debug({
+            action: 'assetstore',
             originalAssetName: asset.name,
             message: "Asset upload request received."
         });
@@ -155,6 +159,7 @@ exports.accept = function (req, res, next) {
     });
 
     log.debug({
+        action: 'assetstore',
         apikeyName: req.apikeyName,
         assetCount: assetData.length,
         message: "Asset upload request received."
@@ -164,17 +169,22 @@ exports.accept = function (req, res, next) {
 
     async.map(assetData, makeAssetHandler(req.query.named), function (err, results) {
         if (err) {
+            var statusCode = err.statusCode || 500;
+
             log.error({
+                action: 'assetstore',
+                statusCode: statusCode,
                 apikeyName: req.apikeyName,
                 error: err.message,
                 message: "Unable to upload one or more assets."
             });
 
-            res.send(500, {
+            res.send(statusCode, {
                 apikeyName: req.apikeyName,
                 error: "Unable to upload one or more assets."
             });
-            return next();
+
+            return next(err);
         }
 
         var summary = {};
@@ -182,6 +192,8 @@ exports.accept = function (req, res, next) {
             summary[result.original] = result.publicURL;
         });
         log.info({
+            action: 'assetstore',
+            statusCode: 200,
             apikeyName: req.apikeyName,
             totalReqDuration: Date.now() - reqStart,
             message: "All assets have been uploaded successfully.",
@@ -199,6 +211,8 @@ exports.list = function (req, res, next) {
     enumerateNamed(function (err, assets) {
         if (err) {
             log.error({
+                action: 'assetlist',
+                statusCode: err.statusCode || 500,
                 message: "Unable to list assets.",
                 error: err.message
             });

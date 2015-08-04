@@ -21,7 +21,13 @@ exports.create = function () {
     .use(restify.fullResponse());
 
   server.on("uncaughtException", function (req, res, route, err) {
-    log.error(err.stack);
+    log.error({
+        statusCode: res.statusCode || 500,
+        requestURL: req.url,
+        stack: err.stack,
+        error: err.message,
+        message: "Uncaught exception"
+    });
     res.send(err);
   });
 

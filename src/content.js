@@ -29,24 +29,18 @@ function downloadContent(contentID, callback) {
 
     source.on('complete', function (resp) {
         if (resp.statusCode === 404) {
-            log.warn({
-                contentID: contentID,
-                message: "No content for ID."
-            });
-
             return callback(new restify.NotFoundError("No content for ID [" + contentID + "]"));
         }
 
         var complete = Buffer.concat(chunks);
 
         if (resp.statusCode > 400) {
-            log.error({
+            log.warn({
                 contentID: contentID,
                 cloudFilesCode: resp.statusCode,
                 cloudFilesResponse: complete,
-                message: "Cloud files error."
+                message: "Cloud Files error."
             });
-            log.warn("Cloud files error.", resp);
 
             return callback(new restify.InternalServerError("Error communicating with an upstream service."));
         }
@@ -192,6 +186,7 @@ exports.retrieve = function (req, res, next) {
     ], function (err, doc) {
         if (err) {
             log.error({
+                statusCode: 500,
                 contentID: req.params.id,
                 error: err.message,
                 message: "Unable to retrieve content."
@@ -203,6 +198,7 @@ exports.retrieve = function (req, res, next) {
         res.json(doc);
 
         log.info({
+            statusCode: 200,
             contentID: req.params.id,
             totalReqDuration: Date.now() - reqStart,
             message: "Content request successful."
@@ -235,6 +231,7 @@ exports.store = function (req, res, next) {
     ], function (err, doc) {
         if (err) {
             log.error({
+                statusCode: 500,
                 apikeyName: req.apikeyName,
                 contentID: req.params.id,
                 error: err.message,
@@ -248,6 +245,7 @@ exports.store = function (req, res, next) {
         res.send(204);
 
         log.info({
+            statusCode: 204,
             apikeyName: req.apikeyName,
             contentID: req.params.id,
             totalReqDuration: Date.now() - reqStart,
@@ -275,6 +273,7 @@ exports.delete = function (req, res, next) {
     connection.client.removeFile(config.contentContainer(), encodeURIComponent(req.params.id), function (err) {
         if (err) {
             log.error({
+                statusCode: 500,
                 apikeyName: req.apikeyName,
                 contentID: req.params.id,
                 totalReqDuration: Date.now() - reqStart,
@@ -287,6 +286,7 @@ exports.delete = function (req, res, next) {
         res.send(204);
 
         log.info({
+            statusCode: 204,
             apikeyName: req.apikeyName,
             contentID: req.params.id,
             totalReqDuration: Date.now() - reqStart,

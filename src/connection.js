@@ -95,6 +95,14 @@ exports.setup = function (callback) {
     useInternal: config.rackspaceServiceNet()
   });
 
+  client.on('log::*', function (message, object) {
+    if (object) {
+      logger.log(this.event.split('::')[1], message, object);
+    } else {
+      logger.log(this.event.split('::')[1], message);
+    }
+  });
+
   client.auth(function (err) {
     if (err) throw err;
 

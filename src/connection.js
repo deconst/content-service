@@ -5,7 +5,7 @@ var
   pkgcloud = require('pkgcloud'),
   mongo = require('mongodb'),
   config = require('./config'),
-  log = require('./logging').getLogger();
+  logger = require('./logging').getLogger();
 
 /**
  * @description Create a function that asynchronously creates a Rackspace container if it
@@ -18,7 +18,7 @@ function makeContainerCreator(client, containerName, logicalName, cdn) {
 
       exports[logicalName] = container;
 
-      log.debug("Container [" + container.name + "] now exists.");
+      logger.debug("Container [" + container.name + "] now exists.");
 
       callback(null, container);
     };
@@ -26,14 +26,14 @@ function makeContainerCreator(client, containerName, logicalName, cdn) {
     var cdnEnable = function (err, container) {
       if (err) return callback(err);
 
-      log.debug("Enabling CDN on container [" + container.name + "].");
+      logger.debug("Enabling CDN on container [" + container.name + "].");
 
       client.setCdnEnabled(container, { ttl: 31536000, enabled: true }, reportBack);
     };
 
     var handleCreation = cdn ? cdnEnable : reportBack;
 
-    log.info("Ensuring that container [" + containerName + "] exists.");
+    logger.info("Ensuring that container [" + containerName + "] exists.");
 
     // Instead of checking if the container exists first, we try to create it, and
     // if it already exists, we get a no-op (202) and move on.
@@ -66,7 +66,7 @@ function mongoInit(callback) {
   mongo.MongoClient.connect(config.mongodbURL(), function (err, db) {
     if (err) return callback(err);
 
-    log.debug("Connected to MongoDB database at [" + config.mongodbURL() + "].");
+    logger.debug("Connected to MongoDB database at [" + config.mongodbURL() + "].");
 
     exports.db = db;
 

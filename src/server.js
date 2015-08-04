@@ -22,7 +22,7 @@ exports.create = function () {
 
   server.on("uncaughtException", function (req, res, route, err) {
     log.error({
-        statusCode: res.statusCode || 500,
+        statusCode: err.statusCode || 500,
         requestURL: req.url,
         stack: err.stack,
         error: err.message,

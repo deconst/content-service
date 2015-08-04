@@ -166,14 +166,31 @@ var enumerateNamed = exports.enumerateNamed = function (callback) {
 };
 
 /**
+ * @description Append a list of asset names to a message before it's logged.
+ */
+function withAssetList(message, originalAssetNames) {
+    var subset = originalAssetNames.slice(0, 3);
+
+    if (originalAssetNames.length > 3) {
+        subset.push("..");
+    }
+
+    var joined = subset.join(", ");
+
+    return message + ": " + joined + ".";
+}
+
+/**
  * @description Fingerprint and upload static, binary assets to the
  *   CDN-enabled ASSET_CONTAINER. Return a JSON object containing a
  *   map of the provided filenames to their final, public URLs.
  */
 exports.accept = function (req, res, next) {
+    var originalAssetNames = [];
     var assetData = Object.getOwnPropertyNames(req.files).map(function (key) {
         var asset = req.files[key];
         asset.key = key;
+        originalAssetNames.push(key);
         return asset;
     });
 
@@ -181,7 +198,8 @@ exports.accept = function (req, res, next) {
         action: 'assetstore',
         apikeyName: req.apikeyName,
         assetCount: assetData.length,
-        message: "Asset upload request received."
+        originalAssetNames: originalAssetNames,
+        message: withAssetList("Asset upload request received", originalAssetNames),
     });
 
     var reqStart = Date.now();
@@ -195,7 +213,7 @@ exports.accept = function (req, res, next) {
                 statusCode: statusCode,
                 apikeyName: req.apikeyName,
                 error: err.message,
-                message: "Unable to upload one or more assets."
+                message: withAssetList("Unable to upload one or more assets", originalAssetNames)
             });
 
             res.send(statusCode, {
@@ -215,7 +233,7 @@ exports.accept = function (req, res, next) {
             statusCode: 200,
             apikeyName: req.apikeyName,
             totalReqDuration: Date.now() - reqStart,
-            message: "All assets have been uploaded successfully."
+            message: withAssetList("All assets have been uploaded successfully", originalAssetNames)
         });
 
         res.send(summary);

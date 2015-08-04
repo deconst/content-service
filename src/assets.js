@@ -69,7 +69,17 @@ function publishAsset(asset, callback) {
         headers: { 'Access-Control-Allow-Origin': '*' }
     });
 
-    up.on('error', callback);
+    up.on('error', function (err) {
+        log.warn({
+            action: 'assetstore',
+            error: err.message,
+            cloudFilesCode: err.statusCode,
+            assetFilename: asset.filename,
+            message: "Error uploading asset to Cloud Files."
+        });
+
+        callback(new restify.InternalServerError("Error publishing an asset to Cloud Files."));
+    });
 
     up.on('success', function () {
         log.debug({

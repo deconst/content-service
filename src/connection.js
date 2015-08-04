@@ -80,7 +80,7 @@ function mongoInit(callback) {
     ], function (err, db) {
       if (err) return callback(err);
 
-      log.debug("All indices created.");
+      logger.debug("All indices created.");
 
       callback(null);
     });

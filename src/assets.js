@@ -196,8 +196,7 @@ exports.accept = function (req, res, next) {
             statusCode: 200,
             apikeyName: req.apikeyName,
             totalReqDuration: Date.now() - reqStart,
-            message: "All assets have been uploaded successfully.",
-            summary: summary
+            message: "All assets have been uploaded successfully."
         });
 
         res.send(summary);

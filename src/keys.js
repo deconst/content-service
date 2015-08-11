@@ -1,21 +1,22 @@
 // Issue and revoke API keys.
 
-var
-  crypto = require('crypto'),
-  async = require('async'),
-  restify = require('restify'),
-  config = require('./config'),
-  connection = require('./connection'),
-  log = require('./logging').getLogger();
+var crypto = require('crypto');
+var async = require('async');
+var restify = require('restify');
+var config = require('./config');
+var connection = require('./connection');
+var log = require('./logging').getLogger();
 
 /**
  * @description Generate a fresh API key.
  */
 function generateKey(callback) {
-  crypto.randomBytes(128, function (err, buf) {
+  crypto.randomBytes(128, function(err, buf) {
     if (err) return callback(err);
 
-    callback(null, { apikey: buf.toString('hex')});
+    callback(null, {
+      apikey: buf.toString('hex')
+    });
   });
 }
 
@@ -23,12 +24,17 @@ function generateKey(callback) {
  * @description Store an API key in Mongo.
  */
 function storeKey(name, result, callback) {
-  var doc = { name: name, apikey: result.apikey };
+  var doc = {
+    name: name,
+    apikey: result.apikey
+  };
 
-  connection.db.collection("apiKeys").insertOne(doc, function (err) {
+  connection.db.collection("apiKeys").insertOne(doc, function(err) {
     if (err) return callback(err);
 
-    callback(null, { apikey: result.apikey });
+    callback(null, {
+      apikey: result.apikey
+    });
   });
 }
 
@@ -36,7 +42,9 @@ function storeKey(name, result, callback) {
  * @description Remove an API key from Mongo.
  */
 function removeKey(key, callback) {
-  connection.db.collection("apiKeys").deleteOne({ apikey: key }, function (err) {
+  connection.db.collection("apiKeys").deleteOne({
+    apikey: key
+  }, function(err) {
     if (err) return callback(err);
 
     callback(null);
@@ -57,10 +65,12 @@ exports.issue = function(req, res, next) {
   async.waterfall([
     generateKey,
     async.apply(storeKey, name)
-  ], function (err, result) {
+  ], function(err, result) {
     next.ifError(err);
 
-    res.json(200, { apikey: result.apikey });
+    res.json(200, {
+      apikey: result.apikey
+    });
     next();
   });
 };
@@ -74,7 +84,7 @@ exports.revoke = function(req, res, next) {
 
   log.info("Revoking an API key.");
 
-  removeKey(req.params.key, function (err) {
+  removeKey(req.params.key, function(err) {
     next.ifError(err);
 
     res.send(204);

@@ -9,6 +9,9 @@ var remote = require('./remote');
 // Methods to delegate to the activated storage driver.
 var delegates = [
   "setup",
+  "uploadAsset",
+  "nameAsset",
+  "enumerateNamedAssets"
 ];
 
 /**
@@ -26,7 +29,7 @@ for (var i = 0; i < delegates.length; i++) {
 /**
  * @description Instantiate the configured storage driver and invoke its setup method.
  */
-exports.setup = function (callback) {
+exports.setup = function(callback) {
   var driverName = config.storage();
   var driver = null;
 
@@ -38,7 +41,7 @@ exports.setup = function (callback) {
     return callback(new Error("Invalid driver name: " + driverName));
   }
 
-  driver.setup(function (err) {
+  driver.setup(function(err) {
     if (err) {
       return callback(err);
     }
@@ -60,4 +63,4 @@ exports.setup = function (callback) {
       return callback(new Error("Driver missing methods: " + driverName));
     }
   });
-}
+};

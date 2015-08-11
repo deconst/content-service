@@ -71,7 +71,7 @@ exports.configure = function (env) {
   }
 
   // Normalize storage as a lower-case string
-  configuration.storage = configuration.storage.toLowerCase();
+  configuration.storage.value = configuration.storage.value.toLowerCase();
 
   // If storage is not remote, remove remote-only-mandatory settings from the missing list.
   if (configuration.storage !== "remote") {
@@ -98,7 +98,7 @@ exports.configure = function (env) {
   }
 
   // Ensure that STORAGE is a recognized value.
-  if (configuration.storage !== "remote" && configuration.storage !== "memory") {
+  if (configuration.storage.value !== "remote" && configuration.storage.value !== "memory") {
     console.error("STORAGE must be either \"remote\" or \"memory\".");
 
     throw new Error("Invalid configuration");

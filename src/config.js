@@ -1,11 +1,15 @@
 // Read configuration from the environment, reporting anything that's missing.
 
-var
-  pkgcloud = require('pkgcloud'),
-  childProcess = require('child_process'),
-  info = require('../package.json');
+var pkgcloud = require('pkgcloud');
+var childProcess = require('child_process');
+var _ = require('lodash');
+var info = require('../package.json');
 
 var configuration = {
+  storage: {
+    env: "STORAGE",
+    def: "remote"
+  },
   rackspaceUsername: {
     env: "RACKSPACE_USERNAME"
   },
@@ -66,6 +70,17 @@ exports.configure = function (env) {
     }
   }
 
+  // Normalize storage as a lower-case string
+  configuration.storage = configuration.storage.toLowerCase();
+
+  // If storage is not remote, remove remote-only-mandatory settings from the missing list.
+  if (configuration.storage !== "remote") {
+    missing = _.without(missing,
+      "RACKSPACE_USERNAME", "RACKSPACE_APIKEY", "RACKSPACE_REGION",
+      "CONTENT_CONTAINER", "ASSET_CONTAINER",
+      "MONGODB_URL");
+  }
+
   // Normalize rackspaceServiceNet and contentLogColor as booleans.
   configuration.rackspaceServiceNet.value = (configuration.rackspaceServiceNet.value === "true");
   configuration.contentLogColor.value = (configuration.contentLogColor.value === "true");
@@ -80,6 +95,13 @@ exports.configure = function (env) {
     console.error("");
 
     throw new Error("Inadequate configuration");
+  }
+
+  // Ensure that STORAGE is a recognized value.
+  if (configuration.storage !== "remote" && configuration.storage !== "memory") {
+    console.error("STORAGE must be either \"remote\" or \"memory\".");
+
+    throw new Error("Invalid configuration");
   }
 };
 

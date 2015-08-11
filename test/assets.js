@@ -4,18 +4,16 @@
 
 require("./helpers/before");
 
-var
-  restify = require("restify"),
-  request = require("supertest"),
-  connection = require("../src/connection"),
-  connmocks = require("./mock/connection"),
-  authhelper = require("./helpers/auth"),
-  server = require("../src/server");
+var restify = require("restify");
+var request = require("supertest");
+var connmocks = require("./mock/connection");
+var authhelper = require("./helpers/auth");
+var server = require("../src/server");
 
-describe("/assets", function() {
+describe.only("/assets", function() {
   var mocks;
 
-  beforeEach(function () {
+  beforeEach(function() {
     mocks = connmocks.install(connection);
     authhelper.install();
   });
@@ -32,38 +30,42 @@ describe("/assets", function() {
       .attach("first", "test/fixtures/asset-file.txt")
       .expect(200)
       .expect("Content-Type", /json/)
-      .expect({ "asset-file.txt": finalName }, done);
+      .expect({
+        "asset-file.txt": finalName
+      }, done);
   });
 
   it("requires authentication", function(done) {
     authhelper.ensureAuthIsRequired(
       request(server.create())
-        .post("/assets")
-        .attach("first", "test/fixtures/asset-file.txt"),
+      .post("/assets")
+      .attach("first", "test/fixtures/asset-file.txt"),
       done);
   });
 
-  it("lists fingerprinted assets", function (done) {
+  it("lists fingerprinted assets", function(done) {
     var finalName =
-        "https://example.com/fake/cdn/url/" +
-        "asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt";
+      "https://example.com/fake/cdn/url/" +
+      "asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt";
 
     var app = server.create();
 
     request(app)
-        .post("/assets")
-        .query({named: 'true'})
-        .set("Authorization", authhelper.AUTH_USER)
-        .attach("first", "test/fixtures/asset-file.txt")
-        .end(function (err, res) {
-            if(err) throw err;
+      .post("/assets")
+      .query({
+        named: 'true'
+      })
+      .set("Authorization", authhelper.AUTH_USER)
+      .attach("first", "test/fixtures/asset-file.txt")
+      .end(function(err, res) {
+        if (err) throw err;
 
-            request(app)
-                .get("/assets")
-                .expect(200)
-                .expect("Content-Type", /json/)
-                .expect('{"first":"' + finalName + '"}', done);
-        });
+        request(app)
+          .get("/assets")
+          .expect(200)
+          .expect("Content-Type", /json/)
+          .expect('{"first":"' + finalName + '"}', done);
+      });
   });
 
 });

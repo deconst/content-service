@@ -53,7 +53,7 @@ function fingerprintAsset(asset, callback) {
  * @description Upload an asset's contents to the asset container.
  */
 function publishAsset(asset, callback) {
-  storage.uploadAsset(asset, function(err, asset) {
+  storage.storeAsset(asset, function(err, asset) {
     if (err) {
       return callback(err);
     }
@@ -118,7 +118,7 @@ function makeAssetHandler(shouldName) {
  * @description Enumerate all named assets.
  */
 var enumerateNamed = exports.enumerateNamed = function(callback) {
-  storage.enumerateNamedAssets(function(err, assetVars) {
+  storage.findNamedAssets(function(err, assetVars) {
     if (err) {
       return callback(err);
     }

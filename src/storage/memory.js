@@ -16,7 +16,7 @@ MemoryStorage.prototype.setup = function(callback) {
   callback();
 };
 
-MemoryStorage.prototype.uploadAsset = function(asset, callback) {
+MemoryStorage.prototype.storeAsset = function(asset, callback) {
   var assetBody = "";
   for (var i = 0; i < asset.chunks.length; i++) {
     assetBody += asset.chunks[i].toString();
@@ -41,11 +41,11 @@ MemoryStorage.prototype.nameAsset = function(asset, callback) {
   callback(null, asset);
 };
 
-MemoryStorage.prototype.enumerateNamedAssets = function(callback) {
+MemoryStorage.prototype.findNamedAssets = function(callback) {
   callback(null, _.values(this.namedAssets));
 };
 
-MemoryStorage.prototype.createKey = function(key, callback) {
+MemoryStorage.prototype.storeKey = function(key, callback) {
   this.keys[key.apikey] = key.name;
   callback();
 };

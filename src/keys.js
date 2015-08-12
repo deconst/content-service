@@ -29,7 +29,7 @@ function storeKey(name, result, callback) {
     apikey: result.apikey
   };
 
-  storage.createKey(key, function(err) {
+  storage.storeKey(key, function(err) {
     callback(err, key);
   });
 }

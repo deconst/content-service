@@ -22,7 +22,7 @@ RemoteStorage.prototype.setup = function(callback) {
 /**
  * @description Upload an asset to the Cloud Files asset container.
  */
-RemoteStorage.prototype.uploadAsset = function(asset, callback) {
+RemoteStorage.prototype.storeAsset = function(asset, callback) {
   var up = connection.client.upload({
     container: config.assetContainer(),
     remote: asset.filename,
@@ -71,14 +71,14 @@ RemoteStorage.prototype.nameAsset = function(asset, callback) {
 /**
  * @description List all assets that have been persisted in Mongo with nameAsset.
  */
-RemoteStorage.prototype.enumerateNamedAssets = function(callback) {
+RemoteStorage.prototype.findNamedAssets = function(callback) {
   connection.db.collection("layoutAssets").find().toArray(callback);
 };
 
 /**
  * @description Store a newly generated API key in the keys collection.
  */
-RemoteStorage.prototype.createKey = function(key, callback) {
+RemoteStorage.prototype.storeKey = function(key, callback) {
   connection.db.collection("apiKeys").insertOne(key, callback);
 };
 

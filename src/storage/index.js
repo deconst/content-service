@@ -71,5 +71,7 @@ exports.setup = function (callback) {
       console.error(missing.join(', '));
       return callback(new Error('Driver missing methods: ' + driverName));
     }
+
+    callback(null);
   });
 };

@@ -42,8 +42,10 @@ exports.setup = function(callback) {
 
   if (driverName === "remote") {
     driver = new remote.RemoteStorage();
+    exports.remote = driver;
   } else if (driverName === "memory") {
     driver = new memory.MemoryStorage();
+    exports.memory = driver;
   } else {
     return callback(new Error("Invalid driver name: " + driverName));
   }

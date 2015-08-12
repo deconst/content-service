@@ -13,12 +13,14 @@ var expect = chai.expect;
 var restify = require("restify");
 var request = require("supertest");
 var authhelper = require("./helpers/auth");
+var storage = require("../src/storage");
 var server = require("../src/server");
 
 describe("/assets", function() {
   var mocks;
 
   beforeEach(function() {
+    storage.memory.clear();
     authhelper.install();
   });
 

@@ -19,6 +19,7 @@ describe("/content", function() {
   var mocks;
 
   beforeEach(function() {
+    storage.memory.clear();
     authhelper.install();
   });
 

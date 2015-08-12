@@ -18,6 +18,7 @@ var server = require("../src/server");
 
 describe("/keys", function() {
   beforeEach(function() {
+    storage.memory.clear();
     authhelper.install();
   });
 

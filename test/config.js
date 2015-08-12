@@ -6,13 +6,13 @@
 
 require("./helpers/before");
 
-var
-  expect = require("chai").expect,
-  config = require("../src/config");
+var expect = require("chai").expect;
+var config = require("../src/config");
 
-describe("config", function () {
-  it("sets variables from the environment", function () {
+describe("config", function() {
+  it("sets variables from the environment", function() {
     config.configure({
+      STORAGE: "memory",
       RACKSPACE_USERNAME: "me",
       RACKSPACE_APIKEY: "12345",
       RACKSPACE_REGION: "space",
@@ -24,6 +24,7 @@ describe("config", function () {
       CONTENT_LOG_LEVEL: "debug"
     });
 
+    expect(config.storage()).to.equal("memory");
     expect(config.rackspaceUsername()).to.equal("me");
     expect(config.rackspaceAPIKey()).to.equal("12345");
     expect(config.rackspaceRegion()).to.equal("space");

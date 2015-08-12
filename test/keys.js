@@ -1,3 +1,5 @@
+/* global describe it beforeEach */
+
 /*
  * Unit tests for API key management.
  */
@@ -13,7 +15,6 @@ var expect = chai.expect;
 var request = require('supertest');
 var storage = require('../src/storage');
 var authhelper = require('./helpers/auth');
-var config = require('../src/config');
 var server = require('../src/server');
 
 describe('/keys', function () {

@@ -1,3 +1,5 @@
+/* global describe it beforeEach */
+
 /*
  * Unit tests for the content service.
  */
@@ -16,8 +18,6 @@ var authhelper = require('./helpers/auth');
 var server = require('../src/server');
 
 describe('/content', function () {
-  var mocks;
-
   beforeEach(function () {
     storage.memory.clear();
     authhelper.install();

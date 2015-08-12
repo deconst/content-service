@@ -1,3 +1,5 @@
+/* global describe it beforeEach */
+
 /*
  * Unit tests for the /asset endpoint.
  */
@@ -8,17 +10,13 @@ var chai = require('chai');
 var dirtyChai = require('dirty-chai');
 
 chai.use(dirtyChai);
-var expect = chai.expect;
 
-var restify = require('restify');
 var request = require('supertest');
 var authhelper = require('./helpers/auth');
 var storage = require('../src/storage');
 var server = require('../src/server');
 
 describe('/assets', function () {
-  var mocks;
-
   beforeEach(function () {
     storage.memory.clear();
     authhelper.install();

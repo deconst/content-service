@@ -1,12 +1,9 @@
 // Handler functions for the /assets endpoint.
 
 var async = require('async');
-var pkgcloud = require('pkgcloud');
 var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
-var restify = require('restify');
-var config = require('./config');
 var storage = require('./storage');
 var log = require('./logging').getLogger();
 
@@ -44,7 +41,7 @@ function fingerprintAsset (asset, callback) {
       original: asset.name,
       chunks: chunks,
       filename: fingerprinted,
-      type: asset.type,
+      type: asset.type
     });
   });
 }
@@ -125,7 +122,7 @@ var enumerateNamed = exports.enumerateNamed = function (callback) {
 
     var assets = {};
 
-    for (i = 0; i < assetVars.length; i++) {
+    for (var i = 0; i < assetVars.length; i++) {
       var assetVar = assetVars[i];
       assets[assetVar.key] = assetVar.publicURL;
     }
@@ -168,7 +165,7 @@ exports.accept = function (req, res, next) {
     apikeyName: req.apikeyName,
     assetCount: assetData.length,
     originalAssetNames: originalAssetNames,
-    message: withAssetList('Asset upload request received', originalAssetNames),
+    message: withAssetList('Asset upload request received', originalAssetNames)
   });
 
   var reqStart = Date.now();

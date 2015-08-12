@@ -1,9 +1,7 @@
 // Store, retrieve, and delete metadata envelopes.
 
 var async = require('async');
-var _ = require('lodash');
 var restify = require('restify');
-var config = require('./config');
 var storage = require('./storage');
 var log = require('./logging').getLogger();
 var assets = require('./assets');
@@ -43,6 +41,10 @@ function downloadContent (contentID, callback) {
  */
 function injectAssetVars (doc, callback) {
   assets.enumerateNamed(function (err, assets) {
+    if (err) {
+      return callback(err);
+    }
+
     doc.assets = assets;
     callback(null, doc);
   });

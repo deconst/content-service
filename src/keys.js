@@ -3,7 +3,6 @@
 var crypto = require('crypto');
 var async = require('async');
 var restify = require('restify');
-var config = require('./config');
 var storage = require('./storage');
 var log = require('./logging').getLogger();
 

@@ -2,10 +2,10 @@
  * Initialize the Restify server.
  */
 
-var restify = require('restify'),
-  config = require('./config'),
-  routes = require('./routes'),
-  log = require('./logging').getLogger();
+var restify = require('restify');
+var config = require('./config');
+var routes = require('./routes');
+var log = require('./logging').getLogger();
 
 exports.create = function () {
   var server = restify.createServer();

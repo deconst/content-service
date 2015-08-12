@@ -46,23 +46,6 @@ function makeContainerCreator (client, containerName, logicalName, cdn) {
 }
 
 /**
- * @description Utility function to ensure that the exported Container model includes CDN URIs when
- *   it's supposed to.
- */
-function refresh (client, containerName, logicalName, callback) {
-  client.getContainer(containerName, function (err, container) {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    exports[logicalName] = container;
-
-    callback(null);
-  });
-}
-
-/**
  * @description Authenticate to MongoDB, export the active MongoDB connection as "db", and
  *   perform any necessary one-time initialization.
  */

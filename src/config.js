@@ -1,6 +1,5 @@
 // Read configuration from the environment, reporting anything that's missing.
 
-var pkgcloud = require('pkgcloud');
 var childProcess = require('child_process');
 var _ = require('lodash');
 var info = require('../package.json');

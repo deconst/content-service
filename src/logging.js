@@ -1,5 +1,5 @@
-var winston = require('winston'),
-  config = require('./config');
+var winston = require('winston');
+var config = require('./config');
 
 var logger = null;
 
@@ -23,7 +23,7 @@ exports.getLogger = function () {
       level: config.contentLogLevel().toLowerCase(),
       prettyPrint: true,
       colorize: config.contentLogColor(),
-      timestamp: true,
+      timestamp: true
     }));
   }
 

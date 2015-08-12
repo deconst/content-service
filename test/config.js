@@ -1,8 +1,8 @@
+/* global describe it */
+
 /*
  * Tests for the environment variable configuration.
  */
-
-/* jshint expr:true */
 
 require('./helpers/before');
 
@@ -33,7 +33,7 @@ describe('config', function () {
     expect(config.rackspaceUsername()).to.equal('me');
     expect(config.rackspaceAPIKey()).to.equal('12345');
     expect(config.rackspaceRegion()).to.equal('space');
-    expect(config.rackspaceServiceNet()).to.be.true;
+    expect(config.rackspaceServiceNet()).to.be.true();
     expect(config.adminAPIKey()).to.equal('12345');
     expect(config.contentContainer()).to.equal('the-content-container');
     expect(config.assetContainer()).to.equal('the-asset-container');

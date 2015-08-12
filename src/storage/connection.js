@@ -1,19 +1,18 @@
 // Manage a connection to the Rackspace cloud. Retain and export handles to created resources.
 
-var
-  async = require('async'),
-  pkgcloud = require('pkgcloud'),
-  mongo = require('mongodb'),
-  config = require('./config'),
-  logger = require('./logging').getLogger();
+var async = require('async');
+var pkgcloud = require('pkgcloud');
+var mongo = require('mongodb');
+var config = require('../config');
+var logger = require('../logging').getLogger();
 
 /**
  * @description Create a function that asynchronously creates a Rackspace container if it
  *   doesn't already exist.
  */
 function makeContainerCreator(client, containerName, logicalName, cdn) {
-  return function (callback) {
-    var reportBack = function (err, container) {
+  return function(callback) {
+    var reportBack = function(err, container) {
       if (err) return callback(err);
 
       exports[logicalName] = container;
@@ -23,12 +22,15 @@ function makeContainerCreator(client, containerName, logicalName, cdn) {
       callback(null, container);
     };
 
-    var cdnEnable = function (err, container) {
+    var cdnEnable = function(err, container) {
       if (err) return callback(err);
 
       logger.debug("Enabling CDN on container [" + container.name + "].");
 
-      client.setCdnEnabled(container, { ttl: 31536000, enabled: true }, reportBack);
+      client.setCdnEnabled(container, {
+        ttl: 31536000,
+        enabled: true
+      }, reportBack);
     };
 
     var handleCreation = cdn ? cdnEnable : reportBack;
@@ -37,7 +39,9 @@ function makeContainerCreator(client, containerName, logicalName, cdn) {
 
     // Instead of checking if the container exists first, we try to create it, and
     // if it already exists, we get a no-op (202) and move on.
-    client.createContainer({ name: containerName }, handleCreation);
+    client.createContainer({
+      name: containerName
+    }, handleCreation);
   };
 }
 
@@ -46,7 +50,7 @@ function makeContainerCreator(client, containerName, logicalName, cdn) {
  *   it's supposed to.
  */
 function refresh(client, containerName, logicalName, callback) {
-  client.getContainer(containerName, function (err, container) {
+  client.getContainer(containerName, function(err, container) {
     if (err) {
       callback(err);
       return;
@@ -63,7 +67,7 @@ function refresh(client, containerName, logicalName, callback) {
  *   perform any necessary one-time initialization.
  */
 function mongoInit(callback) {
-  mongo.MongoClient.connect(config.mongodbURL(), function (err, db) {
+  mongo.MongoClient.connect(config.mongodbURL(), function(err, db) {
     if (err) return callback(err);
 
     logger.debug("Connected to MongoDB database at [" + config.mongodbURL() + "].");
@@ -74,10 +78,22 @@ function mongoInit(callback) {
 
     // Create indices on collections as necessary.
     async.parallel([
-      function (callback) { envelopes.createIndex("tags", { sparse: true }, callback); },
-      function (callback) { envelopes.createIndex("categories", { sparse: true }, callback); },
-      function (callback) { envelopes.createIndex("contentID", { unique: true }, callback); }
-    ], function (err, db) {
+      function(callback) {
+        envelopes.createIndex("tags", {
+          sparse: true
+        }, callback);
+      },
+      function(callback) {
+        envelopes.createIndex("categories", {
+          sparse: true
+        }, callback);
+      },
+      function(callback) {
+        envelopes.createIndex("contentID", {
+          unique: true
+        }, callback);
+      }
+    ], function(err, db) {
       if (err) return callback(err);
 
       logger.debug("All indices created.");
@@ -87,7 +103,7 @@ function mongoInit(callback) {
   });
 }
 
-exports.setup = function (callback) {
+exports.setup = function(callback) {
   var client = pkgcloud.providers.rackspace.storage.createClient({
     username: config.rackspaceUsername(),
     apiKey: config.rackspaceAPIKey(),
@@ -95,7 +111,7 @@ exports.setup = function (callback) {
     useInternal: config.rackspaceServiceNet()
   });
 
-  client.on('log::*', function (message, object) {
+  client.on('log::*', function(message, object) {
     if (object) {
       logger.log(this.event.split('::')[1], message, object);
     } else {
@@ -103,7 +119,7 @@ exports.setup = function (callback) {
     }
   });
 
-  client.auth(function (err) {
+  client.auth(function(err) {
     if (err) throw err;
 
     exports.client = client;

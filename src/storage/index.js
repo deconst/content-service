@@ -24,7 +24,9 @@ var delegates = [
  * setup() is invoked.
  */
 function makeNotSetupFunction(fname) {
-  throw new Error("Attempt to call " + fname + " before storage.setup() is invoked.");
+  return function() {
+    throw new Error("Attempt to call " + fname + " before storage.setup() is invoked.");
+  };
 }
 
 for (var i = 0; i < delegates.length; i++) {

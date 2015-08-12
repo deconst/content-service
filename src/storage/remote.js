@@ -75,6 +75,32 @@ RemoteStorage.prototype.enumerateNamedAssets = function(callback) {
   connection.db.collection("layoutAssets").find().toArray(callback);
 };
 
+/**
+ * @description Store a newly generated API key in the keys collection.
+ */
+RemoteStorage.prototype.createKey = function(key, callback) {
+  connection.db.collection("apiKeys").insertOne(key, callback);
+};
+
+/**
+ * @description Forget a previously stored API key by key value.
+ */
+RemoteStorage.prototype.deleteKey = function(apikey, callback) {
+  connection.db.collection("apiKeys").deleteOne({
+    apikey: apikey
+  }, callback);
+};
+
+/**
+ * @description Return an Array of keys that match the provided API key. Will most frequently
+ *   return either zero or one results, but you never know.
+ */
+RemoteStorage.prototype.findKeys = function(apikey, callback) {
+  connection.db.collection("apiKeys").find({
+    apikey: apikey
+  }).toArray(callback);
+};
+
 module.exports = {
   RemoteStorage: RemoteStorage
 };

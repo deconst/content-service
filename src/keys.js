@@ -4,7 +4,7 @@ var crypto = require('crypto');
 var async = require('async');
 var restify = require('restify');
 var config = require('./config');
-var connection = require('./connection');
+var storage = require('./storage');
 var log = require('./logging').getLogger();
 
 /**
@@ -24,17 +24,13 @@ function generateKey(callback) {
  * @description Store an API key in Mongo.
  */
 function storeKey(name, result, callback) {
-  var doc = {
+  var key = {
     name: name,
     apikey: result.apikey
   };
 
-  connection.db.collection("apiKeys").insertOne(doc, function(err) {
-    if (err) return callback(err);
-
-    callback(null, {
-      apikey: result.apikey
-    });
+  storage.createKey(key, function(err) {
+    callback(err, key);
   });
 }
 
@@ -42,13 +38,7 @@ function storeKey(name, result, callback) {
  * @description Remove an API key from Mongo.
  */
 function removeKey(key, callback) {
-  connection.db.collection("apiKeys").deleteOne({
-    apikey: key
-  }, function(err) {
-    if (err) return callback(err);
-
-    callback(null);
-  });
+  storage.deleteKey(key, callback);
 }
 
 exports.issue = function(req, res, next) {

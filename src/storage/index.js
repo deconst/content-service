@@ -11,7 +11,10 @@ var delegates = [
   "setup",
   "uploadAsset",
   "nameAsset",
-  "enumerateNamedAssets"
+  "enumerateNamedAssets",
+  "createKey",
+  "deleteKey",
+  "findKeys"
 ];
 
 /**

@@ -45,6 +45,28 @@ MemoryStorage.prototype.enumerateNamedAssets = function(callback) {
   callback(null, _.values(this.namedAssets));
 };
 
+MemoryStorage.prototype.createKey = function(key, callback) {
+  this.keys[key.apikey] = key.name;
+  callback();
+};
+
+MemoryStorage.prototype.deleteKey = function(apikey, callback) {
+  delete this.keys[apikey];
+  callback();
+};
+
+MemoryStorage.prototype.findKeys = function(apikey, callback) {
+  var key = this.keys[apikey];
+  if (key) {
+    callback(null, [{
+      apikey: key,
+      name: key.name
+    }]);
+  } else {
+    callback(null, []);
+  }
+};
+
 module.exports = {
   MemoryStorage: MemoryStorage
 };

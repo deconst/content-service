@@ -60,7 +60,7 @@ exports.setup = function(callback) {
       if (!driver[delegateName]) {
         missing.push(delegateName);
       } else {
-        exports[delegateName] = driver[delegateName];
+        exports[delegateName] = driver[delegateName].bind(driver);
       }
     }
 

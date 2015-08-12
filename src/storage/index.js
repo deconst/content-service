@@ -5,6 +5,7 @@
 var config = require('../config');
 var memory = require('./memory');
 var remote = require('./remote');
+var logger = require('../logging').getLogger();
 
 // Methods to delegate to the activated storage driver.
 var delegates = [
@@ -43,9 +44,11 @@ exports.setup = function (callback) {
   if (driverName === 'remote') {
     driver = new remote.RemoteStorage();
     exports.remote = driver;
+    logger.debug("Remote storage driver active.");
   } else if (driverName === 'memory') {
     driver = new memory.MemoryStorage();
     exports.memory = driver;
+    logger.debug("In-memory storage driver active.");
   } else {
     return callback(new Error('Invalid driver name: ' + driverName));
   }

@@ -6,22 +6,20 @@ require("./helpers/before");
 
 var restify = require("restify");
 var request = require("supertest");
-var connmocks = require("./mock/connection");
 var authhelper = require("./helpers/auth");
 var server = require("../src/server");
 
-describe.only("/assets", function() {
+describe("/assets", function() {
   var mocks;
 
   beforeEach(function() {
-    mocks = connmocks.install(connection);
     authhelper.install();
   });
 
   it("accepts an asset file and produces a fingerprinted filename", function(done) {
     // shasum -a 256 test/fixtures/asset-file.txt
     var finalName =
-      "https://example.com/fake/cdn/url/" +
+      "/__local_asset__/" +
       "asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt";
 
     request(server.create())
@@ -45,7 +43,7 @@ describe.only("/assets", function() {
 
   it("lists fingerprinted assets", function(done) {
     var finalName =
-      "https://example.com/fake/cdn/url/" +
+      "/__local_asset__/" +
       "asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt";
 
     var app = server.create();

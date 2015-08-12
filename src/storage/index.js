@@ -8,7 +8,6 @@ var remote = require('./remote');
 
 // Methods to delegate to the activated storage driver.
 var delegates = [
-  "setup",
   "storeAsset",
   "nameAsset",
   "findNamedAssets",

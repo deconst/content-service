@@ -56,11 +56,11 @@ MemoryStorage.prototype.deleteKey = function(apikey, callback) {
 };
 
 MemoryStorage.prototype.findKeys = function(apikey, callback) {
-  var key = this.keys[apikey];
-  if (key) {
+  var name = this.keys[apikey];
+  if (name) {
     callback(null, [{
-      apikey: key,
-      name: key.name
+      apikey: apikey,
+      name: name
     }]);
   } else {
     callback(null, []);

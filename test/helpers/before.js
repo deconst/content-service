@@ -28,5 +28,3 @@ if (process.env.INTEGRATION) {
 }
 
 var storage = require('../../src/storage');
-
-storage.setup(function () {});

@@ -11,15 +11,19 @@ var dirtyChai = require('dirty-chai');
 
 chai.use(dirtyChai);
 
+var async = require('async');
 var request = require('supertest');
 var authhelper = require('./helpers/auth');
 var storage = require('../src/storage');
 var server = require('../src/server');
 
-describe('/assets', function () {
-  beforeEach(function () {
-    storage.memory.clear();
-    authhelper.install();
+describe.only('/assets', function () {
+  beforeEach(function (done) {
+    async.series([
+      function (cb) { storage.setup(cb); },
+      function (cb) { storage.clear(cb); },
+      function (cb) { authhelper.install(cb); }
+    ], done);
   });
 
   it('accepts an asset file and produces a fingerprinted filename', function (done) {

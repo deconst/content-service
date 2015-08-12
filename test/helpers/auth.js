@@ -15,7 +15,7 @@ exports.AUTH_USER = 'deconst apikey="' + exports.APIKEY_USER + '"';
  * @description Populate the DB mock and the application environment to recognize the fixture
  *   API keys.
  */
-exports.install = function () {
+exports.install = function (callback) {
   config.configure({
     RACKSPACE_USERNAME: 'me',
     RACKSPACE_APIKEY: '11111',
@@ -32,7 +32,7 @@ exports.install = function () {
     apikey: exports.APIKEY_USER
   };
 
-  storage.storeKey(key, function () {});
+  storage.storeKey(key, callback);
 };
 
 /**

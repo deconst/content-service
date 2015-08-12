@@ -18,9 +18,15 @@ var authhelper = require('./helpers/auth');
 var server = require('../src/server');
 
 describe('/content', function () {
-  beforeEach(function () {
-    storage.memory.clear();
-    authhelper.install();
+  beforeEach(function (done) {
+    storage.setup(function (err) {
+      if (err) return done(err);
+
+      storage.memory.clear();
+      authhelper.install();
+
+      done();
+    });
   });
 
   describe('#store', function () {

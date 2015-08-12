@@ -14,7 +14,10 @@ var delegates = [
   "enumerateNamedAssets",
   "createKey",
   "deleteKey",
-  "findKeys"
+  "findKeys",
+  "storeContent",
+  "getContent",
+  "deleteContent"
 ];
 
 /**

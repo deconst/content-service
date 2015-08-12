@@ -67,6 +67,32 @@ MemoryStorage.prototype.findKeys = function(apikey, callback) {
   }
 };
 
+MemoryStorage.prototype.storeContent = function(contentID, content, callback) {
+  this.envelopes[contentID] = content;
+  callback();
+};
+
+MemoryStorage.prototype.getContent = function(contentID, callback) {
+  var envelope = this.envelopes[contentID];
+
+  if (envelope === undefined) {
+    var err = new Error("Memory storage error");
+
+    err.statusCode = 404;
+    err.responseBody = "Oh snap";
+
+    return callback(err);
+  }
+
+  callback(null, envelope);
+};
+
+MemoryStorage.prototype.deleteContent = function(contentID, callback) {
+  delete this.envelopes[contentID];
+
+  callback();
+};
+
 module.exports = {
   MemoryStorage: MemoryStorage
 };

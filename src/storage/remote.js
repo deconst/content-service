@@ -101,6 +101,50 @@ RemoteStorage.prototype.findKeys = function(apikey, callback) {
   }).toArray(callback);
 };
 
+RemoteStorage.prototype.storeContent = function(contentID, content, callback) {
+  var dest = connection.client.upload({
+    container: config.contentContainer(),
+    remote: encodeURIComponent(contentID)
+  });
+
+  dest.end(content, callback);
+};
+
+RemoteStorage.prototype.getContent = function(contentID, callback) {
+  var source = connection.client.download({
+    container: config.contentContainer(),
+    remote: encodeURIComponent(contentID)
+  });
+  var chunks = [];
+
+  source.on('error', function(err) {
+    callback(err);
+  });
+
+  source.on('data', function(chunk) {
+    chunks.push(chunk);
+  });
+
+  source.on('complete', function(resp) {
+    var complete = Buffer.concat(chunks);
+
+    if (resp.statusCode > 400) {
+      var err = new Error("Cloud Files error");
+
+      err.statusCode = resp.statusCode;
+      err.responseBody = complete;
+
+      return callback(err);
+    }
+
+    callback(null, complete);
+  });
+};
+
+RemoteStorage.prototype.deleteContent = function(contentID, callback) {
+  connection.client.removeFile(config.contentContainer(), encodeURIComponent(contentID), callback);
+};
+
 module.exports = {
   RemoteStorage: RemoteStorage
 };

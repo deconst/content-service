@@ -4,7 +4,7 @@ var async = require('async');
 var _ = require('lodash');
 var restify = require('restify');
 var config = require('./config');
-var connection = require('./connection');
+var storage = require('./storage');
 var log = require('./logging').getLogger();
 var assets = require('./assets');
 
@@ -12,33 +12,17 @@ var assets = require('./assets');
  * @description Download the raw metadata envelope from Cloud Files.
  */
 function downloadContent(contentID, callback) {
-  var source = connection.client.download({
-    container: config.contentContainer(),
-    remote: encodeURIComponent(contentID)
-  });
-  var chunks = [];
+  storage.getContent(contentID, function(err, content) {
+    if (err) {
+      if (err.statusCode === 404) {
+        return callback(new restify.NotFoundError("No content for ID [" + contentID + "]"));
+      }
 
-  source.on('error', function(err) {
-    callback(err);
-  });
-
-  source.on('data', function(chunk) {
-    chunks.push(chunk);
-  });
-
-  source.on('complete', function(resp) {
-    if (resp.statusCode === 404) {
-      return callback(new restify.NotFoundError("No content for ID [" + contentID + "]"));
-    }
-
-    var complete = Buffer.concat(chunks);
-
-    if (resp.statusCode > 400) {
       log.warn({
         action: 'contentretrieve',
         contentID: contentID,
-        cloudFilesCode: resp.statusCode,
-        cloudFilesResponse: complete,
+        cloudFilesCode: err.statusCode,
+        cloudFilesResponse: err.responseBody,
         message: "Cloud Files error."
       });
 
@@ -65,117 +49,14 @@ function injectAssetVars(doc, callback) {
 }
 
 /**
- * @description If the envelope contains a "query" attribute, perform each query and inject the
- *   results into the document.
- */
-function handleQueries(doc, callback) {
-  if (!doc.envelope.queries) {
-    return callback(null, doc);
-  }
-
-  var queryNames = _.keys(doc.envelope.queries);
-  var queries = [];
-  for (var i = 0; i < queryNames.length; i++) {
-    queries.push(doc.envelope.queries[queryNames[i]]);
-  }
-
-  delete doc.envelope.queries;
-
-  log.debug("Processing " + queries.length + " envelope queries.");
-
-  async.map(queries, handleQuery, function(err, results) {
-    if (err) return callback(err);
-
-    doc.results = {};
-    for (var i = 0; i < results.length; i++) {
-      for (var j = 0; j < results[i].length; j++) {
-        var each = results[i][j];
-
-        if (each.publish_date) {
-          var d = new Date();
-          d.setTime(each.publish_date);
-          each.publish_date = d.toUTCString();
-        }
-      }
-
-      doc.results[queryNames[i]] = results[i];
-    }
-
-    callback(null, doc);
-  });
-}
-
-/**
- * @description Perform a single metadata envelope related-document query.
- */
-function handleQuery(query, callback) {
-  var order = query.$order || {
-    publish_date: -1
-  };
-  var skip = query.$skip;
-  var limit = query.$limit;
-
-  if (query.$query) {
-    query = query.$query;
-    delete query.$query;
-  }
-  delete query.$skip;
-  delete query.$limit;
-
-  var cursor = connection.db.collection("envelopes").find(query);
-
-  cursor.sort(order);
-  if (skip) {
-    cursor.skip(skip);
-  }
-  if (limit) {
-    cursor.limit(limit);
-  }
-
-  cursor.toArray(callback);
-}
-
-/**
  * @description Store an incoming metadata envelope within Cloud Files.
  */
 function storeEnvelope(doc, callback) {
-  var dest = connection.client.upload({
-    container: config.contentContainer(),
-    remote: encodeURIComponent(doc.contentID)
-  });
-
-  dest.end(JSON.stringify(doc.envelope), function(err) {
+  storage.storeContent(doc.contentID, JSON.stringify(doc.envelope), function(err) {
     if (err) return callback(err);
 
     callback(null, doc);
   });
-}
-
-/**
- * @description Persist selected attributes from a metadata envelope in an indexed Mongo collection.
- */
-function indexEnvelope(doc, callback) {
-  var subdoc = _.pick(doc.envelope, ["title", "tags", "categories"]);
-
-  subdoc.contentID = doc.contentID;
-  if (doc.envelope.publish_date) {
-    var parsed_date = Date.parse(doc.envelope.publish_date);
-    if (!Number.isNaN(parsed_date)) {
-      subdoc.publish_date = parsed_date;
-    }
-  }
-
-  connection.db.collection("envelopes").findOneAndReplace({
-      contentID: subdoc.contentID
-    },
-    subdoc, {
-      upsert: true
-    },
-    function(err) {
-      if (err) return callback(err);
-      callback(null, doc);
-    }
-  );
 }
 
 /**
@@ -192,8 +73,7 @@ exports.retrieve = function(req, res, next) {
 
   async.waterfall([
     async.apply(downloadContent, req.params.id),
-    injectAssetVars,
-    handleQueries
+    injectAssetVars
   ], function(err, doc) {
     if (err) {
       log.error({
@@ -239,10 +119,7 @@ exports.store = function(req, res, next) {
     envelope: req.body
   };
 
-  async.waterfall([
-    async.apply(storeEnvelope, doc),
-    indexEnvelope
-  ], function(err, doc) {
+  storeEnvelope(doc, function(err, doc) {
     if (err) {
       log.error({
         action: "contentstore",
@@ -285,7 +162,7 @@ exports.delete = function(req, res, next) {
 
   var reqStart = Date.now();
 
-  connection.client.removeFile(config.contentContainer(), encodeURIComponent(req.params.id), function(err) {
+  storage.deleteContent(req.params.id, function(err) {
     if (err) {
       log.error({
         action: "contentdelete",

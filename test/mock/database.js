@@ -41,7 +41,7 @@ var createMockCollection = function (db, contents) {
         var each = contents[i];
 
         var match =
-          singleMatch(each.apikey, query.apikey) ||
+        singleMatch(each.apikey, query.apikey) ||
           arrayMatch(each.categories, query.categories) ||
           arrayMatch(each.tags, query.tags);
 
@@ -52,15 +52,14 @@ var createMockCollection = function (db, contents) {
     },
 
     findOneAndReplace: function (query, replacement, options, callback) {
-      var
-        results = [],
+      var results = [],
         resultIndex = -1;
 
       for (var i = 0; i < contents.length; i++) {
         var each = contents[i];
 
         var match =
-          singleMatch(each.contentID, query.contentID);
+        singleMatch(each.contentID, query.contentID);
 
         if (match) {
           results.push(each);
@@ -69,9 +68,9 @@ var createMockCollection = function (db, contents) {
       }
 
       if (results.length > 1) {
-        console.error("Query results:", results);
+        console.error('Query results:', results);
 
-        return callback(new Error("Expected a single result but found multiple."));
+        return callback(new Error('Expected a single result but found multiple.'));
       }
 
       if (resultIndex === -1) {
@@ -93,8 +92,8 @@ var createMockCollection = function (db, contents) {
       if (callback) callback(null, db);
     },
     updateOne: function () {
-        contents.push(arguments[1].$set);
-        arguments[arguments.length - 1].call(null);
+      contents.push(arguments[1].$set);
+      arguments[arguments.length - 1].call(null);
     },
     deleteOne: function (filter, callback) {
       var resultIndex = -1;

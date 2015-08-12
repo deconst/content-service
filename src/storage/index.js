@@ -8,24 +8,24 @@ var remote = require('./remote');
 
 // Methods to delegate to the activated storage driver.
 var delegates = [
-  "storeAsset",
-  "nameAsset",
-  "findNamedAssets",
-  "storeKey",
-  "deleteKey",
-  "findKeys",
-  "storeContent",
-  "getContent",
-  "deleteContent"
+  'storeAsset',
+  'nameAsset',
+  'findNamedAssets',
+  'storeKey',
+  'deleteKey',
+  'findKeys',
+  'storeContent',
+  'getContent',
+  'deleteContent'
 ];
 
 /**
  * @description Create a function that will throw an error if a delegating function is called before
  * setup() is invoked.
  */
-function makeNotSetupFunction(fname) {
-  return function() {
-    throw new Error("Attempt to call " + fname + " before storage.setup() is invoked.");
+function makeNotSetupFunction (fname) {
+  return function () {
+    throw new Error('Attempt to call ' + fname + ' before storage.setup() is invoked.');
   };
 }
 
@@ -36,21 +36,21 @@ for (var i = 0; i < delegates.length; i++) {
 /**
  * @description Instantiate the configured storage driver and invoke its setup method.
  */
-exports.setup = function(callback) {
+exports.setup = function (callback) {
   var driverName = config.storage();
   var driver = null;
 
-  if (driverName === "remote") {
+  if (driverName === 'remote') {
     driver = new remote.RemoteStorage();
     exports.remote = driver;
-  } else if (driverName === "memory") {
+  } else if (driverName === 'memory') {
     driver = new memory.MemoryStorage();
     exports.memory = driver;
   } else {
-    return callback(new Error("Invalid driver name: " + driverName));
+    return callback(new Error('Invalid driver name: ' + driverName));
   }
 
-  driver.setup(function(err) {
+  driver.setup(function (err) {
     if (err) {
       return callback(err);
     }
@@ -67,9 +67,9 @@ exports.setup = function(callback) {
     }
 
     if (missing.length !== 0) {
-      console.error("The following methods are missing from the " + driverName + " driver:");
-      console.error(missing.join(", "));
-      return callback(new Error("Driver missing methods: " + driverName));
+      console.error('The following methods are missing from the ' + driverName + ' driver:');
+      console.error(missing.join(', '));
+      return callback(new Error('Driver missing methods: ' + driverName));
     }
   });
 };

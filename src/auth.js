@@ -1,10 +1,10 @@
 // Authentication middleware.
 
-var async = require("async");
-var restify = require("restify");
-var config = require("./config");
-var storage = require("./storage");
-var log = require("./logging").getLogger();
+var async = require('async');
+var restify = require('restify');
+var config = require('./config');
+var storage = require('./storage');
+var log = require('./logging').getLogger();
 
 var credentialRx = /apikey\s*=\s*"?([^"]+)"?/;
 
@@ -12,13 +12,13 @@ var credentialRx = /apikey\s*=\s*"?([^"]+)"?/;
  * @description Extract an API key from a request's parsed Authorization header. Emit an error if
  *  no such header is present, or if it's not formed correctly.
  */
-var parseAuth = function(auth, callback) {
+var parseAuth = function (auth, callback) {
   if (!auth || !Object.keys(auth).length) {
-    return callback(new restify.UnauthorizedError("An API key is required for this endpoint."));
+    return callback(new restify.UnauthorizedError('An API key is required for this endpoint.'));
   }
 
-  if (auth.scheme !== "deconst") {
-    return callback(new restify.InvalidHeaderError("Your Authorization header specifies an incorrect scheme."));
+  if (auth.scheme !== 'deconst') {
+    return callback(new restify.InvalidHeaderError('Your Authorization header specifies an incorrect scheme.'));
   }
 
   var match = credentialRx.exec(auth.credentials);
@@ -34,29 +34,29 @@ var parseAuth = function(auth, callback) {
  * @description Access the name associated with an API key. Emit an error if the key is not
  *   recognized, or if adminOnly is true but the key is not an admin key.
  */
-var locateKeyname = function(adminOnly, key, callback) {
+var locateKeyname = function (adminOnly, key, callback) {
   // Always accept the admin's API key.
   if (key === config.adminAPIKey()) {
     return callback(null, {
       key: key,
-      name: "administrator"
+      name: 'administrator'
     });
   }
 
   if (adminOnly) {
-    return callback(new restify.UnauthorizedError("Only admins may access this endpoint."));
+    return callback(new restify.UnauthorizedError('Only admins may access this endpoint.'));
   }
 
   // Check storage for non-admin keys.
-  storage.findKeys(key, function(err, keys) {
+  storage.findKeys(key, function (err, keys) {
     if (err) return callback(err);
 
     if (!keys.length) {
-      return callback(new restify.UnauthorizedError("The API key you provided is invalid."));
+      return callback(new restify.UnauthorizedError('The API key you provided is invalid.'));
     }
 
     if (keys.length !== 1) {
-      log.error("Expected one API key document, but got " + keys.length + ".", keys);
+      log.error('Expected one API key document, but got ' + keys.length + '.', keys);
     }
 
     callback(null, {
@@ -71,15 +71,15 @@ var locateKeyname = function(adminOnly, key, callback) {
  *   validate an API key from an incoming request. If the API key is valid, its name will be
  *   attached to the request object. Otherwise, an appropriate error will be generated.
  */
-var createAPIKeyHandler = function(adminOnly) {
-  return function(req, res, next) {
+var createAPIKeyHandler = function (adminOnly) {
+  return function (req, res, next) {
     async.waterfall([
       async.apply(parseAuth, req.authorization),
       async.apply(locateKeyname, adminOnly)
-    ], function(err, result) {
+    ], function (err, result) {
       next.ifError(err);
 
-      log.debug("Request authenticated as [" + result.name + "]");
+      log.debug('Request authenticated as [' + result.name + ']');
       req.apikey = result.key;
       req.apikeyName = result.name;
       next();

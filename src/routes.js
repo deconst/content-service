@@ -1,8 +1,7 @@
 var restify = require('restify');
 
 // Handlers
-var
-  auth = require('./auth'),
+var auth = require('./auth'),
   version = require('./version'),
   content = require('./content'),
   assets = require('./assets'),

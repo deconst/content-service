@@ -2,74 +2,74 @@
  * Unit tests for the /asset endpoint.
  */
 
-require("./helpers/before");
+require('./helpers/before');
 
-var chai = require("chai");
-var dirtyChai = require("dirty-chai");
+var chai = require('chai');
+var dirtyChai = require('dirty-chai');
 
 chai.use(dirtyChai);
 var expect = chai.expect;
 
-var restify = require("restify");
-var request = require("supertest");
-var authhelper = require("./helpers/auth");
-var storage = require("../src/storage");
-var server = require("../src/server");
+var restify = require('restify');
+var request = require('supertest');
+var authhelper = require('./helpers/auth');
+var storage = require('../src/storage');
+var server = require('../src/server');
 
-describe("/assets", function() {
+describe('/assets', function () {
   var mocks;
 
-  beforeEach(function() {
+  beforeEach(function () {
     storage.memory.clear();
     authhelper.install();
   });
 
-  it("accepts an asset file and produces a fingerprinted filename", function(done) {
+  it('accepts an asset file and produces a fingerprinted filename', function (done) {
     // shasum -a 256 test/fixtures/asset-file.txt
     var finalName =
-      "/__local_asset__/" +
-      "asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt";
+    '/__local_asset__/' +
+      'asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt';
 
     request(server.create())
-      .post("/assets")
-      .set("Authorization", authhelper.AUTH_USER)
-      .attach("first", "test/fixtures/asset-file.txt")
+      .post('/assets')
+      .set('Authorization', authhelper.AUTH_USER)
+      .attach('first', 'test/fixtures/asset-file.txt')
       .expect(200)
-      .expect("Content-Type", /json/)
+      .expect('Content-Type', /json/)
       .expect({
-        "asset-file.txt": finalName
+        'asset-file.txt': finalName
       }, done);
   });
 
-  it("requires authentication", function(done) {
+  it('requires authentication', function (done) {
     authhelper.ensureAuthIsRequired(
       request(server.create())
-      .post("/assets")
-      .attach("first", "test/fixtures/asset-file.txt"),
+        .post('/assets')
+        .attach('first', 'test/fixtures/asset-file.txt'),
       done);
   });
 
-  it("lists fingerprinted assets", function(done) {
+  it('lists fingerprinted assets', function (done) {
     var finalName =
-      "/__local_asset__/" +
-      "asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt";
+    '/__local_asset__/' +
+      'asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt';
 
     var app = server.create();
 
     request(app)
-      .post("/assets")
+      .post('/assets')
       .query({
         named: 'true'
       })
-      .set("Authorization", authhelper.AUTH_USER)
-      .attach("first", "test/fixtures/asset-file.txt")
-      .end(function(err, res) {
+      .set('Authorization', authhelper.AUTH_USER)
+      .attach('first', 'test/fixtures/asset-file.txt')
+      .end(function (err, res) {
         if (err) throw err;
 
         request(app)
-          .get("/assets")
+          .get('/assets')
           .expect(200)
-          .expect("Content-Type", /json/)
+          .expect('Content-Type', /json/)
           .expect('{"first":"' + finalName + '"}', done);
       });
   });

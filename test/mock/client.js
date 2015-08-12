@@ -1,14 +1,13 @@
 // Mock pkgcloud functionality.
 
-var
-  util = require("util"),
-  stream = require("stream"),
+var util = require('util'),
+  stream = require('stream'),
   Writable = stream.Writable,
   Readable = stream.Readable;
 
 util.inherits(Sink, Writable);
 
-function Sink(options) {
+function Sink (options) {
   Writable.call(this, options);
   var self = this;
 
@@ -16,12 +15,12 @@ function Sink(options) {
     next();
   };
 
-  this.on("finish", function () {
-    self.emit("success");
+  this.on('finish', function () {
+    self.emit('success');
   });
 }
 
-exports.create = function() {
+exports.create = function () {
   return {
     // Internal state, exposed for expectation-writing convenience.
 

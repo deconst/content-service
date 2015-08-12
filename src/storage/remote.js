@@ -10,19 +10,19 @@ var config = require('../config');
  *
  * This is used in deployed clusters.
  */
-function RemoteStorage() {}
+function RemoteStorage () {}
 
 /**
  * @description Initialize connections to external systems.
  */
-RemoteStorage.prototype.setup = function(callback) {
+RemoteStorage.prototype.setup = function (callback) {
   connection.setup(callback);
 };
 
 /**
  * @description Upload an asset to the Cloud Files asset container.
  */
-RemoteStorage.prototype.storeAsset = function(asset, callback) {
+RemoteStorage.prototype.storeAsset = function (asset, callback) {
   var up = connection.client.upload({
     container: config.assetContainer(),
     remote: asset.filename,
@@ -34,13 +34,13 @@ RemoteStorage.prototype.storeAsset = function(asset, callback) {
 
   up.on('error', callback);
 
-  up.on('success', function() {
+  up.on('success', function () {
     var baseURI = connection.assetContainer.cdnSslUri;
     asset.publicURL = baseURI + '/' + encodeURIComponent(asset.filename);
     callback(null, asset);
   });
 
-  asset.chunks.forEach(function(chunk) {
+  asset.chunks.forEach(function (chunk) {
     up.write(chunk);
   });
 
@@ -51,18 +51,18 @@ RemoteStorage.prototype.storeAsset = function(asset, callback) {
  * @description Store this asset in the MongoDB named asset collection, overwriting one with the
  * same name if present.
  */
-RemoteStorage.prototype.nameAsset = function(asset, callback) {
-  connection.db.collection("layoutAssets").updateOne({
-      key: asset.key
-    }, {
-      $set: {
-        key: asset.key,
-        publicURL: asset.publicURL
-      }
-    }, {
-      upsert: true
-    },
-    function(err) {
+RemoteStorage.prototype.nameAsset = function (asset, callback) {
+  connection.db.collection('layoutAssets').updateOne({
+    key: asset.key
+  }, {
+    $set: {
+      key: asset.key,
+      publicURL: asset.publicURL
+    }
+  }, {
+    upsert: true
+  },
+    function (err) {
       callback(err, asset);
     }
   );
@@ -71,22 +71,22 @@ RemoteStorage.prototype.nameAsset = function(asset, callback) {
 /**
  * @description List all assets that have been persisted in Mongo with nameAsset.
  */
-RemoteStorage.prototype.findNamedAssets = function(callback) {
-  connection.db.collection("layoutAssets").find().toArray(callback);
+RemoteStorage.prototype.findNamedAssets = function (callback) {
+  connection.db.collection('layoutAssets').find().toArray(callback);
 };
 
 /**
  * @description Store a newly generated API key in the keys collection.
  */
-RemoteStorage.prototype.storeKey = function(key, callback) {
-  connection.db.collection("apiKeys").insertOne(key, callback);
+RemoteStorage.prototype.storeKey = function (key, callback) {
+  connection.db.collection('apiKeys').insertOne(key, callback);
 };
 
 /**
  * @description Forget a previously stored API key by key value.
  */
-RemoteStorage.prototype.deleteKey = function(apikey, callback) {
-  connection.db.collection("apiKeys").deleteOne({
+RemoteStorage.prototype.deleteKey = function (apikey, callback) {
+  connection.db.collection('apiKeys').deleteOne({
     apikey: apikey
   }, callback);
 };
@@ -95,13 +95,13 @@ RemoteStorage.prototype.deleteKey = function(apikey, callback) {
  * @description Return an Array of keys that match the provided API key. Will most frequently
  *   return either zero or one results, but you never know.
  */
-RemoteStorage.prototype.findKeys = function(apikey, callback) {
-  connection.db.collection("apiKeys").find({
+RemoteStorage.prototype.findKeys = function (apikey, callback) {
+  connection.db.collection('apiKeys').find({
     apikey: apikey
   }).toArray(callback);
 };
 
-RemoteStorage.prototype.storeContent = function(contentID, content, callback) {
+RemoteStorage.prototype.storeContent = function (contentID, content, callback) {
   var dest = connection.client.upload({
     container: config.contentContainer(),
     remote: encodeURIComponent(contentID)
@@ -110,26 +110,26 @@ RemoteStorage.prototype.storeContent = function(contentID, content, callback) {
   dest.end(content, callback);
 };
 
-RemoteStorage.prototype.getContent = function(contentID, callback) {
+RemoteStorage.prototype.getContent = function (contentID, callback) {
   var source = connection.client.download({
     container: config.contentContainer(),
     remote: encodeURIComponent(contentID)
   });
   var chunks = [];
 
-  source.on('error', function(err) {
+  source.on('error', function (err) {
     callback(err);
   });
 
-  source.on('data', function(chunk) {
+  source.on('data', function (chunk) {
     chunks.push(chunk);
   });
 
-  source.on('complete', function(resp) {
+  source.on('complete', function (resp) {
     var complete = Buffer.concat(chunks);
 
     if (resp.statusCode > 400) {
-      var err = new Error("Cloud Files error");
+      var err = new Error('Cloud Files error');
 
       err.statusCode = resp.statusCode;
       err.responseBody = complete;
@@ -141,7 +141,7 @@ RemoteStorage.prototype.getContent = function(contentID, callback) {
   });
 };
 
-RemoteStorage.prototype.deleteContent = function(contentID, callback) {
+RemoteStorage.prototype.deleteContent = function (contentID, callback) {
   connection.client.removeFile(config.contentContainer(), encodeURIComponent(contentID), callback);
 };
 

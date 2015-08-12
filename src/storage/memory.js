@@ -5,22 +5,22 @@ var _ = require('lodash');
  *
  * This is useful for unit testing and for local builds.
  */
-function MemoryStorage() {}
+function MemoryStorage () {}
 
-MemoryStorage.prototype.setup = function(callback) {
+MemoryStorage.prototype.setup = function (callback) {
   this.clear();
   callback();
 };
 
-MemoryStorage.prototype.clear = function() {
+MemoryStorage.prototype.clear = function () {
   this.envelopes = {};
   this.assets = {};
   this.namedAssets = {};
   this.keys = {};
 };
 
-MemoryStorage.prototype.storeAsset = function(asset, callback) {
-  var assetBody = "";
+MemoryStorage.prototype.storeAsset = function (asset, callback) {
+  var assetBody = '';
   for (var i = 0; i < asset.chunks.length; i++) {
     assetBody += asset.chunks[i].toString();
   }
@@ -30,12 +30,12 @@ MemoryStorage.prototype.storeAsset = function(asset, callback) {
     body: assetBody
   };
 
-  asset.publicURL = "/__local_asset__/" + asset.filename;
+  asset.publicURL = '/__local_asset__/' + asset.filename;
 
   callback(null, asset);
 };
 
-MemoryStorage.prototype.nameAsset = function(asset, callback) {
+MemoryStorage.prototype.nameAsset = function (asset, callback) {
   this.namedAssets[asset.key] = {
     key: asset.key,
     publicURL: asset.publicURL
@@ -44,21 +44,21 @@ MemoryStorage.prototype.nameAsset = function(asset, callback) {
   callback(null, asset);
 };
 
-MemoryStorage.prototype.findNamedAssets = function(callback) {
+MemoryStorage.prototype.findNamedAssets = function (callback) {
   callback(null, _.values(this.namedAssets));
 };
 
-MemoryStorage.prototype.storeKey = function(key, callback) {
+MemoryStorage.prototype.storeKey = function (key, callback) {
   this.keys[key.apikey] = key.name;
   callback();
 };
 
-MemoryStorage.prototype.deleteKey = function(apikey, callback) {
+MemoryStorage.prototype.deleteKey = function (apikey, callback) {
   delete this.keys[apikey];
   callback();
 };
 
-MemoryStorage.prototype.findKeys = function(apikey, callback) {
+MemoryStorage.prototype.findKeys = function (apikey, callback) {
   var name = this.keys[apikey];
   if (name) {
     callback(null, [{
@@ -70,19 +70,19 @@ MemoryStorage.prototype.findKeys = function(apikey, callback) {
   }
 };
 
-MemoryStorage.prototype.storeContent = function(contentID, content, callback) {
+MemoryStorage.prototype.storeContent = function (contentID, content, callback) {
   this.envelopes[contentID] = content;
   callback();
 };
 
-MemoryStorage.prototype.getContent = function(contentID, callback) {
+MemoryStorage.prototype.getContent = function (contentID, callback) {
   var envelope = this.envelopes[contentID];
 
   if (envelope === undefined) {
-    var err = new Error("Memory storage error");
+    var err = new Error('Memory storage error');
 
     err.statusCode = 404;
-    err.responseBody = "Oh snap";
+    err.responseBody = 'Oh snap';
 
     return callback(err);
   }
@@ -90,7 +90,7 @@ MemoryStorage.prototype.getContent = function(contentID, callback) {
   callback(null, envelope);
 };
 
-MemoryStorage.prototype.deleteContent = function(contentID, callback) {
+MemoryStorage.prototype.deleteContent = function (contentID, callback) {
   delete this.envelopes[contentID];
 
   callback();

@@ -15,17 +15,16 @@ var storage = require("../src/storage");
 var authhelper = require("./helpers/auth");
 var server = require("../src/server");
 
-describe.only("/content", function() {
+describe("/content", function() {
   var mocks;
 
-  beforeEach(function () {
-    mocks = connmocks.install(connection);
+  beforeEach(function() {
     authhelper.install();
   });
 
-  describe("#store", function () {
+  describe("#store", function() {
 
-    it("persists new content into Cloud Files", function (done) {
+    it("persists new content into Cloud Files", function(done) {
       request(server.create())
         .put("/content/foo%26bar")
         .set("Authorization", authhelper.AUTH_USER)
@@ -33,62 +32,36 @@ describe.only("/content", function() {
         .set("Accept", "application/json")
         .send('{ "something": "body" }')
         .expect(204)
-        .end(function (err, res) {
+        .end(function(err, res) {
           if (err) return done(err);
 
-          var uploaded = mocks.mockClient.uploaded;
-          expect(uploaded).to.have.length(1);
-          expect(uploaded[0].container).to.equal("the-content-container");
+          storage.getContent("foo&bar", function(err, uploaded) {
+            expect(err).to.be.null();
+            expect(uploaded).to.equal('{"something":"body"}');
 
-          done();
+            done();
+          });
         });
     });
 
-    it("requires authentication", function (done) {
+    it("requires authentication", function(done) {
       authhelper.ensureAuthIsRequired(
         request(server.create())
-          .put("/content/something")
-          .send({ thing: "stuff" }),
+        .put("/content/something")
+        .send({
+          thing: "stuff"
+        }),
         done);
-    });
-
-    it("indexes content by category", function (done) {
-      var doc = {
-        title: "title goes here",
-        publish_date: "Tue, 05 Aug 2014 23:59:00 -0400",
-        body: "something",
-        tags: ["tag1", "tag2"],
-        categories: ["cat1", "cat2"]
-      };
-
-      request(server.create())
-        .put("/content/tagged")
-        .set("Authorization", authhelper.AUTH_USER)
-        .send(doc)
-        .expect(204)
-        .end(function (err, res) {
-          if (err) return done(err);
-
-          var contents = mocks.mockDB.collection("envelopes").find().toArray();
-
-          expect(contents).to.deep.include({
-            contentID: "tagged",
-            title: "title goes here",
-            publish_date: Date.parse("Tue, 05 Aug 2014 23:59:00 -0400"),
-            tags: ["tag1", "tag2"],
-            categories: ["cat1", "cat2"]
-          });
-
-          done();
-        });
     });
 
   });
 
-  describe("#retrieve", function () {
+  describe("#retrieve", function() {
 
-    it("retrieves existing content from Cloud Files", function (done) {
-      mocks.mockClient.content["foo%26bar"] = '{ "expected": "json" }';
+    it("retrieves existing content from Cloud Files", function(done) {
+      storage.storeContent("foo&bar", '{ "expected": "json" }', function(err) {
+        expect(err).not.to.exist();
+      });
 
       request(server.create())
         .get("/content/foo%26bar")
@@ -96,75 +69,41 @@ describe.only("/content", function() {
         .expect(200)
         .expect({
           assets: [],
-          envelope: { expected: "json" }
-        }, done);
-    });
-
-    it("collects related documents when a 'queries' attribute is present", function (done) {
-      mocks.mockClient.content.hasqueries = JSON.stringify({
-        queries: {
-          somename: { categories: "sample" },
-          anothername: { tags: "important" }
-        },
-        body: ".."
-      });
-
-      mocks.mockDB.addCollection("envelopes", [
-        { categories: ["sample", "other"], title: "zero", contentID: "id0" },
-        { categories: ["sample", "blerp"], title: "one", contentID: "id1" },
-        { categories: ["nope", "none"], tags: ["uhuh"], title: "two", contentID: "id2" },
-        { tags: ["important"], title: "three", contentID: "id3" },
-        { tags: ["important", "extra"], title: "four", contentID: "id4" }
-      ]);
-
-      request(server.create())
-        .get("/content/hasqueries")
-        .expect("Content-Type", "application/json")
-        .expect(200)
-        .expect({
-          assets: {},
           envelope: {
-            body: ".."
-          },
-          results: {
-            somename: [
-              { categories: ["sample", "other"], title: "zero", contentID: "id0" },
-              { categories: ["sample", "blerp"], title: "one", contentID: "id1" }
-            ],
-            anothername: [
-              { tags: ["important"], title: "three", contentID: "id3" },
-              { tags: ["important", "extra"], title: "four", contentID: "id4" }
-            ]
+            expected: "json"
           }
         }, done);
     });
 
   });
 
-  describe("#delete", function () {
+  describe("#delete", function() {
 
-    it("deletes content from Cloud Files", function (done) {
-      mocks.mockClient.content["foo%26bar"] = '{ "existing": "json" }';
+    it("deletes content from Cloud Files", function(done) {
+      storage.storeContent("foo&bar", '{ "expected": "json" }', function(err) {
+        expect(err).not.to.exist();
+      });
 
       request(server.create())
         .delete("/content/foo%26bar")
         .set("Authorization", authhelper.AUTH_USER)
         .expect(204)
-        .end(function (err, res) {
+        .end(function(err, res) {
           if (err) return done(err);
 
-          var deletions = mocks.mockClient.deleted;
-          expect(deletions).to.have.length(1);
-          expect(deletions[0]).to.equal("foo%26bar");
+          storage.getContent("foo&bar", function(err, uploaded) {
+            expect(err).not.to.be.null();
+            expect(err.statusCode).to.equal(404);
 
-          done();
+            done();
+          });
         });
     });
 
-    it("requires authentication", function (done) {
+    it("requires authentication", function(done) {
       authhelper.ensureAuthIsRequired(
         request(server.create())
-          .delete("/content/foo%26bar"),
+        .delete("/content/foo%26bar"),
         done);
     });
 

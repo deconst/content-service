@@ -44,11 +44,11 @@ exports.setup = function (callback) {
   if (driverName === 'remote') {
     driver = new remote.RemoteStorage();
     exports.remote = driver;
-    logger.debug("Remote storage driver active.");
+    logger.debug('Remote storage driver active.');
   } else if (driverName === 'memory') {
     driver = new memory.MemoryStorage();
     exports.memory = driver;
-    logger.debug("In-memory storage driver active.");
+    logger.debug('In-memory storage driver active.');
   } else {
     return callback(new Error('Invalid driver name: ' + driverName));
   }

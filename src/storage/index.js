@@ -55,9 +55,7 @@ exports.setup = function (callback) {
   }
 
   driver.setup(function (err) {
-    if (err) {
-      return callback(err);
-    }
+    if (err) return callback(err);
 
     var missing = [];
     for (var i = 0; i < delegates.length; i++) {

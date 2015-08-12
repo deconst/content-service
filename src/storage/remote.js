@@ -20,6 +20,13 @@ RemoteStorage.prototype.setup = function (callback) {
 };
 
 /**
+ * @description Do nothing, because writing code to wipe production clean feels like a *bad* idea.
+ */
+RemoteStorage.prototype.clear = function (callback) {
+  callback(null);
+};
+
+/**
  * @description Upload an asset to the Cloud Files asset container.
  */
 RemoteStorage.prototype.storeAsset = function (asset, callback) {

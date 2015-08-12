@@ -103,7 +103,7 @@ exports.setup = function (callback) {
   });
 
   client.auth(function (err) {
-    if (err) throw err;
+    if (err) return callback(err);
 
     exports.client = client;
 

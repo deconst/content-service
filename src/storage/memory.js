@@ -8,15 +8,16 @@ var _ = require('lodash');
 function MemoryStorage () {}
 
 MemoryStorage.prototype.setup = function (callback) {
-  this.clear();
-  callback();
+  this.clear(callback);
 };
 
-MemoryStorage.prototype.clear = function () {
+MemoryStorage.prototype.clear = function (callback) {
   this.envelopes = {};
   this.assets = {};
   this.namedAssets = {};
   this.keys = {};
+
+  callback();
 };
 
 MemoryStorage.prototype.storeAsset = function (asset, callback) {

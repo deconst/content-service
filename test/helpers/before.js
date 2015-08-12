@@ -10,9 +10,9 @@ if (process.env.INTEGRATION) {
 
   config.configure(process.env);
 
-  console.log("NOTE: This will leave files uploaded in Cloud Files containers.");
-  console.log("Be sure to clear these containers after:");
-  console.log("[" + config.contentContainer() + "] and [" + config.assetContainer() + "]");
+  console.log('NOTE: This will leave files uploaded in Cloud Files containers.');
+  console.log('Be sure to clear these containers after:');
+  console.log('[' + config.contentContainer() + '] and [' + config.assetContainer() + ']');
 } else {
   config.configure({
     STORAGE: 'memory',

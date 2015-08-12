@@ -17,7 +17,8 @@ var delegates = [
   'findKeys',
   'storeContent',
   'getContent',
-  'deleteContent'
+  'deleteContent',
+  'clear'
 ];
 
 /**

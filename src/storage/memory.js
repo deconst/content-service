@@ -10,7 +10,7 @@ function MemoryStorage() {}
 MemoryStorage.prototype.setup = function(callback) {
   this.clear();
   callback();
-}
+};
 
 MemoryStorage.prototype.clear = function() {
   this.envelopes = {};

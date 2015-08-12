@@ -6,7 +6,12 @@
 
 require("./helpers/before");
 
-var expect = require("chai").expect;
+var chai = require("chai");
+var dirtyChai = require("dirty-chai");
+
+chai.use(dirtyChai);
+var expect = chai.expect;
+
 var config = require("../src/config");
 
 describe("config", function() {

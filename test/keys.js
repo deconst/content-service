@@ -4,16 +4,19 @@
 
 require("./helpers/before");
 
-var
-  request = require("supertest"),
-  expect = require("chai").expect,
-  connection = require("../src/connection"),
-  connmocks = require("./mock/connection"),
-  authhelper = require("./helpers/auth"),
-  config = require("../src/config"),
-  server = require("../src/server");
+var chai = require("chai");
+var dirtyChai = require("dirty-chai");
 
-describe("/keys", function () {
+chai.use(dirtyChai);
+var expect = chai.expect;
+
+var request = require("supertest");
+var storage = require("../src/storage");
+var authhelper = require("./helpers/auth");
+var config = require("../src/config");
+var server = require("../src/server");
+
+describe("/keys", function() {
   var mocks;
 
   beforeEach(function () {

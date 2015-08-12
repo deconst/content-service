@@ -4,6 +4,12 @@
 
 require("./helpers/before");
 
+var chai = require("chai");
+var dirtyChai = require("dirty-chai");
+
+chai.use(dirtyChai);
+var expect = chai.expect;
+
 var restify = require("restify");
 var request = require("supertest");
 var authhelper = require("./helpers/auth");

@@ -4,13 +4,12 @@
 
 require("./helpers/before");
 
-var
-  request = require("supertest"),
-  config = require("../src/config"),
-  server = require("../src/server");
+var request = require("supertest");
+var config = require("../src/config");
+var server = require("../src/server");
 
-describe("/version", function () {
-  it("reports service information", function (done) {
+describe("/version", function() {
+  it("reports service information", function(done) {
     request(server.create())
       .get("/version")
       .expect(200)

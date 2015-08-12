@@ -29,7 +29,7 @@ function downloadContent(contentID, callback) {
       return callback(new restify.InternalServerError("Error communicating with an upstream service."));
     }
 
-    var envelope = JSON.parse(complete);
+    var envelope = JSON.parse(content);
 
     callback(null, {
       envelope: envelope

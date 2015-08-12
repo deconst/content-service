@@ -6,6 +6,7 @@
 var config = require('../../src/config');
 
 config.configure({
+  STORAGE: "memory",
   RACKSPACE_USERNAME: "me",
   RACKSPACE_APIKEY: "12345",
   RACKSPACE_REGION: "space",
@@ -15,3 +16,7 @@ config.configure({
   MONGODB_URL: "mongodb-url",
   CONTENT_LOG_LEVEL: process.env.CONTENT_LOG_LEVEL || "error"
 });
+
+var storage = require('../../src/storage');
+
+storage.setup(function() {});

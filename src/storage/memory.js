@@ -27,7 +27,7 @@ MemoryStorage.prototype.storeAsset = function(asset, callback) {
     body: assetBody
   };
 
-  asset.publicURL = "/asset/" + asset.filename;
+  asset.publicURL = "/__local_asset__/" + asset.filename;
 
   callback(null, asset);
 };

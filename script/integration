@@ -1,0 +1,12 @@
+#!/bin/bash
+
+ROOT=$(cd $(dirname ${0})/.. ; pwd)
+
+cd ${ROOT}
+source ./environment.sh
+
+export ACTION="test"
+export INTEGRATION="true"
+export STORAGE="remote"
+
+exec docker-compose up

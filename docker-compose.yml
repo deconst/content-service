@@ -9,6 +9,7 @@ content:
   - "mongo:mongo"
   environment:
     ACTION:
+    INTEGRATION:
     NODE_ENV:
     STORAGE:
     RACKSPACE_USERNAME:

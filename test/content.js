@@ -58,18 +58,18 @@ describe('/content', function () {
     it('retrieves existing content from Cloud Files', function (done) {
       storage.storeContent('what&huh', '{ "expected": "json" }', function (err) {
         expect(err).not.to.exist();
-      });
 
-      request(server.create())
-        .get('/content/what%26huh')
-        .expect('Content-Type', 'application/json')
-        .expect(200)
-        .expect({
-          assets: [],
-          envelope: {
-            expected: 'json'
-          }
-        }, done);
+        request(server.create())
+          .get('/content/what%26huh')
+          .expect('Content-Type', 'application/json')
+          .expect(200)
+          .expect({
+            assets: [],
+            envelope: {
+              expected: 'json'
+            }
+          }, done);
+        });
     });
 
   });

@@ -3,7 +3,11 @@
 ROOT=$(cd $(dirname ${0})/.. ; pwd)
 
 cd ${ROOT}
-source ./environment.sh
+if [ -f ${ROOT}/environment-integration.sh ]; then
+  source ${ROOT}/environment-integration.sh
+else
+  source ${ROOT}/environment.sh
+fi
 
 export ACTION="test"
 export INTEGRATION="true"

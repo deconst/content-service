@@ -1,11 +1,10 @@
 // Authentication middleware.
 
-var
-  async = require("async"),
-  restify = require("restify"),
-  config = require("./config"),
-  connection = require("./connection"),
-  log = require("./logging").getLogger();
+var async = require('async');
+var restify = require('restify');
+var config = require('./config');
+var storage = require('./storage');
+var log = require('./logging').getLogger();
 
 var credentialRx = /apikey\s*=\s*"?([^"]+)"?/;
 
@@ -15,11 +14,11 @@ var credentialRx = /apikey\s*=\s*"?([^"]+)"?/;
  */
 var parseAuth = function (auth, callback) {
   if (!auth || !Object.keys(auth).length) {
-    return callback(new restify.UnauthorizedError("An API key is required for this endpoint."));
+    return callback(new restify.UnauthorizedError('An API key is required for this endpoint.'));
   }
 
-  if (auth.scheme !== "deconst") {
-    return callback(new restify.InvalidHeaderError("Your Authorization header specifies an incorrect scheme."));
+  if (auth.scheme !== 'deconst') {
+    return callback(new restify.InvalidHeaderError('Your Authorization header specifies an incorrect scheme.'));
   }
 
   var match = credentialRx.exec(auth.credentials);
@@ -38,26 +37,32 @@ var parseAuth = function (auth, callback) {
 var locateKeyname = function (adminOnly, key, callback) {
   // Always accept the admin's API key.
   if (key === config.adminAPIKey()) {
-    return callback(null, { key: key, name: "administrator"});
+    return callback(null, {
+      key: key,
+      name: 'administrator'
+    });
   }
 
   if (adminOnly) {
-    return callback(new restify.UnauthorizedError("Only admins may access this endpoint."));
+    return callback(new restify.UnauthorizedError('Only admins may access this endpoint.'));
   }
 
-  // Check Mongo for non-admin keys.
-  connection.db.collection("apiKeys").find({ apikey: key }).toArray(function (err, docs) {
+  // Check storage for non-admin keys.
+  storage.findKeys(key, function (err, keys) {
     if (err) return callback(err);
 
-    if (!docs.length) {
-      return callback(new restify.UnauthorizedError("The API key you provided is invalid."));
+    if (!keys.length) {
+      return callback(new restify.UnauthorizedError('The API key you provided is invalid.'));
     }
 
-    if (docs.length !== 1) {
-      log.error("Expected one API key document, but got " + docs.length + ".", docs);
+    if (keys.length !== 1) {
+      log.error('Expected one API key document, but got ' + keys.length + '.', keys);
     }
 
-    callback(null, { key: key, name: docs[0].name});
+    callback(null, {
+      key: key,
+      name: keys[0].name
+    });
   });
 };
 
@@ -74,7 +79,7 @@ var createAPIKeyHandler = function (adminOnly) {
     ], function (err, result) {
       next.ifError(err);
 
-      log.debug("Request authenticated as [" + result.name + "]");
+      log.debug('Request authenticated as [' + result.name + ']');
       req.apikey = result.key;
       req.apikeyName = result.name;
       next();

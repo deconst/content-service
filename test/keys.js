@@ -1,122 +1,108 @@
+/* global describe it beforeEach */
+
 /*
  * Unit tests for API key management.
  */
 
-require("./helpers/before");
+require('./helpers/before');
 
-var
-  request = require("supertest"),
-  expect = require("chai").expect,
-  connection = require("../src/connection"),
-  connmocks = require("./mock/connection"),
-  authhelper = require("./helpers/auth"),
-  config = require("../src/config"),
-  server = require("../src/server");
+var chai = require('chai');
+var dirtyChai = require('dirty-chai');
 
-describe("/keys", function () {
-  var mocks;
+chai.use(dirtyChai);
+var expect = chai.expect;
 
-  beforeEach(function () {
-    mocks = connmocks.install(connection);
-    authhelper.install();
-  });
+var request = require('supertest');
+var storage = require('../src/storage');
+var resetHelper = require('./helpers/reset');
+var authHelper = require('./helpers/auth');
+var server = require('../src/server');
 
-  describe("POST", function () {
+describe('/keys', function () {
+  beforeEach(resetHelper);
 
-    it("allows an admin to issue a new key", function (done) {
+  describe('POST', function () {
+    it('allows an admin to issue a new key', function (done) {
       request(server.create())
-        .post("/keys?named=someone")
-        .set("Authorization", 'deconst apikey="12345"')
+        .post('/keys?named=someone')
+        .set('Authorization', authHelper.AUTH_ADMIN)
         .expect(200)
-        .expect("Content-Type", "application/json")
+        .expect('Content-Type', 'application/json')
         .expect(function (res) {
-          if (!("apikey" in res.body)) throw new Error("No API key issued");
+          var apikey = res.body.apikey;
 
-          var
-            apikey = res.body.apikey,
-            found = false,
-            issued = mocks.mockDB.collection("apiKeys").find().toArray();
+          expect(apikey).not.to.be.undefined();
 
-          issued.forEach(function (each) {
-            if (each.apikey === apikey && each.name === "someone") {
-              found = true;
-            }
+          storage.findKeys(apikey, function (err, keys) {
+            expect(err).to.be.null();
+            expect(keys).to.have.length(1);
+            expect(keys[0].name).to.equal('someone');
           });
-
-          if (!found) throw new Error("Issued API key not found in database");
         })
         .end(done);
     });
 
-    it("requires a key name", function (done) {
+    it('requires a key name', function (done) {
       request(server.create())
-        .post("/keys")
-        .set("Authorization", 'deconst apikey="12345"')
+        .post('/keys')
+        .set('Authorization', authHelper.AUTH_ADMIN)
         .expect(409)
         .expect({
-          code: "MissingParameter",
-          message: "You must specify a name for the API key"
+          code: 'MissingParameter',
+          message: 'You must specify a name for the API key'
         }, done);
     });
 
-    it("requires authentication", function (done) {
-      authhelper.ensureAuthIsRequired(
-        request(server.create()).post("/keys?named=mine"),
+    it('requires authentication', function (done) {
+      authHelper.ensureAuthIsRequired(
+        request(server.create()).post('/keys?named=mine'),
         done);
     });
 
-    it("prevents non-admins from issuing keys", function (done) {
-      authhelper.ensureAdminIsRequired(
-        request(server.create()).post("/keys?named=mine"),
+    it('prevents non-admins from issuing keys', function (done) {
+      authHelper.ensureAdminIsRequired(
+        request(server.create()).post('/keys?named=mine'),
         done);
     });
   });
 
-  describe("DELETE", function () {
-
-    it("allows an admin to revoke an existing key", function (done) {
-      mocks.mockDB.collection("apiKeys").insertOne({ name: "torevoke", apikey: "54321" });
-
+  describe('DELETE', function () {
+    it('allows an admin to revoke an existing key', function (done) {
       request(server.create())
-        .delete("/keys/54321")
-        .set("Authorization", authhelper.AUTH_ADMIN)
+        .delete('/keys/' + authHelper.APIKEY_USER)
+        .set('Authorization', authHelper.AUTH_ADMIN)
         .expect(204)
         .expect(function () {
-          var
-            found = false,
-            issued = mocks.mockDB.collection("apiKeys").find().toArray();
-
-          for (var i = 0; i < issued.length; i++) {
-            var each = issued[i];
-            if (each.apikey === "54321" && each.name === "torevoke") {
-              found = true;
-            }
-          }
-
-          if (found) throw new Error("Revoked API key is still present in the database");
+          storage.findKeys(authHelper.APIKEY_USER, function (err, keys) {
+            expect(err).to.be.null();
+            expect(keys).to.be.empty();
+          });
         })
         .end(done);
     });
 
-    it("requires authentication", function (done) {
-      authhelper.ensureAuthIsRequired(
-        request(server.create()).delete("/keys/54321"),
+    it('requires authentication', function (done) {
+      authHelper.ensureAuthIsRequired(
+        request(server.create()).delete('/keys/54321'),
         done);
     });
 
-    it("prevents non-admins from revoking keys", function (done) {
-      authhelper.ensureAdminIsRequired(
-        request(server.create()).delete("/keys/54321"),
+    it('prevents non-admins from revoking keys', function (done) {
+      authHelper.ensureAdminIsRequired(
+        request(server.create()).delete('/keys/54321'),
         done);
     });
 
     it("doesn't allow admins to revoke their own key", function (done) {
       request(server.create())
-        .delete("/keys/" + authhelper.APIKEY_ADMIN)
-        .set("Authorization", authhelper.AUTH_ADMIN)
+        .delete('/keys/' + authHelper.APIKEY_ADMIN)
+        .set('Authorization', authHelper.AUTH_ADMIN)
         .expect(409)
-        .expect("Content-Type", "application/json")
-        .expect({ code: "InvalidArgument", message: "You cannot revoke your own API key." }, done);
+        .expect('Content-Type', 'application/json')
+        .expect({
+          code: 'InvalidArgument',
+          message: 'You cannot revoke your own API key.'
+        }, done);
     });
   });
 });

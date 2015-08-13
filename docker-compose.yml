@@ -8,17 +8,20 @@ content:
   links:
   - "mongo:mongo"
   environment:
+    ACTION:
+    INTEGRATION:
+    NODE_ENV:
+    STORAGE:
     RACKSPACE_USERNAME:
     RACKSPACE_APIKEY:
     RACKSPACE_REGION:
-    RACKSPACE_SERVICENET: "false"
+    RACKSPACE_SERVICENET:
     ADMIN_APIKEY:
     CONTENT_CONTAINER:
     ASSET_CONTAINER:
     MONGODB_URL: mongodb://mongo:27017/content
     CONTENT_LOG_LEVEL:
-    CONTENT_LOG_COLOR: "true"
-    NODE_ENV: development
+    CONTENT_LOG_COLOR:
   volumes:
   - ".:/usr/src/app"
-  command: script/dev
+  command: script/inside/dev

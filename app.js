@@ -9,14 +9,11 @@ var config = require('./src/config');
 
 config.configure(process.env);
 
-var
-  async = require('async'),
-  restify = require('restify'),
-  log = require('./src/logging').getLogger(),
-  connection = require('./src/connection'),
-  server = require('./src/server');
+var log = require('./src/logging').getLogger();
+var server = require('./src/server');
+var storage = require('./src/storage');
 
-connection.setup(function (err) {
+storage.setup(function (err) {
   if (err) {
     throw err;
   }

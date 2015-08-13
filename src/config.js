@@ -1,52 +1,55 @@
 // Read configuration from the environment, reporting anything that's missing.
 
-var
-  pkgcloud = require('pkgcloud'),
-  childProcess = require('child_process'),
-  info = require('../package.json');
+var childProcess = require('child_process');
+var _ = require('lodash');
+var info = require('../package.json');
 
 var configuration = {
+  storage: {
+    env: 'STORAGE',
+    def: 'remote'
+  },
   rackspaceUsername: {
-    env: "RACKSPACE_USERNAME"
+    env: 'RACKSPACE_USERNAME'
   },
   rackspaceAPIKey: {
-    env: "RACKSPACE_APIKEY"
+    env: 'RACKSPACE_APIKEY'
   },
   rackspaceRegion: {
-    env: "RACKSPACE_REGION"
+    env: 'RACKSPACE_REGION'
   },
   rackspaceServiceNet: {
-    env: "RACKSPACE_SERVICENET",
-    def: "false"
+    env: 'RACKSPACE_SERVICENET',
+    def: 'false'
   },
   adminAPIKey: {
-    env: "ADMIN_APIKEY"
+    env: 'ADMIN_APIKEY'
   },
   contentContainer: {
-    env: "CONTENT_CONTAINER"
+    env: 'CONTENT_CONTAINER'
   },
   assetContainer: {
-    env: "ASSET_CONTAINER"
+    env: 'ASSET_CONTAINER'
   },
   mongodbURL: {
-    env: "MONGODB_URL"
+    env: 'MONGODB_URL'
   },
   contentLogLevel: {
-    env: "CONTENT_LOG_LEVEL",
-    def: "info"
+    env: 'CONTENT_LOG_LEVEL',
+    def: 'info'
   },
   contentLogColor: {
-    env: "CONTENT_LOG_COLOR",
-    def: "false"
+    env: 'CONTENT_LOG_COLOR',
+    def: 'false'
   }
 };
 
-var commit = childProcess.execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
+var commit = childProcess.execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
 
 /**
  * @description Create a getter function for the named function.
  */
-function makeGetter(settingName) {
+function makeGetter (settingName) {
   return function () {
     return configuration[settingName].value;
   };
@@ -66,20 +69,38 @@ exports.configure = function (env) {
     }
   }
 
+  // Normalize storage as a lower-case string
+  configuration.storage.value = configuration.storage.value.toLowerCase();
+
+  // If storage is not remote, remove remote-only-mandatory settings from the missing list.
+  if (configuration.storage !== 'remote') {
+    missing = _.without(missing,
+      'RACKSPACE_USERNAME', 'RACKSPACE_APIKEY', 'RACKSPACE_REGION',
+      'CONTENT_CONTAINER', 'ASSET_CONTAINER',
+      'MONGODB_URL');
+  }
+
   // Normalize rackspaceServiceNet and contentLogColor as booleans.
-  configuration.rackspaceServiceNet.value = (configuration.rackspaceServiceNet.value === "true");
-  configuration.contentLogColor.value = (configuration.contentLogColor.value === "true");
+  configuration.rackspaceServiceNet.value = (configuration.rackspaceServiceNet.value === 'true');
+  configuration.contentLogColor.value = (configuration.contentLogColor.value === 'true');
 
   if (missing.length !== 0) {
-    console.error("Required configuration values are missing!");
-    console.error("Please set the following environment variables:");
-    console.error("");
+    console.error('Required configuration values are missing!');
+    console.error('Please set the following environment variables:');
+    console.error('');
     missing.forEach(function (settingName) {
-      console.error("  " + settingName);
+      console.error('  ' + settingName);
     });
-    console.error("");
+    console.error('');
 
-    throw new Error("Inadequate configuration");
+    throw new Error('Inadequate configuration');
+  }
+
+  // Ensure that STORAGE is a recognized value.
+  if (configuration.storage.value !== 'remote' && configuration.storage.value !== 'memory') {
+    console.error('STORAGE must be either "remote" or "memory".');
+
+    throw new Error('Invalid configuration');
   }
 };
 

@@ -1,12 +1,11 @@
 var restify = require('restify');
 
 // Handlers
-var
-  auth = require('./auth'),
-  version = require('./version'),
-  content = require('./content'),
-  assets = require('./assets'),
-  keys = require('./keys');
+var auth = require('./auth');
+var version = require('./version');
+var content = require('./content');
+var assets = require('./assets');
+var keys = require('./keys');
 
 exports.loadRoutes = function (server) {
   server.get('/version', version.report);

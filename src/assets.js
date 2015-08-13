@@ -1,103 +1,68 @@
 // Handler functions for the /assets endpoint.
 
-var
-    async = require('async'),
-    pkgcloud = require('pkgcloud'),
-    fs = require('fs'),
-    path = require('path'),
-    crypto = require('crypto'),
-    restify = require('restify'),
-    config = require('./config'),
-    connection = require('./connection'),
-    log = require('./logging').getLogger();
+var async = require('async');
+var fs = require('fs');
+var path = require('path');
+var crypto = require('crypto');
+var storage = require('./storage');
+var log = require('./logging').getLogger();
 
 /**
  * @description Calculate a checksum of an uploaded file's contents to generate
  *   the fingerprinted asset name.
  */
-function fingerprintAsset(asset, callback) {
-    var sha256sum = crypto.createHash('sha256');
-    var assetFile = fs.createReadStream(asset.path);
-    var chunks = [];
+function fingerprintAsset (asset, callback) {
+  var sha256sum = crypto.createHash('sha256');
+  var assetFile = fs.createReadStream(asset.path);
+  var chunks = [];
 
-    assetFile.on('data', function (chunk) {
-        sha256sum.update(chunk);
-        chunks.push(chunk);
+  assetFile.on('data', function (chunk) {
+    sha256sum.update(chunk);
+    chunks.push(chunk);
+  });
+
+  assetFile.on('error', callback);
+
+  assetFile.on('end', function () {
+    var digest = sha256sum.digest('hex');
+    var ext = path.extname(asset.name);
+    var basename = path.basename(asset.name, ext);
+    var fingerprinted = basename + '-' + digest + ext;
+
+    log.debug({
+      action: 'assetstore',
+      originalAssetName: asset.name,
+      assetFilename: fingerprinted,
+      message: 'Asset fingerprinted successfully.'
     });
 
-    assetFile.on('error', function (err) {
-        log.warn({
-            action: 'assetstore',
-            error: err.message,
-            message: "Error creating asset fingerprint."
-        });
-
-        callback(new restify.InternalServerError("Error creating asset fingerprint."));
+    callback(null, {
+      key: asset.key,
+      original: asset.name,
+      chunks: chunks,
+      filename: fingerprinted,
+      type: asset.type
     });
-
-    assetFile.on('end', function() {
-        var digest = sha256sum.digest('hex');
-        var ext = path.extname(asset.name);
-        var basename = path.basename(asset.name, ext);
-        var fingerprinted = basename + "-" + digest + ext;
-
-        log.debug({
-            action: 'assetstore',
-            originalAssetName: asset.name,
-            assetFilename: fingerprinted,
-            message: "Asset fingerprinted successfully."
-        });
-
-        callback(null, {
-            key: asset.key,
-            original: asset.name,
-            chunks: chunks,
-            filename: fingerprinted,
-            type: asset.type,
-        });
-    });
+  });
 }
 
 /**
  * @description Upload an asset's contents to the asset container.
  */
-function publishAsset(asset, callback) {
-    var up = connection.client.upload({
-        container: config.assetContainer(),
-        remote: asset.filename,
-        contentType: asset.type,
-        headers: { 'Access-Control-Allow-Origin': '*' }
+function publishAsset (asset, callback) {
+  storage.storeAsset(asset, function (err, asset) {
+    if (err) {
+      return callback(err);
+    }
+
+    log.debug({
+      action: 'assetstore',
+      assetFilename: asset.filename,
+      message: 'Asset uploaded successfully.'
     });
 
-    up.on('error', function (err) {
-        log.warn({
-            action: 'assetstore',
-            error: err.message,
-            cloudFilesCode: err.statusCode,
-            assetFilename: asset.filename,
-            message: "Error uploading asset to Cloud Files."
-        });
-
-        callback(new restify.InternalServerError("Error publishing an asset to Cloud Files."));
-    });
-
-    up.on('success', function () {
-        log.debug({
-            action: 'assetstore',
-            assetFilename: asset.filename,
-            message: "Asset uploaded successfully."
-        });
-
-        var baseURI = connection.assetContainer.cdnSslUri;
-        asset.publicURL = baseURI + '/' + encodeURIComponent(asset.filename);
-        callback(null, asset);
-    });
-
-    asset.chunks.forEach(function (chunk) {
-        up.write(chunk);
-    });
-
-    up.end();
+    callback(null, asset);
+  });
 }
 
 /**
@@ -105,79 +70,80 @@ function publishAsset(asset, callback) {
  *   asset will be included in all outgoing metadata envelopes, for use by
  *   layouts.
  */
-function nameAsset(asset, callback) {
+function nameAsset (asset, callback) {
+  storage.nameAsset(asset, function (err, asset) {
+    if (err) {
+      return callback(err);
+    }
+
     log.debug({
-        action: 'assetstore',
-        originalAssetFilename: asset.original,
-        assetName: asset.key,
-        message: "Asset named successfully."
+      action: 'assetstore',
+      originalAssetFilename: asset.original,
+      assetName: asset.key,
+      message: 'Asset named successfully.'
     });
 
-    connection.db.collection("layoutAssets").updateOne(
-        { key: asset.key },
-        { $set: { key: asset.key, publicURL: asset.publicURL } },
-        { upsert: true },
-        function (err) { callback(err, asset); }
-    );
+    callback(null, asset);
+  });
 }
 
 /**
  * @description Create and return a function that processes a single asset.
  */
-function makeAssetHandler(should_name) {
-    return function(asset, callback) {
-        log.debug({
-            action: 'assetstore',
-            originalAssetName: asset.name,
-            message: "Asset upload request received."
-        });
+function makeAssetHandler (shouldName) {
+  return function (asset, callback) {
+    log.debug({
+      action: 'assetstore',
+      originalAssetName: asset.name,
+      message: 'Asset upload request received.'
+    });
 
-        var steps = [
-            async.apply(fingerprintAsset, asset),
-            publishAsset
-        ];
+    var steps = [
+      async.apply(fingerprintAsset, asset),
+      publishAsset
+    ];
 
-        if (should_name) {
-            steps.push(nameAsset);
-        }
+    if (shouldName) {
+      steps.push(nameAsset);
+    }
 
-        async.waterfall(steps, callback);
-    };
+    async.waterfall(steps, callback);
+  };
 }
 
 /**
  * @description Enumerate all named assets.
  */
 var enumerateNamed = exports.enumerateNamed = function (callback) {
-    connection.db.collection("layoutAssets").find().toArray(function (err, assetVars) {
-        if (err) {
-            return callback(err);
-        }
+  storage.findNamedAssets(function (err, assetVars) {
+    if (err) {
+      return callback(err);
+    }
 
-        var assets = {};
+    var assets = {};
 
-        for (i = 0; i < assetVars.length; i++) {
-            var assetVar = assetVars[i];
-            assets[assetVar.key] = assetVar.publicURL;
-        }
+    for (var i = 0; i < assetVars.length; i++) {
+      var assetVar = assetVars[i];
+      assets[assetVar.key] = assetVar.publicURL;
+    }
 
-        callback(null, assets);
-    });
+    callback(null, assets);
+  });
 };
 
 /**
  * @description Append a list of asset names to a message before it's logged.
  */
-function withAssetList(message, originalAssetNames) {
-    var subset = originalAssetNames.slice(0, 3);
+function withAssetList (message, originalAssetNames) {
+  var subset = originalAssetNames.slice(0, 3);
 
-    if (originalAssetNames.length > 3) {
-        subset.push("..");
-    }
+  if (originalAssetNames.length > 3) {
+    subset.push('..');
+  }
 
-    var joined = subset.join(", ");
+  var joined = subset.join(', ');
 
-    return message + ": " + joined + ".";
+  return message + ': ' + joined + '.';
 }
 
 /**
@@ -186,76 +152,78 @@ function withAssetList(message, originalAssetNames) {
  *   map of the provided filenames to their final, public URLs.
  */
 exports.accept = function (req, res, next) {
-    var originalAssetNames = [];
-    var assetData = Object.getOwnPropertyNames(req.files).map(function (key) {
-        var asset = req.files[key];
-        asset.key = key;
-        originalAssetNames.push(key);
-        return asset;
-    });
+  var originalAssetNames = [];
+  var assetData = Object.getOwnPropertyNames(req.files).map(function (key) {
+    var asset = req.files[key];
+    asset.key = key;
+    originalAssetNames.push(key);
+    return asset;
+  });
 
-    log.debug({
+  log.debug({
+    action: 'assetstore',
+    apikeyName: req.apikeyName,
+    assetCount: assetData.length,
+    originalAssetNames: originalAssetNames,
+    message: withAssetList('Asset upload request received', originalAssetNames)
+  });
+
+  var reqStart = Date.now();
+
+  async.map(assetData, makeAssetHandler(req.query.named), function (err, results) {
+    if (err) {
+      var statusCode = err.statusCode || 500;
+
+      log.error({
         action: 'assetstore',
+        statusCode: statusCode,
         apikeyName: req.apikeyName,
-        assetCount: assetData.length,
-        originalAssetNames: originalAssetNames,
-        message: withAssetList("Asset upload request received", originalAssetNames),
+        error: err.message,
+        stack: err.stack,
+        message: withAssetList('Unable to upload one or more assets', originalAssetNames)
+      });
+
+      res.send(statusCode, {
+        apikeyName: req.apikeyName,
+        error: 'Unable to upload one or more assets.'
+      });
+
+      return next(err);
+    }
+
+    var summary = {};
+    results.forEach(function (result) {
+      summary[result.original] = result.publicURL;
+    });
+    log.info({
+      action: 'assetstore',
+      statusCode: 200,
+      apikeyName: req.apikeyName,
+      totalReqDuration: Date.now() - reqStart,
+      message: withAssetList('All assets have been uploaded successfully', originalAssetNames)
     });
 
-    var reqStart = Date.now();
-
-    async.map(assetData, makeAssetHandler(req.query.named), function (err, results) {
-        if (err) {
-            var statusCode = err.statusCode || 500;
-
-            log.error({
-                action: 'assetstore',
-                statusCode: statusCode,
-                apikeyName: req.apikeyName,
-                error: err.message,
-                message: withAssetList("Unable to upload one or more assets", originalAssetNames)
-            });
-
-            res.send(statusCode, {
-                apikeyName: req.apikeyName,
-                error: "Unable to upload one or more assets."
-            });
-
-            return next(err);
-        }
-
-        var summary = {};
-        results.forEach(function (result) {
-            summary[result.original] = result.publicURL;
-        });
-        log.info({
-            action: 'assetstore',
-            statusCode: 200,
-            apikeyName: req.apikeyName,
-            totalReqDuration: Date.now() - reqStart,
-            message: withAssetList("All assets have been uploaded successfully", originalAssetNames)
-        });
-
-        res.send(summary);
-        next();
-    });
+    res.send(summary);
+    next();
+  });
 };
 
 exports.list = function (req, res, next) {
-    log.debug("Asset list requested.");
+  log.debug('Asset list requested.');
 
-    enumerateNamed(function (err, assets) {
-        if (err) {
-            log.error({
-                action: 'assetlist',
-                statusCode: err.statusCode || 500,
-                message: "Unable to list assets.",
-                error: err.message
-            });
-            return next(err);
-        }
+  enumerateNamed(function (err, assets) {
+    if (err) {
+      log.error({
+        action: 'assetlist',
+        statusCode: err.statusCode || 500,
+        message: 'Unable to list assets.',
+        error: err.message,
+        stack: err.stack
+      });
+      return next(err);
+    }
 
-        res.send(assets);
-        next();
-    });
+    res.send(assets);
+    next();
+  });
 };

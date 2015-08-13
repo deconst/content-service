@@ -3,7 +3,7 @@
 var config = require('../../src/config');
 var storage = require('../../src/storage');
 
-exports.APIKEY_ADMIN = '12345';
+exports.APIKEY_ADMIN = process.env.ADMIN_APIKEY || '12345';
 
 exports.AUTH_ADMIN = 'deconst apikey="' + exports.APIKEY_ADMIN + '"';
 
@@ -16,17 +16,6 @@ exports.AUTH_USER = 'deconst apikey="' + exports.APIKEY_USER + '"';
  *   API keys.
  */
 exports.install = function (callback) {
-  config.configure({
-    RACKSPACE_USERNAME: 'me',
-    RACKSPACE_APIKEY: '11111',
-    RACKSPACE_REGION: 'space',
-    ADMIN_APIKEY: exports.APIKEY_ADMIN,
-    CONTENT_CONTAINER: 'the-content-container',
-    ASSET_CONTAINER: 'the-asset-container',
-    MONGODB_URL: 'mongodb-url',
-    CONTENT_LOG_LEVEL: 'debug'
-  });
-
   var key = {
     name: 'user',
     apikey: exports.APIKEY_USER

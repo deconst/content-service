@@ -26,5 +26,3 @@ if (process.env.INTEGRATION) {
     CONTENT_LOG_LEVEL: process.env.CONTENT_LOG_LEVEL || 'error'
   });
 }
-
-var storage = require('../../src/storage');

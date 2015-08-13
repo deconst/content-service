@@ -69,7 +69,7 @@ describe('/content', function () {
               expected: 'json'
             }
           }, done);
-        });
+      });
     });
 
   });

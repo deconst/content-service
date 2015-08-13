@@ -11,21 +11,7 @@ var assets = require('./assets');
  */
 function downloadContent (contentID, callback) {
   storage.getContent(contentID, function (err, content) {
-    if (err) {
-      if (err.statusCode === 404) {
-        return callback(new restify.NotFoundError('No content for ID [' + contentID + ']'));
-      }
-
-      log.warn({
-        action: 'contentretrieve',
-        contentID: contentID,
-        cloudFilesCode: err.statusCode,
-        cloudFilesResponse: err.responseBody,
-        message: 'Cloud Files error.'
-      });
-
-      return callback(new restify.InternalServerError('Error communicating with an upstream service.'));
-    }
+    if (err) return callback(err);
 
     var envelope = JSON.parse(content);
 
@@ -113,12 +99,18 @@ exports.retrieve = function (req, res, next) {
     injectAssetVars
   ], function (err, doc) {
     if (err) {
+      var message = 'Unable to retrieve content.';
+      if (err.statusCode && err.statusCode === 404) {
+        message = 'No content for ID [' + req.params.id + ']';
+      }
+
       log.error({
         action: 'contentretrieve',
         statusCode: err.statusCode || 500,
         contentID: req.params.id,
         error: err.message,
-        message: 'Unable to retrieve content.'
+        stack: err.stack,
+        message: message
       });
 
       return next(err);

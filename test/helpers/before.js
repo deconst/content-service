@@ -5,7 +5,7 @@
 
 var config = require('../../src/config');
 
-function reconfigure() {
+function reconfigure () {
   if (process.env.INTEGRATION) {
     console.log('Integration test mode active.');
 

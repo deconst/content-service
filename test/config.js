@@ -1,4 +1,4 @@
-/* global describe it */
+/* global describe it afterEach */
 
 /*
  * Tests for the environment variable configuration.

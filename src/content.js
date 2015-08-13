@@ -1,7 +1,6 @@
 // Store, retrieve, and delete metadata envelopes.
 
 var async = require('async');
-var restify = require('restify');
 var storage = require('./storage');
 var log = require('./logging').getLogger();
 var assets = require('./assets');

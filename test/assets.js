@@ -13,18 +13,13 @@ chai.use(dirtyChai);
 
 var async = require('async');
 var request = require('supertest');
-var authhelper = require('./helpers/auth');
+var resetHelper = require('./helpers/reset');
+var authHelper = require('./helpers/auth');
 var storage = require('../src/storage');
 var server = require('../src/server');
 
-describe.only('/assets', function () {
-  beforeEach(function (done) {
-    async.series([
-      function (cb) { storage.setup(cb); },
-      function (cb) { storage.clear(cb); },
-      function (cb) { authhelper.install(cb); }
-    ], done);
-  });
+describe('/assets', function () {
+  beforeEach(resetHelper);
 
   it('accepts an asset file and produces a fingerprinted filename', function (done) {
     // shasum -a 256 test/fixtures/asset-file.txt
@@ -33,7 +28,7 @@ describe.only('/assets', function () {
 
     request(server.create())
       .post('/assets')
-      .set('Authorization', authhelper.AUTH_USER)
+      .set('Authorization', authHelper.AUTH_USER)
       .attach('first', 'test/fixtures/asset-file.txt')
       .expect(200)
       .expect('Content-Type', /json/)
@@ -43,7 +38,7 @@ describe.only('/assets', function () {
   });
 
   it('requires authentication', function (done) {
-    authhelper.ensureAuthIsRequired(
+    authHelper.ensureAuthIsRequired(
       request(server.create())
         .post('/assets')
         .attach('first', 'test/fixtures/asset-file.txt'),
@@ -61,7 +56,7 @@ describe.only('/assets', function () {
       .query({
         named: 'true'
       })
-      .set('Authorization', authhelper.AUTH_USER)
+      .set('Authorization', authHelper.AUTH_USER)
       .attach('first', 'test/fixtures/asset-file.txt')
       .end(function (err, res) {
         if (err) throw err;

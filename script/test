@@ -6,4 +6,7 @@ cd ${ROOT}
 source ./environment.sh
 
 export ACTION="test"
+export STORAGE="memory"
+unset INTEGRATION
+
 exec docker-compose up

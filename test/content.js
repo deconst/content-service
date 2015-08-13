@@ -12,28 +12,21 @@ var dirtyChai = require('dirty-chai');
 chai.use(dirtyChai);
 var expect = chai.expect;
 
+var async = require('async');
 var request = require('supertest');
 var storage = require('../src/storage');
-var authhelper = require('./helpers/auth');
+var authHelper = require('./helpers/auth');
+var resetHelper = require('./helpers/reset');
 var server = require('../src/server');
 
 describe('/content', function () {
-  beforeEach(function (done) {
-    storage.setup(function (err) {
-      if (err) return done(err);
-
-      storage.memory.clear();
-      authhelper.install();
-
-      done();
-    });
-  });
+  beforeEach(resetHelper);
 
   describe('#store', function () {
     it('persists new content into Cloud Files', function (done) {
       request(server.create())
         .put('/content/foo%26bar')
-        .set('Authorization', authhelper.AUTH_USER)
+        .set('Authorization', authHelper.AUTH_USER)
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
         .send('{ "something": "body" }')
@@ -43,7 +36,7 @@ describe('/content', function () {
 
           storage.getContent('foo&bar', function (err, uploaded) {
             expect(err).to.be.null();
-            expect(uploaded).to.equal('{"something":"body"}');
+            expect(JSON.parse(uploaded)).to.deep.equal({ something: "body" });
 
             done();
           });
@@ -51,7 +44,7 @@ describe('/content', function () {
     });
 
     it('requires authentication', function (done) {
-      authhelper.ensureAuthIsRequired(
+      authHelper.ensureAuthIsRequired(
         request(server.create())
           .put('/content/something')
           .send({
@@ -64,12 +57,12 @@ describe('/content', function () {
 
   describe('#retrieve', function () {
     it('retrieves existing content from Cloud Files', function (done) {
-      storage.storeContent('foo&bar', '{ "expected": "json" }', function (err) {
+      storage.storeContent('what&huh', '{ "expected": "json" }', function (err) {
         expect(err).not.to.exist();
       });
 
       request(server.create())
-        .get('/content/foo%26bar')
+        .get('/content/what%26huh')
         .expect('Content-Type', 'application/json')
         .expect(200)
         .expect({
@@ -84,30 +77,30 @@ describe('/content', function () {
 
   describe('#delete', function () {
     it('deletes content from Cloud Files', function (done) {
-      storage.storeContent('foo&bar', '{ "expected": "json" }', function (err) {
+      storage.storeContent('er&okay', '{ "expected": "json" }', function (err) {
         expect(err).not.to.exist();
-      });
 
-      request(server.create())
-        .delete('/content/foo%26bar')
-        .set('Authorization', authhelper.AUTH_USER)
-        .expect(204)
-        .end(function (err, res) {
-          if (err) return done(err);
+        request(server.create())
+          .delete('/content/er%26okay')
+          .set('Authorization', authHelper.AUTH_USER)
+          .expect(204)
+          .end(function (err, res) {
+            if (err) return done(err);
 
-          storage.getContent('foo&bar', function (err, uploaded) {
-            expect(err).not.to.be.null();
-            expect(err.statusCode).to.equal(404);
+            storage.getContent('er&okay', function (err, uploaded) {
+              expect(err).not.to.be.null();
+              expect(err.statusCode).to.equal(404);
 
-            done();
+              done();
+            });
           });
-        });
+      });
     });
 
     it('requires authentication', function (done) {
-      authhelper.ensureAuthIsRequired(
+      authHelper.ensureAuthIsRequired(
         request(server.create())
-          .delete('/content/foo%26bar'),
+          .delete('/content/wat%26nope'),
         done);
     });
 

@@ -28,8 +28,7 @@ describe.only('/assets', function () {
 
   it('accepts an asset file and produces a fingerprinted filename', function (done) {
     // shasum -a 256 test/fixtures/asset-file.txt
-    var finalName =
-    '/__local_asset__/' +
+    var finalName = storage.assetURLPrefix() +
       'asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt';
 
     request(server.create())
@@ -52,8 +51,7 @@ describe.only('/assets', function () {
   });
 
   it('lists fingerprinted assets', function (done) {
-    var finalName =
-    '/__local_asset__/' +
+    var finalName = storage.assetURLPrefix() +
       'asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt';
 
     var app = server.create();

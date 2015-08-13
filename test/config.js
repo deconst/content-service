@@ -12,6 +12,7 @@ var dirtyChai = require('dirty-chai');
 chai.use(dirtyChai);
 var expect = chai.expect;
 
+var before = require('./helpers/before');
 var config = require('../src/config');
 
 describe('config', function () {
@@ -40,4 +41,6 @@ describe('config', function () {
     expect(config.mongodbURL()).to.equal('mongodb-url');
     expect(config.contentLogLevel()).to.equal('debug');
   });
+
+  afterEach(before.reconfigure);
 });

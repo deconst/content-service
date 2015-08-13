@@ -14,20 +14,18 @@ var expect = chai.expect;
 
 var request = require('supertest');
 var storage = require('../src/storage');
-var authhelper = require('./helpers/auth');
+var resetHelper = require('./helpers/reset');
+var authHelper = require('./helpers/auth');
 var server = require('../src/server');
 
 describe('/keys', function () {
-  beforeEach(function () {
-    storage.memory.clear();
-    authhelper.install();
-  });
+  beforeEach(resetHelper);
 
   describe('POST', function () {
     it('allows an admin to issue a new key', function (done) {
       request(server.create())
         .post('/keys?named=someone')
-        .set('Authorization', 'deconst apikey="12345"')
+        .set('Authorization', authHelper.AUTH_ADMIN)
         .expect(200)
         .expect('Content-Type', 'application/json')
         .expect(function (res) {
@@ -47,7 +45,7 @@ describe('/keys', function () {
     it('requires a key name', function (done) {
       request(server.create())
         .post('/keys')
-        .set('Authorization', 'deconst apikey="12345"')
+        .set('Authorization', authHelper.AUTH_ADMIN)
         .expect(409)
         .expect({
           code: 'MissingParameter',
@@ -56,13 +54,13 @@ describe('/keys', function () {
     });
 
     it('requires authentication', function (done) {
-      authhelper.ensureAuthIsRequired(
+      authHelper.ensureAuthIsRequired(
         request(server.create()).post('/keys?named=mine'),
         done);
     });
 
     it('prevents non-admins from issuing keys', function (done) {
-      authhelper.ensureAdminIsRequired(
+      authHelper.ensureAdminIsRequired(
         request(server.create()).post('/keys?named=mine'),
         done);
     });
@@ -70,19 +68,12 @@ describe('/keys', function () {
 
   describe('DELETE', function () {
     it('allows an admin to revoke an existing key', function (done) {
-      storage.storeKey({
-        apikey: '54321',
-        name: 'torevoke'
-      }, function (err) {
-        expect(err).not.to.exist();
-      });
-
       request(server.create())
-        .delete('/keys/54321')
-        .set('Authorization', authhelper.AUTH_ADMIN)
+        .delete('/keys/' + authHelper.APIKEY_USER)
+        .set('Authorization', authHelper.AUTH_ADMIN)
         .expect(204)
         .expect(function () {
-          storage.findKeys('54321', function (err, keys) {
+          storage.findKeys(authHelper.APIKEY_USER, function (err, keys) {
             expect(err).to.be.null();
             expect(keys).to.be.empty();
           });
@@ -91,21 +82,21 @@ describe('/keys', function () {
     });
 
     it('requires authentication', function (done) {
-      authhelper.ensureAuthIsRequired(
+      authHelper.ensureAuthIsRequired(
         request(server.create()).delete('/keys/54321'),
         done);
     });
 
     it('prevents non-admins from revoking keys', function (done) {
-      authhelper.ensureAdminIsRequired(
+      authHelper.ensureAdminIsRequired(
         request(server.create()).delete('/keys/54321'),
         done);
     });
 
     it("doesn't allow admins to revoke their own key", function (done) {
       request(server.create())
-        .delete('/keys/' + authhelper.APIKEY_ADMIN)
-        .set('Authorization', authhelper.AUTH_ADMIN)
+        .delete('/keys/' + authHelper.APIKEY_ADMIN)
+        .set('Authorization', authHelper.AUTH_ADMIN)
         .expect(409)
         .expect('Content-Type', 'application/json')
         .expect({

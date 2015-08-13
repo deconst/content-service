@@ -20,6 +20,13 @@ MemoryStorage.prototype.clear = function (callback) {
   callback();
 };
 
+/**
+ * @description Return prefix of the URL that assets are served under.
+ */
+MemoryStorage.prototype.assetURLPrefix = function () {
+  return "/__local_asset__/";
+};
+
 MemoryStorage.prototype.storeAsset = function (asset, callback) {
   var assetBody = '';
   for (var i = 0; i < asset.chunks.length; i++) {
@@ -31,7 +38,7 @@ MemoryStorage.prototype.storeAsset = function (asset, callback) {
     body: assetBody
   };
 
-  asset.publicURL = '/__local_asset__/' + asset.filename;
+  asset.publicURL = this.assetURLPrefix() + encodeURIComponent(asset.filename);
 
   callback(null, asset);
 };

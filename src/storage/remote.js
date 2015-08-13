@@ -27,6 +27,13 @@ RemoteStorage.prototype.clear = function (callback) {
 };
 
 /**
+ * @description Return prefix of the URL that assets are served under.
+ */
+RemoteStorage.prototype.assetURLPrefix = function () {
+  return connection.assetContainer.cdnSslUri + '/';
+};
+
+/**
  * @description Upload an asset to the Cloud Files asset container.
  */
 RemoteStorage.prototype.storeAsset = function (asset, callback) {
@@ -42,10 +49,9 @@ RemoteStorage.prototype.storeAsset = function (asset, callback) {
   up.on('error', callback);
 
   up.on('success', function () {
-    var baseURI = connection.assetContainer.cdnSslUri;
-    asset.publicURL = baseURI + '/' + encodeURIComponent(asset.filename);
+    asset.publicURL = this.assetURLPrefix() + encodeURIComponent(asset.filename);
     callback(null, asset);
-  });
+  }.bind(this));
 
   asset.chunks.forEach(function (chunk) {
     up.write(chunk);

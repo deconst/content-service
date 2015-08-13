@@ -9,6 +9,8 @@ var logger = require('../logging').getLogger();
 
 // Methods to delegate to the activated storage driver.
 var delegates = [
+  'clear',
+  'assetURLPrefix',
   'storeAsset',
   'nameAsset',
   'findNamedAssets',
@@ -17,8 +19,7 @@ var delegates = [
   'findKeys',
   'storeContent',
   'getContent',
-  'deleteContent',
-  'clear'
+  'deleteContent'
 ];
 
 /**

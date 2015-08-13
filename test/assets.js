@@ -11,7 +11,6 @@ var dirtyChai = require('dirty-chai');
 
 chai.use(dirtyChai);
 
-var async = require('async');
 var request = require('supertest');
 var resetHelper = require('./helpers/reset');
 var authHelper = require('./helpers/auth');

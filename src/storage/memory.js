@@ -24,7 +24,7 @@ MemoryStorage.prototype.clear = function (callback) {
  * @description Return prefix of the URL that assets are served under.
  */
 MemoryStorage.prototype.assetURLPrefix = function () {
-  return "/__local_asset__/";
+  return '/__local_asset__/';
 };
 
 MemoryStorage.prototype.storeAsset = function (asset, callback) {

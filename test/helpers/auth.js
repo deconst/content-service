@@ -1,11 +1,5 @@
 // Helper functions used to test endpoints that are protected by authentication.
 
-var async = require('async');
-
-var config = require('../../src/config');
-var storage = require('../../src/storage');
-var connection = require('../../src/storage/connection');
-
 exports.APIKEY_ADMIN = process.env.ADMIN_APIKEY || '12345';
 
 exports.AUTH_ADMIN = 'deconst apikey="' + exports.APIKEY_ADMIN + '"';

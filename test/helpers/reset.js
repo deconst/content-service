@@ -5,7 +5,7 @@ var storage = require('../../src/storage');
 var connection = require('../../src/storage/connection');
 var auth = require('./auth');
 
-function clearCollection(name, callback) {
+function clearCollection (name, callback) {
   var collection = connection.db.collection(name);
   collection.count({}, function (err, count) {
     if (err) return callback(err);
@@ -18,23 +18,23 @@ function clearCollection(name, callback) {
   });
 }
 
-function setupStorage(callback) {
+function setupStorage (callback) {
   storage.setup(callback);
 }
 
-function clearStorage(callback) {
+function clearStorage (callback) {
   storage.clear(callback);
 }
 
-function clearAPIKeys(callback) {
+function clearAPIKeys (callback) {
   clearCollection('apiKeys', callback);
 }
 
-function installAPIKey(callback) {
+function installAPIKey (callback) {
   storage.storeKey({ name: 'user', apikey: auth.APIKEY_USER }, callback);
 }
 
-function clearNamedAssets(callback) {
+function clearNamedAssets (callback) {
   clearCollection('layoutAssets', callback);
 }
 

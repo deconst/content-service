@@ -12,7 +12,6 @@ var dirtyChai = require('dirty-chai');
 chai.use(dirtyChai);
 var expect = chai.expect;
 
-var async = require('async');
 var request = require('supertest');
 var storage = require('../src/storage');
 var authHelper = require('./helpers/auth');
@@ -36,7 +35,7 @@ describe('/content', function () {
 
           storage.getContent('foo&bar', function (err, uploaded) {
             expect(err).to.be.null();
-            expect(JSON.parse(uploaded)).to.deep.equal({ something: "body" });
+            expect(JSON.parse(uploaded)).to.deep.equal({ something: 'body' });
 
             done();
           });

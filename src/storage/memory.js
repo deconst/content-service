@@ -56,6 +56,21 @@ MemoryStorage.prototype.findNamedAssets = function (callback) {
   callback(null, _.values(this.namedAssets));
 };
 
+MemoryStorage.prototype.getAsset = function (filename, callback) {
+  var asset = this.assets[filename];
+
+  if (asset === undefined) {
+    var err = new Error('Memory storage error');
+
+    err.statusCode = 404;
+    err.responseBody = 'Oh snap';
+
+    return callback(err);
+  }
+
+  callback(null, asset);
+};
+
 MemoryStorage.prototype.storeKey = function (key, callback) {
   this.keys[key.apikey] = key.name;
   callback();

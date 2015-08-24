@@ -89,6 +89,42 @@ RemoteStorage.prototype.findNamedAssets = function (callback) {
 };
 
 /**
+ * @description Retrieve an asset directly through the content service API. This is useless for
+ *  remote storage (because you can and should use the CDN url instead) but implemented for
+ *  parity with memory storage.
+ */
+RemoteStorage.prototype.getAsset = function (filename, callback) {
+  var source = connection.client.download({
+    container: config.assetContainer(),
+    remote: filename
+  });
+  var chunks = [];
+
+  source.on('error', function (err) {
+    callback(err);
+  });
+
+  source.on('data', function (chunk) {
+    chunks.push(chunk);
+  });
+
+  source.on('complete', function (resp) {
+    var complete = Buffer.concat(chunks);
+
+    if (resp.statusCode > 400) {
+      var err = new Error('Cloud Files error');
+
+      err.statusCode = resp.statusCode;
+      err.responseBody = complete;
+
+      return callback(err);
+    }
+
+    callback(null, { contentType: resp.contentType, body: complete });
+  });
+};
+
+/**
  * @description Store a newly generated API key in the keys collection.
  */
 RemoteStorage.prototype.storeKey = function (key, callback) {

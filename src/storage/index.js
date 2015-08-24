@@ -14,6 +14,7 @@ var delegates = [
   'storeAsset',
   'nameAsset',
   'findNamedAssets',
+  'getAsset',
   'storeKey',
   'deleteKey',
   'findKeys',

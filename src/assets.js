@@ -227,3 +227,39 @@ exports.list = function (req, res, next) {
     next();
   });
 };
+
+exports.retrieve = function (req, res, next) {
+  log.debug({
+    action: 'assetretrieve',
+    message: 'Asset requested directly.'
+  });
+
+  var reqStart = Date.now();
+
+  storage.getAsset(req.params.id, function (err, asset) {
+    if (err) {
+      log.error({
+        action: 'assetretrieve',
+        statusCode: err.statusCode || 500,
+        message: 'Unable to retrieve asset',
+        error: err.message,
+        stack: err.stack
+      });
+      return next(err);
+    }
+
+    res.header('Content-Type', asset.contentType);
+    res.send(asset.body);
+
+    log.info({
+      action: 'contentretrieve',
+      statusCode: 200,
+      assetFilename: req.params.id,
+      assetContentType: asset.contentType,
+      totalReqDuration: Date.now() - reqStart,
+      message: 'Asset request successful.'
+    });
+
+    next();
+  });
+}

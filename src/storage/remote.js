@@ -122,7 +122,7 @@ RemoteStorage.prototype.getAsset = function (filename, callback) {
 
     callback(null, { contentType: resp.contentType, body: complete });
   });
-}
+};
 
 /**
  * @description Store a newly generated API key in the keys collection.

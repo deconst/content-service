@@ -69,7 +69,7 @@ MemoryStorage.prototype.getAsset = function (filename, callback) {
   }
 
   callback(null, asset);
-}
+};
 
 MemoryStorage.prototype.storeKey = function (key, callback) {
   this.keys[key.apikey] = key.name;

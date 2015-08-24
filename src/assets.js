@@ -262,4 +262,4 @@ exports.retrieve = function (req, res, next) {
 
     next();
   });
-}
+};

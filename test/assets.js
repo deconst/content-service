@@ -6,6 +6,7 @@
 
 require('./helpers/before');
 
+var fs = require('fs');
 var chai = require('chai');
 var dirtyChai = require('dirty-chai');
 
@@ -18,13 +19,17 @@ var storage = require('../src/storage');
 var server = require('../src/server');
 
 describe('/assets', function () {
+  // shasum -a 256 test/fixtures/asset-file.txt
+  var fingerprintedFilename =
+  'asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt';
+  var finalName;
+
   beforeEach(resetHelper);
+  beforeEach(function () {
+    finalName = storage.assetURLPrefix() + fingerprintedFilename;
+  });
 
   it('accepts an asset file and produces a fingerprinted filename', function (done) {
-    // shasum -a 256 test/fixtures/asset-file.txt
-    var finalName = storage.assetURLPrefix() +
-      'asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt';
-
     request(server.create())
       .post('/assets')
       .set('Authorization', authHelper.AUTH_USER)
@@ -45,9 +50,6 @@ describe('/assets', function () {
   });
 
   it('lists fingerprinted assets', function (done) {
-    var finalName = storage.assetURLPrefix() +
-      'asset-file-0a1b4ceeaee9f0b7325a5dbdb93497e1f8c98d03b6f2518084294faa3452efc1.txt';
-
     var app = server.create();
 
     request(app)
@@ -65,6 +67,24 @@ describe('/assets', function () {
           .expect(200)
           .expect('Content-Type', /json/)
           .expect('{"first":"' + finalName + '"}', done);
+      });
+  });
+
+  it('retrieves assets by fingerprinted filename', function (done) {
+    var app = server.create();
+    var rawAssetContents = fs.readFileSync('test/fixtures/asset-file.txt').toString();
+
+    request(app)
+      .post('/assets')
+      .set('Authorization', authHelper.AUTH_USER)
+      .attach('first', 'test/fixtures/asset-file.txt')
+      .end(function (err) {
+        if (err) throw err;
+
+        request(app)
+          .get('/assets/' + fingerprintedFilename)
+          .expect(200)
+          .expect(rawAssetContents, done);
       });
   });
 

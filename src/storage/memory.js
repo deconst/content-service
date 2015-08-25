@@ -28,10 +28,7 @@ MemoryStorage.prototype.assetURLPrefix = function () {
 };
 
 MemoryStorage.prototype.storeAsset = function (asset, callback) {
-  var assetBody = '';
-  for (var i = 0; i < asset.chunks.length; i++) {
-    assetBody += asset.chunks[i].toString();
-  }
+  var assetBody = Buffer.concat(asset.chunks);
 
   this.assets[asset.filename] = {
     contentType: asset.type,

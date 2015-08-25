@@ -250,11 +250,14 @@ exports.retrieve = function (req, res, next) {
       return next(err);
     }
 
-    res.header('Content-Type', asset.contentType);
-    res.send(asset.body);
+    // Bypass restify's formatter to keep it from being "helpful"
+    res.setHeader('content-type', asset.contentType);
+    res.writeHead(200);
+    res.write(asset.body);
+    res.end();
 
     log.info({
-      action: 'contentretrieve',
+      action: 'assetretrieve',
       statusCode: 200,
       assetFilename: req.params.id,
       assetContentType: asset.contentType,

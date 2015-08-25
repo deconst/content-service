@@ -33,6 +33,7 @@ function fingerprintAsset (asset, callback) {
       action: 'assetstore',
       originalAssetName: asset.name,
       assetFilename: fingerprinted,
+      assetContentType: asset.type,
       message: 'Asset fingerprinted successfully.'
     });
 
@@ -58,6 +59,7 @@ function publishAsset (asset, callback) {
     log.debug({
       action: 'assetstore',
       assetFilename: asset.filename,
+      assetContentType: asset.type,
       message: 'Asset uploaded successfully.'
     });
 

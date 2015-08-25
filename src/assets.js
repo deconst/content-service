@@ -250,6 +250,7 @@ exports.retrieve = function (req, res, next) {
       return next(err);
     }
 
+    // Bypass restify's formatter to keep it from being "helpful"
     res.setHeader('content-type', asset.contentType);
     res.writeHead(200);
     res.write(asset.body);

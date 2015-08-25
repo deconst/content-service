@@ -250,11 +250,12 @@ exports.retrieve = function (req, res, next) {
       return next(err);
     }
 
-    res.header('Content-Type', asset.contentType);
-    res.send(asset.body);
+    res.send(200, asset.body, {
+      'Content-Type': asset.contentType
+    });
 
     log.info({
-      action: 'contentretrieve',
+      action: 'assetretrieve',
       statusCode: 200,
       assetFilename: req.params.id,
       assetContentType: asset.contentType,

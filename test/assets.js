@@ -84,6 +84,7 @@ describe('/assets', function () {
         request(app)
           .get('/assets/' + fingerprintedFilename)
           .expect(200)
+          .expect('Content-Type', 'text/plain')
           .expect(rawAssetContents, done);
       });
   });

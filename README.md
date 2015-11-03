@@ -180,3 +180,49 @@ An HTTP status code of 204 indicates that the API key will no longer be valid.
 *Response: Unsuccessful*
 
 An HTTP status code of 401 indicates that the request did not contain a valid administrator API key. A 409 is generated if an administrator attempts to revoke their own key.
+
+### `PUT /control`
+
+**(Authorization required: any user)**
+
+Change the stored control repository SHA.
+
+*Request*
+
+The request payload must be a JSON object containing a 40-character git commit SHA.
+
+```json
+{
+  "sha": "f2fa39527c7b35b9960fd39e2eb77217db3ee517"
+}
+```
+
+*Response: Successful*
+
+A status code of 204 indicates that the new SHA has been accepted.
+
+*Response: Unsuccessful*
+
+An HTTP status code of 401 indicates that the request did not contain a valid API key. A status code of 400 indicates that the request body did not contain an appropriately formatted JSON document.
+
+### `GET /control`
+
+Retrieve the most recently stored control repository SHA.
+
+*Response: Successful*
+
+If a control repository SHA has been stored:
+
+```json
+{
+  "sha": "f2fa39527c7b35b9960fd39e2eb77217db3ee517"
+}
+```
+
+If no SHA has been stored yet:
+
+```json
+{
+  "sha": null
+}
+```

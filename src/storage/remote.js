@@ -219,6 +219,10 @@ RemoteStorage.prototype.getSHA = function (callback) {
       return callback(err);
     }
 
+    if (doc === null) {
+      return callback(null, null);
+    }
+
     callback(null, doc.sha);
   });
 };

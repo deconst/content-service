@@ -70,7 +70,7 @@ describe('/control', function () {
     });
   });
 
-  describe("GET", function () {
+  describe('GET', function () {
     it('returns null if no git sha has been stored', function (done) {
       request(server.create())
         .get('/control')

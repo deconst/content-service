@@ -8,5 +8,6 @@ source ./environment.sh
 export ACTION="test"
 export STORAGE="memory"
 unset INTEGRATION
+unset ADMIN_APIKEY
 
 exec docker-compose up

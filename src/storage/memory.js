@@ -16,6 +16,7 @@ MemoryStorage.prototype.clear = function (callback) {
   this.assets = {};
   this.namedAssets = {};
   this.keys = {};
+  this.sha = null;
 
   callback();
 };
@@ -114,6 +115,16 @@ MemoryStorage.prototype.deleteContent = function (contentID, callback) {
   delete this.envelopes[contentID];
 
   callback();
+};
+
+MemoryStorage.prototype.storeSHA = function (sha, callback) {
+  this.sha = sha;
+
+  callback(null);
+};
+
+MemoryStorage.prototype.getSHA = function (callback) {
+  callback(null, this.sha);
 };
 
 module.exports = {

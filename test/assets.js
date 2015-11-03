@@ -88,5 +88,4 @@ describe('/assets', function () {
           .expect(rawAssetContents, done);
       });
   });
-
 });

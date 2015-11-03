@@ -6,6 +6,7 @@ var version = require('./version');
 var content = require('./content');
 var assets = require('./assets');
 var keys = require('./keys');
+var control = require('./control');
 
 exports.loadRoutes = function (server) {
   server.get('/version', version.report);
@@ -25,4 +26,7 @@ exports.loadRoutes = function (server) {
 
   server.post('/keys', auth.requireAdmin, restify.queryParser(), keys.issue);
   server.del('/keys/:key', auth.requireAdmin, keys.revoke);
+
+  server.get('/control', control.retrieve);
+  server.put('/control', auth.requireKey, restify.bodyParser(), control.store);
 };

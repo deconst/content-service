@@ -214,7 +214,7 @@ RemoteStorage.prototype.storeSHA = function (sha, callback) {
 };
 
 RemoteStorage.prototype.getSHA = function (callback) {
-  connection.db.collection('sha').findOne({ key: 'controlRepository'}, function (err, doc) {
+  connection.db.collection('sha').findOne({key: 'controlRepository'}, function (err, doc) {
     if (err) {
       return callback(err);
     }

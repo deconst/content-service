@@ -51,7 +51,6 @@ describe('/content', function () {
           }),
         done);
     });
-
   });
 
   describe('#retrieve', function () {
@@ -71,7 +70,6 @@ describe('/content', function () {
           }, done);
       });
     });
-
   });
 
   describe('#delete', function () {
@@ -102,6 +100,5 @@ describe('/content', function () {
           .delete('/content/wat%26nope'),
         done);
     });
-
   });
 });

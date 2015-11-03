@@ -69,4 +69,24 @@ describe('/control', function () {
         .end(done);
     });
   });
+
+  describe("GET", function () {
+    it('returns null if no git sha has been stored', function (done) {
+      request(server.create())
+        .get('/control')
+        .expect(200)
+        .expect({sha: null}, done);
+    });
+
+    it('retrieves a stored git sha', function (done) {
+      storage.storeSHA('c653898a7c864cadb425dc6b19e80e8e276013fc', function (err) {
+        expect(err).to.be.null();
+
+        request(server.create())
+          .get('/control')
+          .expect(200)
+          .expect({sha: 'c653898a7c864cadb425dc6b19e80e8e276013fc'}, done);
+      });
+    });
+  });
 });

@@ -26,4 +26,15 @@ exports.store = function (req, res, next) {
   });
 };
 
-exports.retrieve = function (req, res, next) {};
+exports.retrieve = function (req, res, next) {
+  storage.getSHA(function (err, sha) {
+    next.ifError(err);
+
+    res.json(200, {sha: sha});
+
+    log.info('Got control repository SHA', {
+      sha: sha
+    });
+    next();
+  });
+};

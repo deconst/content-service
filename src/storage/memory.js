@@ -120,7 +120,7 @@ MemoryStorage.prototype.deleteContent = function (contentID, callback) {
 MemoryStorage.prototype.storeSHA = function (sha, callback) {
   this.sha = sha;
 
-  callback();
+  callback(null);
 };
 
 MemoryStorage.prototype.getSHA = function (callback) {

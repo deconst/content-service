@@ -24,7 +24,7 @@ function ensureComplete (backend) {
       return function () {
         expect(instance[delegate]).to.be.an.instanceOf(Function);
 
-        if (arities[delegate]) {
+        if (arities[delegate] !== undefined) {
           expect(instance[delegate].length).to.equal(arities[delegate]);
         } else {
           arities[delegate] = instance[delegate].length;

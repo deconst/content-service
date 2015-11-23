@@ -14,6 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "0.9.0",
+    "elasticsearch": "^9.0.2",
     "lodash": "^3.8.0",
     "mongodb": "2.0.27",
     "pkgcloud": "1.1.0",

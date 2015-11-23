@@ -8,7 +8,7 @@ var remote = require('./remote');
 var logger = require('../logging').getLogger();
 
 // Methods to delegate to the activated storage driver.
-var delegates = [
+var delegates = exports.delegates = [
   'clear',
   'assetURLPrefix',
   'storeAsset',

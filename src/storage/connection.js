@@ -3,6 +3,7 @@
 var async = require('async');
 var pkgcloud = require('pkgcloud');
 var mongo = require('mongodb');
+var elasticsearch = require('elasticsearch');
 var config = require('../config');
 var logger = require('../logging').getLogger();
 
@@ -86,6 +87,21 @@ function mongoInit (callback) {
   });
 }
 
+/**
+ * @description Authenticate to Elasticsearch and perform one-time initialization. Export the active
+ * Elasticsearch client as "elastic".
+ */
+function elasticInit (callback) {
+  var client = new elasticsearch.Client({
+    host: config.elasticsearchHost(),
+    ssl: { rejectUnauthorized: true } // Plz no trivial MITM attacks
+  });
+
+  exports.elastic = client;
+
+  callback(null);
+}
+
 exports.setup = function (callback) {
   var client = pkgcloud.providers.rackspace.storage.createClient({
     username: config.rackspaceUsername(),
@@ -110,7 +126,8 @@ exports.setup = function (callback) {
     async.parallel([
       makeContainerCreator(client, config.contentContainer(), 'contentContainer', false),
       makeContainerCreator(client, config.assetContainer(), 'assetContainer', true),
-      mongoInit
+      mongoInit,
+      elasticInit
     ], callback);
   });
 };

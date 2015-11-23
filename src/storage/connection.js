@@ -88,13 +88,46 @@ function mongoInit (callback) {
 }
 
 /**
+ * @description Shunt Elasticsearch log messages to the existing logger.
+ */
+function ElasticLogs (config) {
+  var makeLogHandler = function (level) {
+    return function (message) {
+      logger[level]({
+        action: 'elasticsearch',
+        message: message
+      });
+    };
+  };
+
+  this.error = makeLogHandler('error');
+  this.warning = makeLogHandler('warning');
+  this.info = makeLogHandler('info');
+  this.debug = makeLogHandler('debug');
+
+  this.trace = function (httpMethod, requestUrl, requestBody, responseBody, responseStatus) {
+    logger.trace({
+      message: 'Elasticsearch HTTP request',
+      httpMethod: httpMethod,
+      requestUrl: requestUrl,
+      requestBody: requestBody,
+      responseBody: responseBody,
+      responseStatus: responseStatus
+    });
+
+    this.close = function () {};
+  };
+}
+
+/**
  * @description Authenticate to Elasticsearch and perform one-time initialization. Export the active
  * Elasticsearch client as "elastic".
  */
 function elasticInit (callback) {
   var client = new elasticsearch.Client({
     host: config.elasticsearchHost(),
-    ssl: { rejectUnauthorized: true } // Plz no trivial MITM attacks
+    ssl: { rejectUnauthorized: true }, // Plz no trivial MITM attacks
+    log: ElasticLogs
   });
 
   exports.elastic = client;

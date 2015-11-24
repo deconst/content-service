@@ -151,7 +151,21 @@ function elasticInit (callback) {
     body: {
       mappings: { envelope: envelopeMapping }
     }
-  }, callback);
+  }, function (err) {
+    if (err) {
+      if (/^IndexAlreadyExistsException/.test(err.message)) {
+        logger.info('Elasticsearch index already exists.', {
+          indexName: 'elastic'
+        });
+
+        return callback(null);
+      }
+
+      return callback(err);
+    }
+
+    return callback(null);
+  });
 }
 
 exports.setup = function (callback) {

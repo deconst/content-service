@@ -4,11 +4,11 @@
  * Ensure that storage providers are complete and consistent.
  */
 
- var chai = require('chai');
- var dirtyChai = require('dirty-chai');
+var chai = require('chai');
+var dirtyChai = require('dirty-chai');
 
- chai.use(dirtyChai);
- var expect = chai.expect;
+chai.use(dirtyChai);
+var expect = chai.expect;
 
 var delegates = require('../src/storage').delegates;
 var MemoryStorage = require('../src/storage/memory').MemoryStorage;
@@ -16,9 +16,9 @@ var RemoteStorage = require('../src/storage/remote').RemoteStorage;
 
 var arities = {};
 
-function ensureComplete (backend) {
+function ensureComplete (Backend) {
   return function () {
-    var instance = new backend();
+    var instance = new Backend();
 
     var makeDelegateTester = function (delegate) {
       return function () {
@@ -33,7 +33,7 @@ function ensureComplete (backend) {
     };
 
     delegates.forEach(function (delegate) {
-      it("implements the " + delegate + " method", makeDelegateTester(delegate));
+      it('implements the ' + delegate + ' method', makeDelegateTester(delegate));
     });
   };
 }

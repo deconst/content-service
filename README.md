@@ -15,31 +15,40 @@ To develop locally, you'll need to install:
 Then, you can build and run the service with:
 
 ```bash
-# See below for service configuration.
-export RACKSPACE_USERNAME=...
-export RACKSPACE_APIKEY=...
-export RACKSPACE_REGION=...
+# Customize your environment settings.
+cp environment.sample.sh environment.sh
+${EDITOR} environment.sh
+source environment.sh
 
-docker-compose build && docker-compose up -d
+docker-compose build
+docker-compose up
 ```
 
 ## Configuration
 
 The content service is configured by passing environment variables to the Docker container. These are the available configuration options:
 
- * `RACKSPACE_USERNAME`: **(Required)** the username for your Rackspace account.
- * `RACKSPACE_APIKEY`: **(Required)** the API key for your Rackspace account.
- * `RACKSPACE_REGION`: **(Required)** the Rackspace region for the content service to use.
- * `RACKSPACE_SERVICENET`: if `"true"`, connect to Cloud Files over ServiceNet rather than the public endpoint.
- * `ADMIN_APIKEY`: **(Required)** an API key that can be used by administrators or other internal services to issue and revoke API keys.
- * `CONTENT_CONTAINER`: **(Required)** container name to use for the stored metadata envelopes.
- * `ASSET_CONTAINER`: **(Required)** container name to use for published assets.
- * `CONTENT_LOG_LEVEL`: Optional logging level. The valid levels are `TRACE`, `DEBUG`, `VERBOSE`, `INFO` (Default), `WARN`, and `ERROR`.
- * `CONTENT_LOG_COLOR`: Logging colorization. Set to `"true"` to enable colorful logs.
+ * `STORAGE`: *(default: `"remote"`)* Specify `memory` to use entirely in-memory storage, or `remote` to use external storage services.
+ * `ADMIN_APIKEY`: **(required)** An API key that can be used by administrators or other internal services to issue and revoke API keys.
+
+### Remote services
+
+ * `RACKSPACE_USERNAME`: **(required if STORAGE=remote)** The username for your Rackspace account.
+ * `RACKSPACE_APIKEY`: **(required if STORAGE=remote)** The API key for your Rackspace account.
+ * `RACKSPACE_REGION`: **(required if STORAGE=remote)** The Rackspace region for the content service to use.
+ * `RACKSPACE_SERVICENET`: *(default: `"false"`)* If `"true"`, connect to Cloud Files over ServiceNet rather than the public endpoint.
+ * `CONTENT_CONTAINER`: **(required if STORAGE=remote)** Container name to use for the stored metadata envelopes.
+ * `ASSET_CONTAINER`: **(required if STORAGE=remote)** Container name to use for published assets.
+ * `MONGODB_URL`: **(required if STORAGE=remote)** MongoDB connection string, including any required authentication information.
+ * `ELASTICSEARCH_HOST`: **(required if STORAGE=remote)** Elasticsearch connection string, including any required authentication information.
+
+### Logging
+
+ * `CONTENT_LOG_LEVEL`: *(default: `"info"`)* Optional logging level, case-insensitive. The valid levels are `TRACE`, `DEBUG`, `VERBOSE`, `INFO`, `WARN`, and `ERROR`.
+ * `CONTENT_LOG_COLOR`: *(default: `"false"`)* Logging colorization. Set to `"true"` to enable colorful logs.
+ * `NODE_ENV`: If set to `"production"`, logs will be emitted as JSON objects.
 
 Both Cloud Files containers will be created and configured on application launch if they do not already exist.
-
-In development mode, docker-compose provides defaults for everything but `RACKSPACE_USERNAME`, `RACKSPACE_APIKEY`, and `RACKSPACE_REGION`.
 
 ## API
 

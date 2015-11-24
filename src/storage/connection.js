@@ -133,7 +133,25 @@ function elasticInit (callback) {
 
   exports.elastic = client;
 
-  callback(null);
+  var envelopeMapping = {
+    properties: {
+      title: {
+        type: 'string',
+        index: 'analyzed'
+      },
+      body: {
+        type: 'string',
+        index: 'analyzed'
+      }
+    }
+  };
+
+  client.indices.create({
+    index: 'envelopes',
+    body: {
+      mappings: { envelope: envelopeMapping }
+    }
+  }, callback);
 }
 
 exports.setup = function (callback) {

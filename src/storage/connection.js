@@ -107,6 +107,8 @@ function ElasticLogs (config) {
   this.debug = makeLogHandler('debug');
 
   this.trace = function (httpMethod, requestUrl, requestBody, responseBody, responseStatus) {
+    requestUrl.pathname = requestUrl.path;
+
     logger.trace({
       message: 'Elasticsearch HTTP request',
       httpMethod: httpMethod,

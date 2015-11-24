@@ -200,6 +200,15 @@ RemoteStorage.prototype.deleteContent = function (contentID, callback) {
   connection.client.removeFile(config.contentContainer(), encodeURIComponent(contentID), callback);
 };
 
+RemoteStorage.prototype.listContent = function (callback) {
+  connection.client.getFiles(config.contentContainer(), { limit: Infinity }, function (err, files) {
+    if (err) return callback(err);
+
+    var fileNames = files.map(function (e) { return e.name; });
+    callback(null, fileNames);
+  });
+};
+
 RemoteStorage.prototype.indexContent = function (contentID, envelope, callback) {
   connection.elastic.index({
     index: 'envelopes',

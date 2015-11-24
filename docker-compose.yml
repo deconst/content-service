@@ -1,4 +1,6 @@
 ---
+elasticsearch:
+  image: elasticsearch:1.7
 mongo:
   image: mongo:2.6
 content:
@@ -7,6 +9,7 @@ content:
   - "9000:8080"
   links:
   - "mongo:mongo"
+  - "elasticsearch:elasticsearch"
   environment:
     ACTION:
     INTEGRATION:
@@ -20,6 +23,7 @@ content:
     CONTENT_CONTAINER:
     ASSET_CONTAINER:
     MONGODB_URL: mongodb://mongo:27017/content
+    ELASTICSEARCH_HOST: http://elasticsearch:9200/
     CONTENT_LOG_LEVEL:
     CONTENT_LOG_COLOR:
   volumes:

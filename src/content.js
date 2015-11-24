@@ -50,7 +50,20 @@ exports.store = function (req, res, next) {
     message: 'Content storage request received.'
   });
 
-  storage.storeContent(contentID, JSON.stringify(envelope), function (err) {
+  // Store the envelope in the primary key-value storage engine.
+  var kvStore = function (cb) {
+    storage.storeContent(contentID, JSON.stringify(envelope), cb);
+  };
+
+  // Index the envelope in the full text search storage engine.
+  var ftsStore = function (cb) {
+    storage.indexContent(contentID, envelope, cb);
+  };
+
+  async.parallel([
+    kvStore,
+    ftsStore
+  ], function (err) {
     if (err) {
       log.error({
         action: 'contentstore',
@@ -72,7 +85,7 @@ exports.store = function (req, res, next) {
       action: 'contentstore',
       statusCode: 204,
       apikeyName: req.apikeyName,
-      contentID: req.params.id,
+      contentID: contentID,
       totalReqDuration: Date.now() - reqStart,
       message: 'Content storage successful.'
     });

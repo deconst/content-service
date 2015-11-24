@@ -57,7 +57,12 @@ exports.store = function (req, res, next) {
 
   // Index the envelope in the full text search storage engine.
   var ftsStore = function (cb) {
-    storage.indexContent(contentID, envelope, cb);
+    var subset = {
+      title: envelope.title,
+      body: envelope.body
+    };
+
+    storage.indexContent(contentID, subset, cb);
   };
 
   async.parallel([

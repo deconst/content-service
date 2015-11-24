@@ -1,6 +1,6 @@
 // Echo the service name, version, and commit.
 
-var config = require('./config');
+var config = require('../config');
 
 /**
  * @description gets the version of the current service

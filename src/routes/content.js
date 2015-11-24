@@ -1,9 +1,9 @@
 // Store, retrieve, and delete metadata envelopes.
 
 var async = require('async');
-var storage = require('./storage');
-var log = require('./logging').getLogger();
 var assets = require('./assets');
+var storage = require('../storage');
+var log = require('../logging').getLogger();
 
 /**
  * @description Download the raw metadata envelope from Cloud Files.

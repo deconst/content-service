@@ -137,14 +137,9 @@ function elasticInit (callback) {
 
   var envelopeMapping = {
     properties: {
-      title: {
-        type: 'string',
-        index: 'analyzed'
-      },
-      body: {
-        type: 'string',
-        index: 'analyzed'
-      }
+      title: { type: 'string', index: 'analyzed' },
+      body: { type: 'string', index: 'analyzed' },
+      keywords: { type: 'string', index: 'analyzed' }
     }
   };
 

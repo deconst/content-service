@@ -4,8 +4,8 @@ var async = require('async');
 var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
-var storage = require('./storage');
-var log = require('./logging').getLogger();
+var storage = require('../storage');
+var log = require('../logging').getLogger();
 
 /**
  * @description Calculate a checksum of an uploaded file's contents to generate

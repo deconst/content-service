@@ -3,8 +3,8 @@
 var crypto = require('crypto');
 var async = require('async');
 var restify = require('restify');
-var storage = require('./storage');
-var log = require('./logging').getLogger();
+var storage = require('../storage');
+var log = require('../logging').getLogger();
 
 /**
  * @description Generate a fresh API key.

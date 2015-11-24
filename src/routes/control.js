@@ -2,8 +2,8 @@
 
 var restify = require('restify');
 
-var storage = require('./storage');
-var log = require('./logging').getLogger();
+var storage = require('../storage');
+var log = require('../logging').getLogger();
 
 exports.store = function (req, res, next) {
   if (req.params.sha === undefined) {

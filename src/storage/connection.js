@@ -1,5 +1,6 @@
 // Manage a connection to the Rackspace cloud. Retain and export handles to created resources.
 
+var url = require('url');
 var async = require('async');
 var pkgcloud = require('pkgcloud');
 var mongo = require('mongodb');
@@ -109,7 +110,7 @@ function ElasticLogs (config) {
     logger.trace({
       message: 'Elasticsearch HTTP request',
       httpMethod: httpMethod,
-      requestUrl: requestUrl,
+      requestUrl: url.format(requestUrl),
       requestBody: requestBody,
       responseBody: responseBody,
       responseStatus: responseStatus

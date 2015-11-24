@@ -4,16 +4,14 @@
   "description": "A content service for storing and retreiving content",
   "main": "app.js",
   "scripts": {
-    "test": "mocha --timeout 10000",
-    "docker-build": "docker build -t content-service .",
-    "docker-run": "sh -c \"docker run -it --rm --name content-service-running -p 80:8080 -e RACKSPACE_USERNAME=$RACKSPACE_USERNAME -e RACKSPACE_APIKEY=$RACKSPACE_APIKEY -e RACKSPACE_REGION=$RACKSPACE_REGION -e RACKSPACE_CONTAINER=$RACKSPACE_CONTAINER -e CONTENT_LOG_LEVEL=$CONTENT_LOG_LEVEL content-service\"",
-    "start": "node app.js",
-    "format": "obama --format"
+    "test": "mocha --timeout 10000 && semistandard",
+    "start": "node app.js"
   },
   "author": "Ken Perkins <ken.perkins@rackspace.com>",
   "license": "MIT",
   "dependencies": {
     "async": "0.9.0",
+    "elasticsearch": "^9.0.2",
     "lodash": "^3.8.0",
     "mongodb": "2.0.27",
     "pkgcloud": "1.1.0",
@@ -24,7 +22,7 @@
     "chai": "^3.2.0",
     "dirty-chai": "^1.2.2",
     "mocha": "^2.2.4",
-    "obama": "^0.1.0",
+    "semistandard": "^7.0.3",
     "supertest": "^0.15.0"
   }
 }

@@ -1,8 +1,10 @@
 // Manage a connection to the Rackspace cloud. Retain and export handles to created resources.
 
+var url = require('url');
 var async = require('async');
 var pkgcloud = require('pkgcloud');
 var mongo = require('mongodb');
+var elasticsearch = require('elasticsearch');
 var config = require('../config');
 var logger = require('../logging').getLogger();
 
@@ -86,6 +88,83 @@ function mongoInit (callback) {
   });
 }
 
+/**
+ * @description Shunt Elasticsearch log messages to the existing logger.
+ */
+function ElasticLogs (config) {
+  var makeLogHandler = function (level) {
+    return function (message) {
+      logger[level]({
+        action: 'elasticsearch',
+        message: message
+      });
+    };
+  };
+
+  this.error = makeLogHandler('error');
+  this.warning = makeLogHandler('warning');
+  this.info = makeLogHandler('info');
+  this.debug = makeLogHandler('debug');
+
+  this.trace = function (httpMethod, requestUrl, requestBody, responseBody, responseStatus) {
+    requestUrl.pathname = requestUrl.path;
+
+    logger.trace({
+      message: 'Elasticsearch HTTP request',
+      httpMethod: httpMethod,
+      requestUrl: url.format(requestUrl),
+      requestBody: requestBody,
+      responseBody: responseBody,
+      responseStatus: responseStatus
+    });
+
+    this.close = function () {};
+  };
+}
+
+/**
+ * @description Authenticate to Elasticsearch and perform one-time initialization. Export the active
+ * Elasticsearch client as "elastic".
+ */
+function elasticInit (callback) {
+  var client = new elasticsearch.Client({
+    host: config.elasticsearchHost(),
+    apiVersion: '1.7',
+    ssl: { rejectUnauthorized: true }, // Plz no trivial MITM attacks
+    log: ElasticLogs
+  });
+
+  exports.elastic = client;
+
+  var envelopeMapping = {
+    properties: {
+      title: { type: 'string', index: 'analyzed' },
+      body: { type: 'string', index: 'analyzed' },
+      keywords: { type: 'string', index: 'analyzed' }
+    }
+  };
+
+  client.indices.create({ index: 'envelopes' }, function (err) {
+    if (err) {
+      if (/^IndexAlreadyExistsException/.test(err.message)) {
+        logger.info('Elasticsearch index already exists.', {
+          indexName: 'elastic'
+        });
+      } else {
+        return callback(err);
+      }
+    }
+
+    client.indices.putMapping({
+      index: 'envelopes',
+      type: 'envelope',
+      body: {
+        envelope: envelopeMapping
+      }
+    }, callback);
+  });
+}
+
 exports.setup = function (callback) {
   var client = pkgcloud.providers.rackspace.storage.createClient({
     username: config.rackspaceUsername(),
@@ -110,7 +189,8 @@ exports.setup = function (callback) {
     async.parallel([
       makeContainerCreator(client, config.contentContainer(), 'contentContainer', false),
       makeContainerCreator(client, config.assetContainer(), 'assetContainer', true),
-      mongoInit
+      mongoInit,
+      elasticInit
     ], callback);
   });
 };

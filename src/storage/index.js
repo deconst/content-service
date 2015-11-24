@@ -8,7 +8,7 @@ var remote = require('./remote');
 var logger = require('../logging').getLogger();
 
 // Methods to delegate to the activated storage driver.
-var delegates = [
+var delegates = exports.delegates = [
   'clear',
   'assetURLPrefix',
   'storeAsset',
@@ -21,6 +21,7 @@ var delegates = [
   'storeContent',
   'getContent',
   'deleteContent',
+  'indexContent',
   'storeSHA',
   'getSHA'
 ];
@@ -61,21 +62,12 @@ exports.setup = function (callback) {
   driver.setup(function (err) {
     if (err) return callback(err);
 
-    var missing = [];
     for (var i = 0; i < delegates.length; i++) {
       var delegateName = delegates[i];
 
-      if (!driver[delegateName]) {
-        missing.push(delegateName);
-      } else {
+      if (driver[delegateName]) {
         exports[delegateName] = driver[delegateName].bind(driver);
       }
-    }
-
-    if (missing.length !== 0) {
-      console.error('The following methods are missing from the ' + driverName + ' driver:');
-      console.error(missing.join(', '));
-      return callback(new Error('Driver missing methods: ' + driverName));
     }
 
     callback(null);

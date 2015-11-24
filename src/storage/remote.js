@@ -200,6 +200,15 @@ RemoteStorage.prototype.deleteContent = function (contentID, callback) {
   connection.client.removeFile(config.contentContainer(), encodeURIComponent(contentID), callback);
 };
 
+RemoteStorage.prototype.indexContent = function (contentID, envelope, callback) {
+  connection.elastic.index({
+    index: 'envelopes',
+    type: 'envelope',
+    id: contentID,
+    body: envelope
+  }, callback);
+};
+
 RemoteStorage.prototype.storeSHA = function (sha, callback) {
   connection.db.collection('sha').updateOne({
     key: 'controlRepository'

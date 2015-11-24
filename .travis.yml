@@ -2,10 +2,3 @@
 language: node_js
 node_js:
 - "0.12.1"
-install:
-- npm install -g jshint obama
-- npm install .
-script:
-- npm test
-- jshint .
-- obama

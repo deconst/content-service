@@ -20,6 +20,11 @@ storage.setup(function (err) {
 
   var app = server.create();
 
+  process.on('SIGTERM', function () {
+    log.info('Shutting down.');
+    app.close();
+  });
+
   app.listen(8080, function () {
     log.info('%s listening at %s', app.name, app.url);
   });

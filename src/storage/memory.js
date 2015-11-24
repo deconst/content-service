@@ -13,6 +13,7 @@ MemoryStorage.prototype.setup = function (callback) {
 
 MemoryStorage.prototype.clear = function (callback) {
   this.envelopes = {};
+  this.indexedEnvelopes = [];
   this.assets = {};
   this.namedAssets = {};
   this.keys = {};
@@ -113,6 +114,15 @@ MemoryStorage.prototype.getContent = function (contentID, callback) {
 
 MemoryStorage.prototype.deleteContent = function (contentID, callback) {
   delete this.envelopes[contentID];
+
+  callback();
+};
+
+MemoryStorage.prototype.indexContent = function (contentID, envelope, callback) {
+  this.indexedEnvelopes.push({
+    id: contentID,
+    _source: envelope
+  });
 
   callback();
 };

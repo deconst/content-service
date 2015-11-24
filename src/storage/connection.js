@@ -144,16 +144,8 @@ function elasticInit (callback) {
     }
   };
 
-  client.indices.create({ index: 'envelopes' }, function (err) {
-    if (err) {
-      if (/^IndexAlreadyExistsException/.test(err.message)) {
-        logger.info('Elasticsearch index already exists.', {
-          indexName: 'elastic'
-        });
-      } else {
-        return callback(err);
-      }
-    }
+  client.indices.create({ index: 'envelopes', ignore: 400 }, function (err) {
+    if (err) return callback(err);
 
     client.indices.putMapping({
       index: 'envelopes',

@@ -129,6 +129,7 @@ function ElasticLogs (config) {
 function elasticInit (callback) {
   var client = new elasticsearch.Client({
     host: config.elasticsearchHost(),
+    apiVersion: '1.7',
     ssl: { rejectUnauthorized: true }, // Plz no trivial MITM attacks
     log: ElasticLogs
   });

@@ -20,7 +20,7 @@ function reconfigure () {
       RACKSPACE_USERNAME: 'me',
       RACKSPACE_APIKEY: '12345',
       RACKSPACE_REGION: 'space',
-      ADMIN_APIKEY: '12345',
+      ADMIN_APIKEY: process.env.ADMIN_APIKEY || '12345',
       CONTENT_CONTAINER: 'the-content-container',
       ASSET_CONTAINER: 'the-asset-container',
       MONGODB_URL: 'mongodb-url',

@@ -143,25 +143,24 @@ function elasticInit (callback) {
     }
   };
 
-  client.indices.create({
-    index: 'envelopes',
-    body: {
-      mappings: { envelope: envelopeMapping }
-    }
-  }, function (err) {
+  client.indices.create({ index: 'envelopes' }, function (err) {
     if (err) {
       if (/^IndexAlreadyExistsException/.test(err.message)) {
         logger.info('Elasticsearch index already exists.', {
           indexName: 'elastic'
         });
-
-        return callback(null);
+      } else {
+        return callback(err);
       }
-
-      return callback(err);
     }
 
-    return callback(null);
+    client.indices.putMapping({
+      index: 'envelopes',
+      type: 'envelope',
+      body: {
+        envelope: envelopeMapping
+      }
+    }, callback);
   });
 }
 

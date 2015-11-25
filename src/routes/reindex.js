@@ -49,7 +49,7 @@ function reindex () {
     }
 
     var reindexContentID = function (contentID, cb) {
-      storage.getContent(contentID, function (err, envelope) {
+      storage.getContent(contentID, function (err, doc) {
         if (err) {
           handleError(err, 'Unable to fetch envelope with ID [' + contentID + ']', false);
 
@@ -62,7 +62,26 @@ function reindex () {
           contentID: contentID
         });
 
-        storage.indexContent(contentID, envelope, function (err) {
+        var envelope = null;
+        try {
+          envelope = JSON.parse(doc);
+        } catch (err) {
+          handleError(err, 'Unable to parse envelope with ID [' + contentID + ']', false);
+
+          state.failedEnvelopes++;
+          state.totalEnvelopes++;
+          return cb();
+        }
+
+        var kws = envelope.keywords || [];
+
+        var subset = {
+          title: envelope.title,
+          body: envelope.body,
+          keywords: kws.join(' ')
+        };
+
+        storage.indexContent(contentID, subset, function (err) {
           if (err) {
             handleError(err, 'Unable to index envelope with ID [' + contentID + ']', false);
             state.failedEnvelopes++;

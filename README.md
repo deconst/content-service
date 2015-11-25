@@ -235,3 +235,11 @@ If no SHA has been stored yet:
   "sha": null
 }
 ```
+
+### `POST /reindex`
+
+Asynchronously reindex all content from the primary key-value content store in the full-text search store.
+
+*Response: Successful*
+
+A status code of 202 indicates the reindexing has begun. Watch the container's logs to see indexing progress.

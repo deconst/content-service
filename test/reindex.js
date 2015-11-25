@@ -55,7 +55,9 @@ describe('/reindex', function () {
     });
 
     it('reindexes all known content', function (done) {
-      reindex.completedCallback = function (state) {
+      reindex.completedCallback = function (err, state) {
+        expect(err).to.be.null();
+
         expect(indexed.idOne).to.equal('{ "body": "aaa bbb ccc" }');
         expect(indexed.idTwo).to.equal('{ "body": "ddd eee fff" }');
         expect(indexed.idThree).to.equal('{ "body": "ggg hhh iii" }');

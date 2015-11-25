@@ -58,9 +58,9 @@ describe('/reindex', function () {
       reindex.completedCallback = function (err, state) {
         expect(err).to.be.null();
 
-        expect(indexed.idOne).to.equal('{ "body": "aaa bbb ccc" }');
-        expect(indexed.idTwo).to.equal('{ "body": "ddd eee fff" }');
-        expect(indexed.idThree).to.equal('{ "body": "ggg hhh iii" }');
+        expect(indexed.idOne).to.deep.equal({ title: undefined, body: 'aaa bbb ccc', keywords: '' });
+        expect(indexed.idTwo).to.deep.equal({ title: undefined, body: 'ddd eee fff', keywords: '' });
+        expect(indexed.idThree).to.deep.equal({ title: undefined, body: 'ggg hhh iii', keywords: '' });
 
         expect(state.totalEnvelopes).to.equal(3);
         expect(state.elapsedMs).not.to.be.undefined();

@@ -7,6 +7,7 @@ var content = require('./content');
 var assets = require('./assets');
 var keys = require('./keys');
 var control = require('./control');
+var reindex = require('./reindex');
 
 exports.loadRoutes = function (server) {
   server.get('/version', version.report);
@@ -29,4 +30,6 @@ exports.loadRoutes = function (server) {
 
   server.get('/control', control.retrieve);
   server.put('/control', auth.requireKey, restify.bodyParser(), control.store);
+
+  server.post('/reindex', auth.requireAdmin, reindex.begin);
 };

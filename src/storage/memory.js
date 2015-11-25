@@ -118,6 +118,16 @@ MemoryStorage.prototype.deleteContent = function (contentID, callback) {
   callback();
 };
 
+MemoryStorage.prototype.listContent = function (callback) {
+  var ids = Object.keys(this.envelopes);
+
+  callback(null, ids, function () {
+    if (ids.length > 0) {
+      callback(null, [], function () {});
+    }
+  });
+};
+
 MemoryStorage.prototype.indexContent = function (contentID, envelope, callback) {
   this.indexedEnvelopes.push({
     id: contentID,

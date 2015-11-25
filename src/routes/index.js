@@ -31,5 +31,5 @@ exports.loadRoutes = function (server) {
   server.get('/control', control.retrieve);
   server.put('/control', auth.requireKey, restify.bodyParser(), control.store);
 
-  server.post('/reindex', auth.requireAdmin, restify.queryParser(), reindex.begin);
+  server.post('/reindex', auth.requireAdmin, reindex.begin);
 };

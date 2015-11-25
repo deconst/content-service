@@ -212,7 +212,7 @@ RemoteStorage.prototype.listContent = function (callback) {
     connection.client.getFiles(config.contentContainer(), options, function (err, files) {
       if (err) return callback(err);
 
-      var fileNames = files.map(function (e) { return e.name; });
+      var fileNames = files.map(function (e) { return decodeURIComponent(e.name); });
 
       var next = function () {
         // The last page was empty. We're done and we've already sent our done sentinel.
@@ -232,6 +232,8 @@ RemoteStorage.prototype.listContent = function (callback) {
       callback(null, fileNames, next);
     });
   };
+
+  nextPage(null);
 };
 
 RemoteStorage.prototype.indexContent = function (contentID, envelope, callback) {

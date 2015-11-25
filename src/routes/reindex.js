@@ -23,6 +23,8 @@ function reindex () {
     totalEnvelopes: 0
   };
 
+  log.info('Reindex requested', state);
+
   var handleError = function (err, message, fatal) {
     state.errMessage = err.message;
     state.stack = err.stack;
@@ -42,7 +44,7 @@ function reindex () {
       state.elapsedMs = Date.now() - state.startedTs;
       log.info('All content re-indexed.', state);
 
-      exports.completedContent(null, state);
+      exports.completedCallback(null, state);
       return;
     }
 
@@ -52,6 +54,7 @@ function reindex () {
           handleError(err, 'Unable to fetch envelope with ID [' + contentID + ']', false);
 
           state.failedEnvelopes++;
+          state.totalEnvelopes++;
           return cb();
         }
 
@@ -63,6 +66,7 @@ function reindex () {
           if (err) {
             handleError(err, 'Unable to index envelope with ID [' + contentID + ']', false);
             state.failedEnvelopes++;
+            state.totalEnvelopes++;
             return cb();
           }
 
@@ -71,12 +75,13 @@ function reindex () {
           });
 
           state.successfulEnvelopes++;
+          state.totalEnvelopes++;
           cb();
         });
       });
     };
 
-    async.mapLimit(contentIDs, 20, reindexContentID);
+    async.mapLimit(contentIDs, 20, reindexContentID, next);
   });
 }
 

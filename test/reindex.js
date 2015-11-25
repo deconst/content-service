@@ -68,10 +68,12 @@ describe('/reindex', function () {
         done();
       };
 
-      request(server.create)
+      request(server.create())
         .post('/reindex')
         .set('Authorization', authHelper.AUTH_ADMIN)
-        .expect(202);
+        .expect(202, function (err) {
+          if (err) done(err);
+        });
     });
   });
 });

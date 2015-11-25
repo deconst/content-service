@@ -201,12 +201,37 @@ RemoteStorage.prototype.deleteContent = function (contentID, callback) {
 };
 
 RemoteStorage.prototype.listContent = function (callback) {
-  connection.client.getFiles(config.contentContainer(), { limit: Infinity }, function (err, files) {
-    if (err) return callback(err);
+  var perPage = 10000;
 
-    var fileNames = files.map(function (e) { return e.name; });
-    callback(null, fileNames);
-  });
+  var nextPage = function (marker) {
+    var options = { limit: perPage };
+    if (marker !== null) {
+      options.marker = marker;
+    }
+
+    connection.client.getFiles(config.contentContainer(), options, function (err, files) {
+      if (err) return callback(err);
+
+      var fileNames = files.map(function (e) { return e.name; });
+
+      var next = function () {
+        // The last page was empty. We're done and we've already sent our done sentinel.
+        if (fileNames.length === 0) return;
+
+        if (fileNames.length < perPage) {
+          // Enumeration is complete. Invoke the callback a final time with an empty result set
+          // to signal completion.
+          callback(null, [], function () {});
+          return;
+        }
+
+        // We (may) still have files to go. Onward to the next page.
+        nextPage(fileNames[fileNames.length - 1]);
+      };
+
+      callback(null, fileNames, next);
+    });
+  };
 };
 
 RemoteStorage.prototype.indexContent = function (contentID, envelope, callback) {

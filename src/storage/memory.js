@@ -130,11 +130,27 @@ MemoryStorage.prototype.listContent = function (callback) {
 
 MemoryStorage.prototype.indexContent = function (contentID, envelope, callback) {
   this.indexedEnvelopes.push({
-    id: contentID,
+    _id: contentID,
     _source: envelope
   });
 
   callback();
+};
+
+MemoryStorage.prototype.queryContent = function (query, pageNumber, perPage, callback) {
+  var rx = new RegExp(query, 'i');
+
+  var hits = this.indexedEnvelopes.filter(function (entry) {
+    return rx.test([entry._source.title, entry._source.body, entry._source.keywords].join(' '));
+  });
+
+  // Mimic the important parts of the Elasticsearch response.
+  callback(null, {
+    hits: {
+      total: hits.length,
+      hits: hits
+    }
+  });
 };
 
 MemoryStorage.prototype.storeSHA = function (sha, callback) {

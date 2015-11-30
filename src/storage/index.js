@@ -23,6 +23,7 @@ var delegates = exports.delegates = [
   'deleteContent',
   'listContent',
   'indexContent',
+  'queryContent',
   'storeSHA',
   'getSHA'
 ];

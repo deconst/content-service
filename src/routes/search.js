@@ -30,7 +30,9 @@ exports.query = function (req, res, next) {
     logger.info('Successfully completed search', logPayload);
 
     res.send(200, {
-      results: results.hits.hits.map(function (each) { return each._id; })
+      results: results.hits.hits.map(function (each) {
+        return { contentID: each._id };
+      })
     });
     next();
   });

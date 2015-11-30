@@ -16,6 +16,7 @@ exports.completedCallback = function () {};
  */
 function reindex () {
   var state = {
+    event: 'reindex',
     startedTs: Date.now(),
     elapsedMs: null,
     successfulEnvelopes: 0,
@@ -59,6 +60,7 @@ function reindex () {
         }
 
         log.debug('Successful envelope fetch', {
+          event: 'reindex',
           contentID: contentID
         });
 
@@ -90,6 +92,7 @@ function reindex () {
           }
 
           log.debug('Successful envelope index', {
+            event: 'reindex',
             contentID: contentID
           });
 

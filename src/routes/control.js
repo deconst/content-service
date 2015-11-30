@@ -31,10 +31,6 @@ exports.retrieve = function (req, res, next) {
     next.ifError(err);
 
     res.json(200, {sha: sha});
-
-    log.info('Got control repository SHA', {
-      sha: sha
-    });
     next();
   });
 };

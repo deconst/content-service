@@ -11,13 +11,13 @@ describe('/search', function () {
   beforeEach(resetHelper);
 
   beforeEach(function (done) {
-    storage.indexContent('foo/aaa', { title: undefined, body: 'all aaa', keywords: '' }, done);
+    storage.indexContent('foo/aaa', { title: 'first', body: 'all aaa', keywords: '' }, done);
   });
   beforeEach(function (done) {
-    storage.indexContent('foo/bbb', { title: undefined, body: 'all bbb', keywords: '' }, done);
+    storage.indexContent('foo/bbb', { title: 'second', body: 'all bbb', keywords: '' }, done);
   });
   beforeEach(function (done) {
-    storage.indexContent('foo/ccc', { title: undefined, body: 'all ccc', keywords: '' }, done);
+    storage.indexContent('foo/ccc', { title: 'third', body: 'all ccc', keywords: '' }, done);
   });
 
   it('returns IDs of matching documents', function (done) {
@@ -26,9 +26,21 @@ describe('/search', function () {
       .expect(200)
       .expect({
         results: [
-          { contentID: 'foo/aaa' },
-          { contentID: 'foo/bbb' },
-          { contentID: 'foo/ccc' }
+          {
+            contentID: 'foo/aaa',
+            title: 'first',
+            excerpt: '...<em>all</em>...'
+          },
+          {
+            contentID: 'foo/bbb',
+            title: 'second',
+            excerpt: '...<em>all</em>...'
+          },
+          {
+            contentID: 'foo/ccc',
+            title: 'third',
+            excerpt: '...<em>all</em>...'
+          }
         ]
       }, done);
   });

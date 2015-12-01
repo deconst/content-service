@@ -41,11 +41,20 @@ exports.query = function (req, res, next) {
     logPayload.pageResultCount = results.hits.hits.length;
     logger.info('Successfully completed search', logPayload);
 
-    res.send(200, {
-      results: results.hits.hits.map(function (each) {
-        return { contentID: each._id };
-      })
+    var doc = results.hits.hits.map(function (each) {
+      var transformed = {
+        contentID: each._id,
+        title: each._source.title
+      };
+
+      if (each.highlight.body.length > 0) {
+        transformed.excerpt = each.highlight.body[0];
+      }
+
+      return transformed;
     });
+
+    res.send(200, { results: doc });
     next();
   });
 };

@@ -254,6 +254,11 @@ RemoteStorage.prototype.queryContent = function (query, pageNumber, perPage, cal
     body: {
       query: {
         match: { _all: query }
+      },
+      highlight: {
+        fields: {
+          body: {}
+        }
       }
     }
   }, callback);

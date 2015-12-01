@@ -142,6 +142,17 @@ MemoryStorage.prototype.queryContent = function (query, pageNumber, perPage, cal
 
   var hits = this.indexedEnvelopes.filter(function (entry) {
     return rx.test([entry._source.title, entry._source.body, entry._source.keywords].join(' '));
+  }).map(function (entry) {
+    // Populate "highlights" as just the regexp matches, surrounded by <em> tags.
+    var m = rx.exec(entry._source.body);
+    var highlight = [];
+
+    if (m !== null) {
+      highlight.push('...<em>' + entry._source.body.substr(m.index, m[0].length) + '</em>...');
+    }
+
+    entry.highlight = {body: highlight};
+    return entry;
   });
 
   // Mimic the important parts of the Elasticsearch response.

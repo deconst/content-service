@@ -28,14 +28,14 @@ describe('/content', function () {
         .set('Authorization', authHelper.AUTH_USER)
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
-        .send('{ "something": "body" }')
+        .send('{ "body": "something" }')
         .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 
           storage.getContent('foo&bar', function (err, uploaded) {
             expect(err).to.be.null();
-            expect(JSON.parse(uploaded)).to.deep.equal({ something: 'body' });
+            expect(JSON.parse(uploaded)).to.deep.equal({ body: 'something' });
 
             done();
           });

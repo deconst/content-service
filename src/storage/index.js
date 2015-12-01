@@ -2,6 +2,7 @@
  * Interfaces between the API and the underlying storage engines.
  */
 
+var cheerio = require('cheerio');
 var config = require('../config');
 var memory = require('./memory');
 var remote = require('./remote');
@@ -80,10 +81,13 @@ exports.setup = function (callback) {
 
 exports.indexContent = function (contentID, envelope, callback) {
   var kws = envelope.keywords || [];
+  var $ = cheerio.load(envelope.body, {
+    normalizeWhitespace: true
+  });
 
   var subset = {
     title: envelope.title || '',
-    body: envelope.body,
+    body: $.root().text(),
     keywords: kws.join(' ')
   };
 

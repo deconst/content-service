@@ -92,7 +92,7 @@ MemoryStorage.prototype.findKeys = function (apikey, callback) {
   }
 };
 
-MemoryStorage.prototype.storeContent = function (contentID, content, callback) {
+MemoryStorage.prototype._storeContent = function (contentID, content, callback) {
   this.envelopes[contentID] = content;
   callback();
 };

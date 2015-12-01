@@ -19,7 +19,7 @@ var delegates = exports.delegates = [
   'storeKey',
   'deleteKey',
   'findKeys',
-  'storeContent',
+  '_storeContent',
   'getContent',
   'deleteContent',
   'listContent',
@@ -78,6 +78,10 @@ exports.setup = function (callback) {
 };
 
 // Facade functions to perform common input preprocessing.
+
+exports.storeContent = function (contentID, envelope, callback) {
+  exports._storeContent(contentID, envelope, callback);
+};
 
 exports.indexContent = function (contentID, envelope, callback) {
   var kws = envelope.keywords || [];

@@ -50,7 +50,7 @@ function reindex () {
     }
 
     var reindexContentID = function (contentID, cb) {
-      storage.getContent(contentID, function (err, doc) {
+      storage.getContent(contentID, function (err, envelope) {
         if (err) {
           handleError(err, 'Unable to fetch envelope with ID [' + contentID + ']', false);
 
@@ -63,17 +63,6 @@ function reindex () {
           event: 'reindex',
           contentID: contentID
         });
-
-        var envelope = null;
-        try {
-          envelope = JSON.parse(doc);
-        } catch (err) {
-          handleError(err, 'Unable to parse envelope with ID [' + contentID + ']', false);
-
-          state.failedEnvelopes++;
-          state.totalEnvelopes++;
-          return cb();
-        }
 
         storage.indexContent(contentID, envelope, function (err) {
           if (err) {

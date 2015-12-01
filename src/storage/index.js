@@ -84,7 +84,17 @@ exports.storeContent = function (contentID, envelope, callback) {
 };
 
 exports.getContent = function (contentID, callback) {
-  exports._getContent(contentID, callback);
+  exports._getContent(contentID, function (err, raw) {
+    if (err) return callback(err);
+
+    try {
+      var envelope = JSON.parse(raw);
+    } catch (e) {
+      return callback(e);
+    }
+
+    callback(null, envelope);
+  });
 };
 
 exports.indexContent = function (contentID, envelope, callback) {

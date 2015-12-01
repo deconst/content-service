@@ -9,14 +9,10 @@ var log = require('../logging').getLogger();
  * @description Download the raw metadata envelope from Cloud Files.
  */
 function downloadContent (contentID, callback) {
-  storage.getContent(contentID, function (err, content) {
+  storage.getContent(contentID, function (err, envelope) {
     if (err) return callback(err);
 
-    var envelope = JSON.parse(content);
-
-    callback(null, {
-      envelope: envelope
-    });
+    callback(null, { envelope: envelope });
   });
 }
 

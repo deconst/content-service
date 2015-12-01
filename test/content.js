@@ -35,7 +35,7 @@ describe('/content', function () {
 
           storage.getContent('foo&bar', function (err, uploaded) {
             expect(err).to.be.null();
-            expect(JSON.parse(uploaded)).to.deep.equal({ body: 'something' });
+            expect(uploaded).to.deep.equal({ body: 'something' });
 
             done();
           });

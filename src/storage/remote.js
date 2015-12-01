@@ -245,6 +245,25 @@ RemoteStorage.prototype.indexContent = function (contentID, envelope, callback) 
   }, callback);
 };
 
+RemoteStorage.prototype.queryContent = function (query, pageNumber, perPage, callback) {
+  connection.elastic.search({
+    index: 'envelopes',
+    from: (pageNumber - 1) * perPage,
+    size: perPage,
+    ignoreUnavailable: true,
+    body: {
+      query: {
+        match: { _all: query }
+      },
+      highlight: {
+        fields: {
+          body: {}
+        }
+      }
+    }
+  }, callback);
+};
+
 RemoteStorage.prototype.storeSHA = function (sha, callback) {
   connection.db.collection('sha').updateOne({
     key: 'controlRepository'

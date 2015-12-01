@@ -97,7 +97,7 @@ MemoryStorage.prototype._storeContent = function (contentID, content, callback) 
   callback();
 };
 
-MemoryStorage.prototype.getContent = function (contentID, callback) {
+MemoryStorage.prototype._getContent = function (contentID, callback) {
   var envelope = this.envelopes[contentID];
 
   if (envelope === undefined) {

@@ -20,7 +20,7 @@ var delegates = exports.delegates = [
   'deleteKey',
   'findKeys',
   '_storeContent',
-  'getContent',
+  '_getContent',
   'deleteContent',
   'listContent',
   '_indexContent',
@@ -81,6 +81,10 @@ exports.setup = function (callback) {
 
 exports.storeContent = function (contentID, envelope, callback) {
   exports._storeContent(contentID, JSON.stringify(envelope), callback);
+};
+
+exports.getContent = function (contentID, callback) {
+  exports._getContent(contentID, callback);
 };
 
 exports.indexContent = function (contentID, envelope, callback) {

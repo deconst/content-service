@@ -76,6 +76,16 @@ exports.setup = function (callback) {
   });
 };
 
+// Facade functions to perform common input preprocessing.
+
 exports.indexContent = function (contentID, envelope, callback) {
-  exports._indexContent(contentID, envelope, callback);
+  var kws = envelope.keywords || [];
+
+  var subset = {
+    title: envelope.title || '',
+    body: envelope.body,
+    keywords: kws.join(' ')
+  };
+
+  exports._indexContent(contentID, subset, callback);
 };

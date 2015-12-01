@@ -236,7 +236,7 @@ RemoteStorage.prototype.listContent = function (callback) {
   nextPage(null);
 };
 
-RemoteStorage.prototype.indexContent = function (contentID, envelope, callback) {
+RemoteStorage.prototype._indexContent = function (contentID, envelope, callback) {
   connection.elastic.index({
     index: 'envelopes',
     type: 'envelope',

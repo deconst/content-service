@@ -22,7 +22,7 @@ var delegates = exports.delegates = [
   'getContent',
   'deleteContent',
   'listContent',
-  'indexContent',
+  '_indexContent',
   'queryContent',
   'storeSHA',
   'getSHA'
@@ -74,4 +74,8 @@ exports.setup = function (callback) {
 
     callback(null);
   });
+};
+
+exports.indexContent = function (contentID, envelope, callback) {
+  exports._indexContent(contentID, envelope, callback);
 };

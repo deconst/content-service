@@ -19,8 +19,8 @@ var delegates = exports.delegates = [
   'storeKey',
   'deleteKey',
   'findKeys',
-  'storeContent',
-  'getContent',
+  '_storeContent',
+  '_getContent',
   'deleteContent',
   'listContent',
   '_indexContent',
@@ -78,6 +78,24 @@ exports.setup = function (callback) {
 };
 
 // Facade functions to perform common input preprocessing.
+
+exports.storeContent = function (contentID, envelope, callback) {
+  exports._storeContent(contentID, JSON.stringify(envelope), callback);
+};
+
+exports.getContent = function (contentID, callback) {
+  exports._getContent(contentID, function (err, raw) {
+    if (err) return callback(err);
+
+    try {
+      var envelope = JSON.parse(raw);
+    } catch (e) {
+      return callback(e);
+    }
+
+    callback(null, envelope);
+  });
+};
 
 exports.indexContent = function (contentID, envelope, callback) {
   var kws = envelope.keywords || [];

@@ -9,14 +9,10 @@ var log = require('../logging').getLogger();
  * @description Download the raw metadata envelope from Cloud Files.
  */
 function downloadContent (contentID, callback) {
-  storage.getContent(contentID, function (err, content) {
+  storage.getContent(contentID, function (err, envelope) {
     if (err) return callback(err);
 
-    var envelope = JSON.parse(content);
-
-    callback(null, {
-      envelope: envelope
-    });
+    callback(null, { envelope: envelope });
   });
 }
 
@@ -52,7 +48,7 @@ exports.store = function (req, res, next) {
 
   // Store the envelope in the primary key-value storage engine.
   var kvStore = function (cb) {
-    storage.storeContent(contentID, JSON.stringify(envelope), cb);
+    storage.storeContent(contentID, envelope, cb);
   };
 
   // Index the envelope in the full text search storage engine.

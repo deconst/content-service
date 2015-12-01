@@ -92,12 +92,12 @@ MemoryStorage.prototype.findKeys = function (apikey, callback) {
   }
 };
 
-MemoryStorage.prototype.storeContent = function (contentID, content, callback) {
+MemoryStorage.prototype._storeContent = function (contentID, content, callback) {
   this.envelopes[contentID] = content;
   callback();
 };
 
-MemoryStorage.prototype.getContent = function (contentID, callback) {
+MemoryStorage.prototype._getContent = function (contentID, callback) {
   var envelope = this.envelopes[contentID];
 
   if (envelope === undefined) {

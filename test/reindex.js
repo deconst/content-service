@@ -45,13 +45,13 @@ describe('/reindex', function () {
 
   describe('with content', function () {
     beforeEach(function (done) {
-      storage.storeContent('idOne', '{ "body": "aaa bbb ccc" }', done);
+      storage.storeContent('idOne', { body: 'aaa bbb ccc' }, done);
     });
     beforeEach(function (done) {
-      storage.storeContent('idTwo', '{ "body": "ddd eee fff" }', done);
+      storage.storeContent('idTwo', { body: 'ddd eee fff' }, done);
     });
     beforeEach(function (done) {
-      storage.storeContent('idThree', '{ "body": "ggg hhh iii" }', done);
+      storage.storeContent('idThree', { body: 'ggg hhh iii' }, done);
     });
 
     it('reindexes all known content', function (done) {

@@ -150,7 +150,7 @@ RemoteStorage.prototype.findKeys = function (apikey, callback) {
   }).toArray(callback);
 };
 
-RemoteStorage.prototype.storeContent = function (contentID, content, callback) {
+RemoteStorage.prototype._storeContent = function (contentID, content, callback) {
   var dest = connection.client.upload({
     container: config.contentContainer(),
     remote: encodeURIComponent(contentID)
@@ -165,7 +165,7 @@ RemoteStorage.prototype.storeContent = function (contentID, content, callback) {
   dest.end(content);
 };
 
-RemoteStorage.prototype.getContent = function (contentID, callback) {
+RemoteStorage.prototype._getContent = function (contentID, callback) {
   var source = connection.client.download({
     container: config.contentContainer(),
     remote: encodeURIComponent(contentID)

@@ -190,6 +190,32 @@ An HTTP status code of 204 indicates that the API key will no longer be valid.
 
 An HTTP status code of 401 indicates that the request did not contain a valid administrator API key. A 409 is generated if an administrator attempts to revoke their own key.
 
+### `GET /search?q=:term&pageNumber=:num&perPage=:size`
+
+Perform a full-text search against all indexed documents.
+
+`q` is a required parameter. `pageNumber` defaults to 1 if unspecified, and `perPage` defaults to 10.
+
+*Response: Successful*
+
+```json
+{
+  "total": 100,
+  "results": [
+    {
+      "contentID": "https://github.com/deconst/deconst-docs/one",
+      "title": "First result title",
+      "excerpt": "body excerpt with matching text <em>highlighted</em>"
+    },
+    {
+      "contentID": "https://github.com/deconst/deconst-docs/two",
+      "title": "Second result title",
+      "excerpt": "first bit of the body if no body content matched"
+    }
+  ]
+}
+```
+
 ### `PUT /control`
 
 **(Authorization required: any user)**

@@ -32,4 +32,10 @@ describe('/search', function () {
         ]
       }, done);
   });
+
+  it('responds with a 409 if no query is provided', function (done) {
+    request(server.create())
+      .get('/search')
+      .expect(409, done);
+  });
 });

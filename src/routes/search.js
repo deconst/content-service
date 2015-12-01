@@ -17,6 +17,12 @@ exports.query = function (req, res, next) {
     pageNumber: pageNumber
   };
 
+  if (q === null || q === undefined) {
+    logger.info('Missing required query parameter', logPayload);
+    res.send(new restify.MissingParameterError('q parameter is required'));
+    return;
+  }
+
   logger.debug('Beginning search', logPayload);
 
   storage.queryContent(q, pageNumber, perPage, function (err, results) {

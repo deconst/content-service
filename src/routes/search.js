@@ -22,7 +22,8 @@ exports.query = function (req, res, next) {
       logPayload.stack = err.stack;
 
       logger.error('Error performing search', logPayload);
-      return next(restify.InternalServerError('Error performing search'));
+      res.send(new restify.InternalServerError('Error performing search'));
+      return;
     }
 
     logPayload.totalResultCount = results.hits.total;

@@ -264,7 +264,13 @@ If no SHA has been stored yet:
 
 ### `POST /reindex`
 
+**(Authorization required: admin only)**
+
 Asynchronously reindex all content from the primary key-value content store in the full-text search store.
+
+*Response: Unsuccessful*
+
+An HTTP status code of 401 indicates that the request did not contain a valid administrator API key.
 
 *Response: Successful*
 

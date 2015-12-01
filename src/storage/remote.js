@@ -248,7 +248,7 @@ RemoteStorage.prototype.indexContent = function (contentID, envelope, callback) 
 RemoteStorage.prototype.queryContent = function (query, pageNumber, perPage, callback) {
   connection.elastic.search({
     index: 'envelopes',
-    from: pageNumber - 1 * perPage,
+    from: (pageNumber - 1) * perPage,
     size: perPage,
     ignoreUnavailable: true,
     body: {

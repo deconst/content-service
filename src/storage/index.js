@@ -80,7 +80,7 @@ exports.setup = function (callback) {
 // Facade functions to perform common input preprocessing.
 
 exports.storeContent = function (contentID, envelope, callback) {
-  exports._storeContent(contentID, envelope, callback);
+  exports._storeContent(contentID, JSON.stringify(envelope), callback);
 };
 
 exports.indexContent = function (contentID, envelope, callback) {

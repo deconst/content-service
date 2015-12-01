@@ -52,7 +52,7 @@ exports.store = function (req, res, next) {
 
   // Store the envelope in the primary key-value storage engine.
   var kvStore = function (cb) {
-    storage.storeContent(contentID, JSON.stringify(envelope), cb);
+    storage.storeContent(contentID, envelope, cb);
   };
 
   // Index the envelope in the full text search storage engine.

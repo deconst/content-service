@@ -99,7 +99,7 @@ describe('/content', function () {
 
   describe('#retrieve', function () {
     it('retrieves existing content from Cloud Files', function (done) {
-      storage.storeContent('what&huh', '{ "expected": "json" }', function (err) {
+      storage.storeContent('what&huh', { body: 'expected' }, function (err) {
         expect(err).not.to.exist();
 
         request(server.create())
@@ -109,7 +109,7 @@ describe('/content', function () {
           .expect({
             assets: [],
             envelope: {
-              expected: 'json'
+              body: 'expected'
             }
           }, done);
       });
@@ -118,7 +118,7 @@ describe('/content', function () {
 
   describe('#delete', function () {
     it('deletes content from Cloud Files', function (done) {
-      storage.storeContent('er&okay', '{ "expected": "json" }', function (err) {
+      storage.storeContent('er&okay', { body: 'expected' }, function (err) {
         expect(err).not.to.exist();
 
         request(server.create())

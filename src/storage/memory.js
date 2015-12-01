@@ -128,7 +128,7 @@ MemoryStorage.prototype.listContent = function (callback) {
   });
 };
 
-MemoryStorage.prototype.indexContent = function (contentID, envelope, callback) {
+MemoryStorage.prototype._indexContent = function (contentID, envelope, callback) {
   this.indexedEnvelopes.push({
     _id: contentID,
     _source: envelope

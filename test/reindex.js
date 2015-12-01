@@ -27,14 +27,14 @@ describe('/reindex', function () {
   var realIndexContent = null;
   beforeEach(function () {
     indexed = {};
-    realIndexContent = storage.indexContent;
-    storage.indexContent = function (contentID, envelope, callback) {
+    realIndexContent = storage._indexContent;
+    storage._indexContent = function (contentID, envelope, callback) {
       indexed[contentID] = envelope;
       realIndexContent(contentID, envelope, callback);
     };
   });
   afterEach(function () {
-    storage.indexContent = realIndexContent;
+    storage._indexContent = realIndexContent;
   });
 
   it('requires an admin key', function (done) {
@@ -58,9 +58,9 @@ describe('/reindex', function () {
       reindex.completedCallback = function (err, state) {
         expect(err).to.be.null();
 
-        expect(indexed.idOne).to.deep.equal({ title: undefined, body: 'aaa bbb ccc', keywords: '' });
-        expect(indexed.idTwo).to.deep.equal({ title: undefined, body: 'ddd eee fff', keywords: '' });
-        expect(indexed.idThree).to.deep.equal({ title: undefined, body: 'ggg hhh iii', keywords: '' });
+        expect(indexed.idOne).to.deep.equal({ title: '', body: 'aaa bbb ccc', keywords: '' });
+        expect(indexed.idTwo).to.deep.equal({ title: '', body: 'ddd eee fff', keywords: '' });
+        expect(indexed.idThree).to.deep.equal({ title: '', body: 'ggg hhh iii', keywords: '' });
 
         expect(state.totalEnvelopes).to.equal(3);
         expect(state.elapsedMs).not.to.be.undefined();

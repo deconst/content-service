@@ -75,15 +75,7 @@ function reindex () {
           return cb();
         }
 
-        var kws = envelope.keywords || [];
-
-        var subset = {
-          title: envelope.title,
-          body: envelope.body,
-          keywords: kws.join(' ')
-        };
-
-        storage.indexContent(contentID, subset, function (err) {
+        storage.indexContent(contentID, envelope, function (err) {
           if (err) {
             handleError(err, 'Unable to index envelope with ID [' + contentID + ']', false);
             state.failedEnvelopes++;

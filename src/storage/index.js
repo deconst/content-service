@@ -2,6 +2,7 @@
  * Interfaces between the API and the underlying storage engines.
  */
 
+var cheerio = require('cheerio');
 var config = require('../config');
 var memory = require('./memory');
 var remote = require('./remote');
@@ -22,7 +23,7 @@ var delegates = exports.delegates = [
   'getContent',
   'deleteContent',
   'listContent',
-  'indexContent',
+  '_indexContent',
   'queryContent',
   'storeSHA',
   'getSHA'
@@ -74,4 +75,21 @@ exports.setup = function (callback) {
 
     callback(null);
   });
+};
+
+// Facade functions to perform common input preprocessing.
+
+exports.indexContent = function (contentID, envelope, callback) {
+  var kws = envelope.keywords || [];
+  var $ = cheerio.load(envelope.body, {
+    normalizeWhitespace: true
+  });
+
+  var subset = {
+    title: envelope.title || '',
+    body: $.root().text(),
+    keywords: kws.join(' ')
+  };
+
+  exports._indexContent(contentID, subset, callback);
 };

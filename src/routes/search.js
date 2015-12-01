@@ -10,7 +10,12 @@ exports.query = function (req, res, next) {
   var pageNumber = req.params.pageNumber || 1;
 
   var startTs = Date.now();
-  var logPayload = {query: q, perPage: perPage, pageNumber: pageNumber};
+  var logPayload = {
+    event: 'search',
+    query: q,
+    perPage: perPage,
+    pageNumber: pageNumber
+  };
 
   logger.debug('Beginning search', logPayload);
 

@@ -42,6 +42,31 @@ describe('/content', function () {
         });
     });
 
+    it('makes the content available to full-text search', function (done) {
+      request(server.create())
+        .put('/content/foobar')
+        .set('Authorization', authHelper.AUTH_USER)
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'applicaiton/json')
+        .send('{ "title": "aaa", "body": "<p class=\'nope\'>bbb ccc ddd</p>" }')
+        .expect(204)
+        .end(function (err, res) {
+          if (err) return done(err);
+
+          storage.queryContent('ccc', 1, 10, function (err, results) {
+            console.log(require('util').inspect(results, { depth: null }));
+            expect(err).to.be.null();
+            expect(results.hits.total).to.equal(1);
+
+            var result = results.hits.hits[0];
+            expect(result._id).to.equal('foobar');
+            expect(result._source.title).to.equal('aaa');
+
+            done();
+          });
+        });
+    });
+
     it('requires authentication', function (done) {
       authHelper.ensureAuthIsRequired(
         request(server.create())

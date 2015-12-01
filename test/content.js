@@ -47,20 +47,39 @@ describe('/content', function () {
         .put('/content/foobar')
         .set('Authorization', authHelper.AUTH_USER)
         .set('Content-Type', 'application/json')
-        .set('Accept', 'applicaiton/json')
-        .send('{ "title": "aaa", "body": "<p class=\'nope\'>bbb ccc ddd</p>" }')
+        .set('Accept', 'application/json')
+        .send('{ "title": "aaa", "body": "bbb ccc ddd" }')
         .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 
           storage.queryContent('ccc', 1, 10, function (err, results) {
-            console.log(require('util').inspect(results, { depth: null }));
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(1);
 
             var result = results.hits.hits[0];
             expect(result._id).to.equal('foobar');
             expect(result._source.title).to.equal('aaa');
+
+            done();
+          });
+        });
+    });
+
+    it('trims HTML from content before full-text indexing', function (done) {
+      request(server.create())
+        .put('/content/foobar')
+        .set('Authorization', authHelper.AUTH_USER)
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
+        .send('{ "title": "aaa", "body": "<p class=\'nope\'>bbb ccc ddd</p>" }')
+        .expect(204)
+        .end(function (err, res) {
+          if (err) return done(err);
+
+          storage.queryContent('nope', 1, 10, function (err, results) {
+            expect(err).to.be.null();
+            expect(results.hits.total).to.equal(0);
 
             done();
           });

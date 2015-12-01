@@ -54,7 +54,10 @@ exports.query = function (req, res, next) {
       return transformed;
     });
 
-    res.send(200, { results: doc });
+    res.send(200, {
+      total: results.hits.total,
+      results: doc
+    });
     next();
   });
 };

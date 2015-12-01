@@ -25,6 +25,7 @@ describe('/search', function () {
       .get('/search?q=all')
       .expect(200)
       .expect({
+        total: 3,
         results: [
           {
             contentID: 'foo/aaa',

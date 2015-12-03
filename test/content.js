@@ -150,7 +150,7 @@ describe('/content', function () {
 
     it('deletes content from Elasticsearch', function (done) {
       request(server.create())
-        .delete('/content/er%23okay')
+        .delete('/content/er%26okay')
         .set('Authorization', authHelper.AUTH_USER)
         .expect(204)
         .end(function (err, res) {

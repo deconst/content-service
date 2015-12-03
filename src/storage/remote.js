@@ -197,7 +197,14 @@ RemoteStorage.prototype._getContent = function (contentID, callback) {
 };
 
 RemoteStorage.prototype.deleteContent = function (contentID, callback) {
-  connection.client.removeFile(config.contentContainer(), encodeURIComponent(contentID), callback);
+  connection.client.removeFile(config.contentContainer(), encodeURIComponent(contentID), function (err) {
+    if (err && err.statusCode === 404) {
+      // It's already deleted, so this is fine. Everything is fine.
+      return callback(null);
+    }
+
+    callback(err);
+  });
 };
 
 RemoteStorage.prototype.listContent = function (callback) {
@@ -269,7 +276,14 @@ RemoteStorage.prototype.unindexContent = function (contentID, callback) {
     index: 'envelopes',
     type: 'envelope',
     id: contentID
-  }, callback);
+  }, function (err) {
+    if (err && err.status === '404') {
+      // It's already gone. Disregard.
+      return callback(null);
+    }
+
+    callback(err);
+  });
 };
 
 RemoteStorage.prototype.storeSHA = function (sha, callback) {

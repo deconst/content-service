@@ -142,24 +142,37 @@ exports.retrieve = function (req, res, next) {
  * @description Delete a piece of previously stored content by content ID.
  */
 exports.delete = function (req, res, next) {
-  log.debug({
-    action: 'contentdelete',
+  var contentID = req.params.id;
+  log.debug('Content deletion request received.', {
+    action: 'content delete',
     apikeyName: req.apikeyName,
-    contentID: req.params.id,
-    message: 'Content deletion request received.'
+    contentID: contentID
   });
 
   var reqStart = Date.now();
 
-  storage.deleteContent(req.params.id, function (err) {
+  var kvDelete = function (cb) {
+    storage.deleteContent(contentID, cb);
+  };
+
+  var ftsDelete = function (cb) {
+    storage.unindexContent(contentID, cb);
+  };
+
+  async.parallel([
+    kvDelete,
+    ftsDelete
+  ], function (err) {
     if (err) {
-      log.error({
-        action: 'contentdelete',
-        statusCode: err.statusCode || 500,
+      err.statusCode = err.statusCode || err.status || 500;
+
+      log.error('Unable to delete content.', {
+        event: 'content delete',
+        statusCode: err.statusCode,
+        errMessage: err.message,
         apikeyName: req.apikeyName,
-        contentID: req.params.id,
-        totalReqDuration: Date.now() - reqStart,
-        message: 'Unable to delete content.'
+        contentID: contentID,
+        totalReqDuration: Date.now() - reqStart
       });
 
       return next(err);
@@ -167,13 +180,12 @@ exports.delete = function (req, res, next) {
 
     res.send(204);
 
-    log.info({
-      action: 'contentdelete',
+    log.info('Content deletion successful.', {
+      event: 'content delete',
       statusCode: 204,
       apikeyName: req.apikeyName,
-      contentID: req.params.id,
-      totalReqDuration: Date.now() - reqStart,
-      message: 'Content deletion successful.'
+      contentID: contentID,
+      totalReqDuration: Date.now() - reqStart
     });
 
     next();

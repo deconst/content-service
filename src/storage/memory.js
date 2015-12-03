@@ -164,6 +164,14 @@ MemoryStorage.prototype.queryContent = function (query, pageNumber, perPage, cal
   });
 };
 
+MemoryStorage.prototype.unindexContent = function (contentID, callback) {
+  this.indexedEnvelopes = this.indexedEnvelopes.filter(function (each) {
+    return each._id !== contentID;
+  });
+
+  callback(null);
+};
+
 MemoryStorage.prototype.storeSHA = function (sha, callback) {
   this.sha = sha;
 

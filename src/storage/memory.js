@@ -137,10 +137,16 @@ MemoryStorage.prototype._indexContent = function (contentID, envelope, callback)
   callback();
 };
 
-MemoryStorage.prototype.queryContent = function (query, pageNumber, perPage, callback) {
+MemoryStorage.prototype.queryContent = function (query, categories, pageNumber, perPage, callback) {
   var rx = new RegExp(query, 'i');
 
   var hits = this.indexedEnvelopes.filter(function (entry) {
+    if (categories) {
+      if (_.intersection(categories, entry._source.categories).length === 0) {
+        return false;
+      }
+    }
+
     return rx.test([entry._source.title, entry._source.body, entry._source.keywords].join(' '));
   }).map(function (entry) {
     // Populate "highlights" as just the regexp matches, surrounded by <em> tags.

@@ -267,6 +267,7 @@ RemoteStorage.prototype.queryContent = function (query, pageNumber, perPage, cal
 RemoteStorage.prototype.unindexContent = function (contentID, callback) {
   connection.elastic.delete({
     index: 'envelopes',
+    type: 'envelope',
     id: contentID
   }, callback);
 };

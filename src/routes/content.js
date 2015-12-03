@@ -143,11 +143,10 @@ exports.retrieve = function (req, res, next) {
  */
 exports.delete = function (req, res, next) {
   var contentID = req.params.id;
-  log.debug({
-    action: 'contentdelete',
+  log.debug('Content deletion request received.', {
+    action: 'content delete',
     apikeyName: req.apikeyName,
-    contentID: contentID,
-    message: 'Content deletion request received.'
+    contentID: contentID
   });
 
   var reqStart = Date.now();
@@ -165,9 +164,12 @@ exports.delete = function (req, res, next) {
     ftsDelete
   ], function (err) {
     if (err) {
+      err.statusCode = err.statusCode || err.status || 500;
+
       log.error('Unable to delete content.', {
         event: 'content delete',
-        statusCode: err.statusCode || 500,
+        statusCode: err.statusCode,
+        errMessage: err.message,
         apikeyName: req.apikeyName,
         contentID: contentID,
         totalReqDuration: Date.now() - reqStart

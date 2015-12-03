@@ -86,6 +86,26 @@ describe('/content', function () {
         });
     });
 
+    it('skips envelopes with unsearchable set to true', function (done) {
+      request(server.create())
+        .put('/content/foobar')
+        .set('Authorization', authHelper.AUTH_USER)
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
+        .send('{ "title": "aaa", "body": "bbb ccc ddd", "unsearchable": true }')
+        .expect(204)
+        .end(function (err, res) {
+          if (err) return done(err);
+
+          storage.queryContent('ccc', 1, 10, function (err, results) {
+            expect(err).to.be.null();
+            expect(results.hits.total).to.equal(0);
+
+            done();
+          });
+        });
+    });
+
     it('requires authentication', function (done) {
       authHelper.ensureAuthIsRequired(
         request(server.create())

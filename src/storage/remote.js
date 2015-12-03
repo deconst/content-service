@@ -259,7 +259,7 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
     q.match = { _all: query };
   } else {
     q.filtered = {
-      query: { _all: query },
+      query: { match: { _all: query } },
       filter: { terms: { category: categories } }
     };
   }

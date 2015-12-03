@@ -10,6 +10,10 @@ exports.query = function (req, res, next) {
   var pageNumber = req.params.pageNumber || 1;
   var categories = req.params.categories;
 
+  if (typeof categories === 'string') {
+    categories = [categories];
+  }
+
   var startTs = Date.now();
   var logPayload = {
     event: 'search',

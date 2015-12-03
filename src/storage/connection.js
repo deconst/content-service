@@ -140,7 +140,8 @@ function elasticInit (callback) {
     properties: {
       title: { type: 'string', index: 'analyzed' },
       body: { type: 'string', index: 'analyzed' },
-      keywords: { type: 'string', index: 'analyzed' }
+      keywords: { type: 'string', index: 'analyzed' },
+      categories: { type: 'string', index: 'not_analyzed' }
     }
   };
 

@@ -264,6 +264,13 @@ RemoteStorage.prototype.queryContent = function (query, pageNumber, perPage, cal
   }, callback);
 };
 
+RemoteStorage.prototype.unindexContent = function (contentID, callback) {
+  connection.elastic.delete({
+    index: 'envelopes',
+    id: contentID
+  }, callback);
+};
+
 RemoteStorage.prototype.storeSHA = function (sha, callback) {
   connection.db.collection('sha').updateOne({
     key: 'controlRepository'

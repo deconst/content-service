@@ -25,6 +25,7 @@ var delegates = exports.delegates = [
   'listContent',
   '_indexContent',
   'queryContent',
+  'unindexContent',
   'storeSHA',
   'getSHA'
 ];

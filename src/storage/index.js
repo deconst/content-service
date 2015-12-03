@@ -112,7 +112,8 @@ exports.indexContent = function (contentID, envelope, callback) {
   var subset = {
     title: envelope.title || '',
     body: $.root().text(),
-    keywords: kws.join(' ')
+    keywords: kws.join(' '),
+    categories: envelope.categories || []
   };
 
   exports._indexContent(contentID, subset, callback);

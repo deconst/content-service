@@ -117,25 +117,11 @@ describe('/content', function () {
   });
 
   describe('#delete', function () {
-    it('deletes content from Cloud Files', function (done) {
-      storage.storeContent('er&okay', { body: 'expected' }, function (err) {
-        expect(err).not.to.exist();
-
-        request(server.create())
-          .delete('/content/er%26okay')
-          .set('Authorization', authHelper.AUTH_USER)
-          .expect(204)
-          .end(function (err, res) {
-            if (err) return done(err);
-
-            storage.getContent('er&okay', function (err, uploaded) {
-              expect(err).not.to.be.null();
-              expect(err.statusCode).to.equal(404);
-
-              done();
-            });
-          });
-      });
+    beforeEach(function (done) {
+      storage.storeContent('er&okay', { body: 'expected' }, done);
+    });
+    beforeEach(function (done) {
+      storage.indexContent('er&okay', { body: 'expected' }, done);
     });
 
     it('requires authentication', function (done) {
@@ -143,6 +129,41 @@ describe('/content', function () {
         request(server.create())
           .delete('/content/wat%26nope'),
         done);
+    });
+
+    it('deletes content from Cloud Files', function (done) {
+      request(server.create())
+        .delete('/content/er%26okay')
+        .set('Authorization', authHelper.AUTH_USER)
+        .expect(204)
+        .end(function (err, res) {
+          if (err) return done(err);
+
+          storage.getContent('er&okay', function (err, uploaded) {
+            expect(err).not.to.be.null();
+            expect(err.statusCode).to.equal(404);
+
+            done();
+          });
+        });
+    });
+
+    it('deletes content from Elasticsearch', function (done) {
+      request(server.create())
+        .delete('/content/er%23okay')
+        .set('Authorization', authHelper.AUTH_USER)
+        .expect(204)
+        .end(function (err, res) {
+          if (err) return done(err);
+
+          storage.queryContent('expected', 1, 10, function (err, found) {
+            expect(err).to.be.null();
+            expect(found.hits.total).to.equal(0);
+            expect(found.hits.hits.length).to.equal(0);
+
+            done();
+          });
+        });
     });
   });
 });

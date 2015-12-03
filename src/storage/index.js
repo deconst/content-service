@@ -99,6 +99,11 @@ exports.getContent = function (contentID, callback) {
 };
 
 exports.indexContent = function (contentID, envelope, callback) {
+  // Skip envelopes that have "unsearchable" set to true.
+  if (envelope.unsearchable) {
+    return callback(null);
+  }
+
   var kws = envelope.keywords || [];
   var $ = cheerio.load(envelope.body, {
     normalizeWhitespace: true

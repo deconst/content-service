@@ -252,16 +252,26 @@ RemoteStorage.prototype._indexContent = function (contentID, envelope, callback)
   }, callback);
 };
 
-RemoteStorage.prototype.queryContent = function (query, pageNumber, perPage, callback) {
+RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, perPage, callback) {
+  var q = {};
+
+  if (!categories) {
+    q.match = { _all: query };
+  } else {
+    q.filtered = {
+      query: { match: { _all: query } },
+      filter: { terms: { categories: categories } }
+    };
+  }
+
   connection.elastic.search({
     index: 'envelopes',
+    type: 'envelope',
     from: (pageNumber - 1) * perPage,
     size: perPage,
     ignoreUnavailable: true,
     body: {
-      query: {
-        match: { _all: query }
-      },
+      query: q,
       highlight: {
         fields: {
           body: {}

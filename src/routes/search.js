@@ -8,13 +8,19 @@ exports.query = function (req, res, next) {
   var q = req.params.q;
   var perPage = req.params.perPage || 10;
   var pageNumber = req.params.pageNumber || 1;
+  var categories = req.params.categories;
+
+  if (typeof categories === 'string') {
+    categories = [categories];
+  }
 
   var startTs = Date.now();
   var logPayload = {
     event: 'search',
     query: q,
     perPage: perPage,
-    pageNumber: pageNumber
+    pageNumber: pageNumber,
+    categories: categories
   };
 
   if (q === null || q === undefined) {
@@ -25,7 +31,7 @@ exports.query = function (req, res, next) {
 
   logger.debug('Beginning search', logPayload);
 
-  storage.queryContent(q, pageNumber, perPage, function (err, results) {
+  storage.queryContent(q, categories, pageNumber, perPage, function (err, results) {
     logPayload.duration = Date.now() - startTs;
 
     if (err) {

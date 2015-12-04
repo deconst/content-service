@@ -53,7 +53,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('ccc', 1, 10, function (err, results) {
+          storage.queryContent('ccc', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(1);
 
@@ -77,7 +77,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('nope', 1, 10, function (err, results) {
+          storage.queryContent('nope', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(0);
 
@@ -97,7 +97,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('ccc', 1, 10, function (err, results) {
+          storage.queryContent('ccc', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(0);
 
@@ -176,7 +176,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('expected', 1, 10, function (err, found) {
+          storage.queryContent('expected', null, 1, 10, function (err, found) {
             expect(err).to.be.null();
             expect(found.hits.total).to.equal(0);
             expect(found.hits.hits.length).to.equal(0);

@@ -260,12 +260,13 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
   } else {
     q.filtered = {
       query: { match: { _all: query } },
-      filter: { terms: { category: categories } }
+      filter: { terms: { categories: categories } }
     };
   }
 
   connection.elastic.search({
     index: 'envelopes',
+    type: 'envelope',
     from: (pageNumber - 1) * perPage,
     size: perPage,
     ignoreUnavailable: true,

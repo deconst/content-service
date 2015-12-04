@@ -190,11 +190,11 @@ An HTTP status code of 204 indicates that the API key will no longer be valid.
 
 An HTTP status code of 401 indicates that the request did not contain a valid administrator API key. A 409 is generated if an administrator attempts to revoke their own key.
 
-### `GET /search?q=:term&pageNumber=:num&perPage=:size`
+### `GET /search?q=:term&pageNumber=:num&perPage=:size&categories=deconst.horse`
 
 Perform a full-text search against all indexed documents.
 
-`q` is a required parameter. `pageNumber` defaults to 1 if unspecified, and `perPage` defaults to 10.
+`q` is a required parameter. `pageNumber` defaults to 1 if unspecified, and `perPage` defaults to 10. `categories` may be specified multiple times (or as `categories[]`), and if present at least once, will constrain search results to only those envelopes that contain at least one matching category.
 
 *Response: Successful*
 

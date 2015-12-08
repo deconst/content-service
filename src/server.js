@@ -10,14 +10,16 @@ var log = require('./logging').getLogger();
 exports.create = function () {
   var server = restify.createServer();
 
+  server.pre(restify.pre.sanitizePath());
+
   server.name = config.info.name;
 
-  server
-    .use(function (req, res, next) {
-      log.verbose(req.method + ' ' + req.url);
-      next();
-    })
-    .use(restify.fullResponse());
+  server.use(function (req, res, next) {
+    log.verbose(req.method + ' ' + req.url);
+    next();
+  });
+
+  server.use(restify.fullResponse());
 
   server.on('uncaughtException', function (req, res, route, err) {
     log.error({

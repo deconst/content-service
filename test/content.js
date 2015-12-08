@@ -24,7 +24,7 @@ describe('/content', function () {
   describe('#store', function () {
     it('persists new content into Cloud Files', function (done) {
       request(server.create())
-        .put('/content/foo%26bar')
+        .put('/content/foo%26bar%2F')
         .set('Authorization', authHelper.AUTH_USER)
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
@@ -33,7 +33,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.getContent('foo&bar', function (err, uploaded) {
+          storage.getContent('foo&bar/', function (err, uploaded) {
             expect(err).to.be.null();
             expect(uploaded).to.deep.equal({ body: 'something' });
 

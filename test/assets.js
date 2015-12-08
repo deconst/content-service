@@ -88,4 +88,10 @@ describe('/assets', function () {
           .expect(rawAssetContents, done);
       });
   });
+
+  it("doesn't crash with a trailing slash", function (done) {
+    request(server.create())
+      .get('/assets/')
+      .expect(200, done);
+  });
 });

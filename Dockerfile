@@ -1,4 +1,4 @@
-FROM node:0.12.1
+FROM node:4.3.1
 
 RUN useradd node
 RUN npm install -g nodemon

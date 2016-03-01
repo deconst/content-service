@@ -134,7 +134,11 @@ function elasticInit (callback) {
     log: ElasticLogs
   });
 
+  logger.debug('Connected to Elasticsearch.');
+
   exports.elastic = client;
+
+  callback(null);
 }
 
 exports.setup = function (callback) {

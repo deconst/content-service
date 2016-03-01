@@ -23,7 +23,9 @@ var delegates = exports.delegates = [
   '_getContent',
   'deleteContent',
   'listContent',
+  'createNewIndex',
   '_indexContent',
+  'makeIndexActive',
   'queryContent',
   'unindexContent',
   'storeSHA',
@@ -98,7 +100,13 @@ exports.getContent = function (contentID, callback) {
   });
 };
 
-exports.indexContent = function (contentID, envelope, callback) {
+exports.indexContent = function (contentID, envelope, indexName, callback) {
+  // indexName is optional and defaults to the alias "envelopes-current".
+  if (!callback) {
+    callback = indexName;
+    indexName = 'envelopes-current';
+  }
+
   // Skip envelopes that have "unsearchable" set to true.
   if (envelope.unsearchable) {
     return callback(null);
@@ -116,5 +124,5 @@ exports.indexContent = function (contentID, envelope, callback) {
     categories: envelope.categories || []
   };
 
-  exports._indexContent(contentID, subset, callback);
+  exports._indexContent(contentID, subset, indexName, callback);
 };

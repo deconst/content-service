@@ -128,12 +128,20 @@ MemoryStorage.prototype.listContent = function (callback) {
   });
 };
 
-MemoryStorage.prototype._indexContent = function (contentID, envelope, callback) {
+MemoryStorage.prototype.createNewIndex = function (indexName, callback) {
+  callback();
+};
+
+MemoryStorage.prototype._indexContent = function (contentID, envelope, indexName, callback) {
   this.indexedEnvelopes.push({
     _id: contentID,
     _source: envelope
   });
 
+  callback();
+};
+
+MemoryStorage.prototype.makeIndexActive = function (indexName, callback) {
   callback();
 };
 

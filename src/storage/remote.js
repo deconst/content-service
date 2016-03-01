@@ -1,3 +1,5 @@
+'use strict';
+
 var connection = require('./connection');
 var config = require('../config');
 
@@ -243,12 +245,46 @@ RemoteStorage.prototype.listContent = function (callback) {
   nextPage(null);
 };
 
-RemoteStorage.prototype._indexContent = function (contentID, envelope, callback) {
+RemoteStorage.prototype.createNewIndex = function (indexName, callback) {
+  let envelopeMapping = {
+    properties: {
+      title: { type: 'string', index: 'analyzed' },
+      body: { type: 'string', index: 'analyzed' },
+      keywords: { type: 'string', index: 'analyzed' },
+      categories: { type: 'string', index: 'not_analyzed' }
+    }
+  };
+
+  connection.elastic.indices.create({ index: indexName }, (err) => {
+    if (err) return callback(err);
+
+    connection.elastic.indices.putMapping({
+      index: indexName,
+      type: 'envelope',
+      body: {
+        envelope: envelopeMapping
+      }
+    }, callback);
+  });
+};
+
+RemoteStorage.prototype._indexContent = function (contentID, envelope, indexName, callback) {
   connection.elastic.index({
-    index: 'envelopes',
+    index: indexName,
     type: 'envelope',
     id: contentID,
     body: envelope
+  }, callback);
+};
+
+RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
+  connection.elastic.updateAliases({
+    body: {
+      actions: [
+        { remove: { index: '*', alias: 'envelopes-current' } },
+        { add: { index: indexName, alias: 'envelopes-current' } }
+      ]
+    }
   }, callback);
 };
 

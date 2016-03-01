@@ -113,7 +113,7 @@ exports.indexContent = function (contentID, envelope, indexName, callback) {
   }
 
   var kws = envelope.keywords || [];
-  var $ = cheerio.load(envelope.body, {
+  var $ = cheerio.load(envelope.body || '', {
     normalizeWhitespace: true
   });
 

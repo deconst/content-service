@@ -301,14 +301,20 @@ RemoteStorage.prototype._indexContent = function (contentID, envelope, indexName
 };
 
 RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
-  connection.elastic.updateAliases({
+  connection.elastic.indices.updateAliases({
     body: {
       actions: [
         { remove: { index: '*', alias: 'envelopes-current' } },
         { add: { index: indexName, alias: 'envelopes-current' } }
       ]
     }
-  }, callback);
+  }, (err) => {
+    if (err) return callback(err);
+
+    connection.elastic.indices.delete({
+      index: `envelopes-*,-${indexName}`
+    }, callback);
+  });
 };
 
 RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, perPage, callback) {

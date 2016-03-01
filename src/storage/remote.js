@@ -319,8 +319,6 @@ RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
     }, (err, response, status) => {
       if (err) return callback(err);
 
-      console.log(require('util').inspect(response, { depth: null }));
-
       let indexNames = Object.keys(response).filter((n) => n !== indexName);
 
       async.each(indexNames, (name, cb) => {

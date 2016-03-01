@@ -101,10 +101,10 @@ exports.getContent = function (contentID, callback) {
 };
 
 exports.indexContent = function (contentID, envelope, indexName, callback) {
-  // indexName is optional and defaults to the alias "envelopes-current".
+  // indexName is optional and defaults to the alias "envelopes_current".
   if (!callback) {
     callback = indexName;
-    indexName = 'envelopes-current';
+    indexName = 'envelopes_current';
   }
 
   // Skip envelopes that have "unsearchable" set to true.

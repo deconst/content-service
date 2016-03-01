@@ -1,5 +1,6 @@
 'use strict';
 
+var async = require('async');
 var connection = require('./connection');
 var config = require('../config');
 
@@ -34,7 +35,7 @@ RemoteStorage.prototype.setup = function (callback) {
         return callback(null);
       }
 
-      let indexName = `envelopes-${Date.now()}`;
+      let indexName = `envelopes_${Date.now()}`;
       this.createNewIndex(indexName, (err) => {
         if (err) return callback(err);
 
@@ -304,16 +305,28 @@ RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
   connection.elastic.indices.updateAliases({
     body: {
       actions: [
-        { remove: { index: '*', alias: 'envelopes-current' } },
-        { add: { index: indexName, alias: 'envelopes-current' } }
+        { remove: { index: '*', alias: 'envelopes_current' } },
+        { add: { index: indexName, alias: 'envelopes_current' } }
       ]
     }
   }, (err) => {
     if (err) return callback(err);
 
-    connection.elastic.indices.delete({
-      index: `envelopes-*,-${indexName}`
-    }, callback);
+    connection.elastic.indices.get({
+      index: 'envelopes*',
+      ignoreUnavailable: true,
+      feature: '_settings'
+    }, (err, response, status) => {
+      if (err) return callback(err);
+
+      console.log(require('util').inspect(response, { depth: null }));
+
+      let indexNames = Object.keys(response).filter((n) => n !== indexName);
+
+      async.each(indexNames, (name, cb) => {
+        connection.elastic.indices.delete({ index: name }, cb);
+      }, callback);
+    });
   });
 };
 
@@ -330,7 +343,7 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
   }
 
   connection.elastic.search({
-    index: 'envelopes-current',
+    index: 'envelopes_current',
     type: 'envelope',
     from: (pageNumber - 1) * perPage,
     size: perPage,
@@ -348,7 +361,7 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
 
 RemoteStorage.prototype.unindexContent = function (contentID, callback) {
   connection.elastic.delete({
-    index: 'envelopes',
+    index: 'envelopes_current',
     type: 'envelope',
     id: contentID
   }, function (err) {

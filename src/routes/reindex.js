@@ -17,7 +17,7 @@ exports.completedCallback = function () {};
  *  invoke the completedCallback with the accumulated state.
  */
 function reindex () {
-  let indexName = `envelopes-${Date.now()}`;
+  let indexName = `envelopes_${Date.now()}`;
 
   let state = {
     event: 'reindex',

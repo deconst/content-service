@@ -23,7 +23,9 @@ var delegates = exports.delegates = [
   '_getContent',
   'deleteContent',
   'listContent',
+  'createNewIndex',
   '_indexContent',
+  'makeIndexActive',
   'queryContent',
   'unindexContent',
   'storeSHA',
@@ -98,14 +100,20 @@ exports.getContent = function (contentID, callback) {
   });
 };
 
-exports.indexContent = function (contentID, envelope, callback) {
+exports.indexContent = function (contentID, envelope, indexName, callback) {
+  // indexName is optional and defaults to the alias "envelopes_current".
+  if (!callback) {
+    callback = indexName;
+    indexName = 'envelopes_current';
+  }
+
   // Skip envelopes that have "unsearchable" set to true.
   if (envelope.unsearchable) {
     return callback(null);
   }
 
   var kws = envelope.keywords || [];
-  var $ = cheerio.load(envelope.body, {
+  var $ = cheerio.load(envelope.body || '', {
     normalizeWhitespace: true
   });
 
@@ -116,5 +124,5 @@ exports.indexContent = function (contentID, envelope, callback) {
     categories: envelope.categories || []
   };
 
-  exports._indexContent(contentID, subset, callback);
+  exports._indexContent(contentID, subset, indexName, callback);
 };

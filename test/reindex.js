@@ -28,9 +28,9 @@ describe('/reindex', function () {
   beforeEach(function () {
     indexed = {};
     realIndexContent = storage._indexContent;
-    storage._indexContent = function (contentID, envelope, callback) {
+    storage._indexContent = function (contentID, envelope, indexName, callback) {
       indexed[contentID] = envelope;
-      realIndexContent(contentID, envelope, callback);
+      realIndexContent(contentID, envelope, indexName, callback);
     };
   });
   afterEach(function () {

@@ -19,6 +19,6 @@ case "${ACTION}" in
     npm test
     ;;
   *)
-    nodemon app.js
+    exec nodemon app.js
     ;;
 esac

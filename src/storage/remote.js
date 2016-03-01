@@ -1,3 +1,6 @@
+'use strict';
+
+var async = require('async');
 var connection = require('./connection');
 var config = require('../config');
 
@@ -16,7 +19,30 @@ function RemoteStorage () {}
  * @description Initialize connections to external systems.
  */
 RemoteStorage.prototype.setup = function (callback) {
-  connection.setup(callback);
+  connection.setup((err) => {
+    if (err) return callback(err);
+
+    // Attempt to create the latch index. If we can, we're responsible for setting up the initial
+    // index and alias. Otherwise, another content service is on it.
+    connection.elastic.indices.create({ index: 'latch', ignore: 400 }, (err, response, status) => {
+      if (err) return callback(err);
+
+      if (status === 400) {
+        // The latch index already existed, so another service is creating the search indices.
+        // Note that there's a race condition that occurs when a service that *isn't* creating
+        // the search indices attempts to store content between the creation of the latch index
+        // and the makeIndexActive() call below in the service that is.
+        return callback(null);
+      }
+
+      let indexName = `envelopes_${Date.now()}`;
+      this.createNewIndex(indexName, (err) => {
+        if (err) return callback(err);
+
+        this.makeIndexActive(indexName, callback);
+      });
+    });
+  });
 };
 
 /**
@@ -243,13 +269,63 @@ RemoteStorage.prototype.listContent = function (callback) {
   nextPage(null);
 };
 
-RemoteStorage.prototype._indexContent = function (contentID, envelope, callback) {
+RemoteStorage.prototype.createNewIndex = function (indexName, callback) {
+  let envelopeMapping = {
+    properties: {
+      title: { type: 'string', index: 'analyzed' },
+      body: { type: 'string', index: 'analyzed' },
+      keywords: { type: 'string', index: 'analyzed' },
+      categories: { type: 'string', index: 'not_analyzed' }
+    }
+  };
+
+  connection.elastic.indices.create({ index: indexName }, (err) => {
+    if (err) return callback(err);
+
+    connection.elastic.indices.putMapping({
+      index: indexName,
+      type: 'envelope',
+      body: {
+        envelope: envelopeMapping
+      }
+    }, callback);
+  });
+};
+
+RemoteStorage.prototype._indexContent = function (contentID, envelope, indexName, callback) {
   connection.elastic.index({
-    index: 'envelopes',
+    index: indexName,
     type: 'envelope',
     id: contentID,
     body: envelope
   }, callback);
+};
+
+RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
+  connection.elastic.indices.updateAliases({
+    body: {
+      actions: [
+        { remove: { index: '*', alias: 'envelopes_current' } },
+        { add: { index: indexName, alias: 'envelopes_current' } }
+      ]
+    }
+  }, (err) => {
+    if (err) return callback(err);
+
+    connection.elastic.indices.get({
+      index: 'envelopes*',
+      ignoreUnavailable: true,
+      feature: '_settings'
+    }, (err, response, status) => {
+      if (err) return callback(err);
+
+      let indexNames = Object.keys(response).filter((n) => n !== indexName);
+
+      async.each(indexNames, (name, cb) => {
+        connection.elastic.indices.delete({ index: name }, cb);
+      }, callback);
+    });
+  });
 };
 
 RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, perPage, callback) {
@@ -265,7 +341,7 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
   }
 
   connection.elastic.search({
-    index: 'envelopes',
+    index: 'envelopes_current',
     type: 'envelope',
     from: (pageNumber - 1) * perPage,
     size: perPage,
@@ -283,7 +359,7 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
 
 RemoteStorage.prototype.unindexContent = function (contentID, callback) {
   connection.elastic.delete({
-    index: 'envelopes',
+    index: 'envelopes_current',
     type: 'envelope',
     id: contentID
   }, function (err) {

@@ -134,28 +134,11 @@ function elasticInit (callback) {
     log: ElasticLogs
   });
 
+  logger.debug('Connected to Elasticsearch.');
+
   exports.elastic = client;
 
-  var envelopeMapping = {
-    properties: {
-      title: { type: 'string', index: 'analyzed' },
-      body: { type: 'string', index: 'analyzed' },
-      keywords: { type: 'string', index: 'analyzed' },
-      categories: { type: 'string', index: 'not_analyzed' }
-    }
-  };
-
-  client.indices.create({ index: 'envelopes', ignore: 400 }, function (err) {
-    if (err) return callback(err);
-
-    client.indices.putMapping({
-      index: 'envelopes',
-      type: 'envelope',
-      body: {
-        envelope: envelopeMapping
-      }
-    }, callback);
-  });
+  callback(null);
 }
 
 exports.setup = function (callback) {

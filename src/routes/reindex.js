@@ -1,3 +1,5 @@
+'use strict';
+
 // Reindex submitted content from its canonical source.
 
 var async = require('async');
@@ -15,8 +17,11 @@ exports.completedCallback = function () {};
  *  invoke the completedCallback with the accumulated state.
  */
 function reindex () {
-  var state = {
+  let indexName = `envelopes_${Date.now()}`;
+
+  let state = {
     event: 'reindex',
+    indexName: indexName,
     startedTs: Date.now(),
     elapsedMs: null,
     successfulEnvelopes: 0,
@@ -26,7 +31,7 @@ function reindex () {
 
   log.info('Reindex requested', state);
 
-  var handleError = function (err, message, fatal) {
+  let handleError = function (err, message, fatal) {
     state.errMessage = err.message;
     state.stack = err.stack;
 
@@ -37,54 +42,81 @@ function reindex () {
     }
   };
 
-  storage.listContent(function (err, contentIDs, next) {
-    if (err) return handleError(err, 'Unable to list content', true);
+  let createIndex = function (callback) {
+    storage.createNewIndex(indexName, (err) => {
+      if (err) return handleError(err, 'Unable to create new index', true);
 
-    if (contentIDs.length === 0) {
-      // We've listed all of the content. Declare victory in the logs.
-      state.elapsedMs = Date.now() - state.startedTs;
-      log.info('All content re-indexed.', state);
+      callback();
+    });
+  };
 
-      exports.completedCallback(null, state);
-      return;
-    }
+  let reindexAllContent = function (callback) {
+    storage.listContent(function (err, contentIDs, next) {
+      if (err) return handleError(err, 'Unable to list content', true);
 
-    var reindexContentID = function (contentID, cb) {
-      storage.getContent(contentID, function (err, envelope) {
-        if (err) {
-          handleError(err, 'Unable to fetch envelope with ID [' + contentID + ']', false);
+      if (contentIDs.length === 0) {
+        // We've listed all of the content. Declare victory in the logs.
+        log.info('All content re-indexed.', state);
 
-          state.failedEnvelopes++;
-          state.totalEnvelopes++;
-          return cb();
-        }
+        return callback();
+      }
 
-        log.debug('Successful envelope fetch', {
-          event: 'reindex',
-          contentID: contentID
-        });
-
-        storage.indexContent(contentID, envelope, function (err) {
+      let reindexContentID = function (contentID, cb) {
+        storage.getContent(contentID, function (err, envelope) {
           if (err) {
-            handleError(err, 'Unable to index envelope with ID [' + contentID + ']', false);
+            handleError(err, 'Unable to fetch envelope with ID [' + contentID + ']', false);
+
             state.failedEnvelopes++;
             state.totalEnvelopes++;
             return cb();
           }
 
-          log.debug('Successful envelope index', {
+          log.debug('Successful envelope fetch', {
             event: 'reindex',
             contentID: contentID
           });
 
-          state.successfulEnvelopes++;
-          state.totalEnvelopes++;
-          cb();
-        });
-      });
-    };
+          storage.indexContent(contentID, envelope, indexName, function (err) {
+            if (err) {
+              handleError(err, 'Unable to index envelope with ID [' + contentID + ']', false);
+              state.failedEnvelopes++;
+              state.totalEnvelopes++;
+              return cb();
+            }
 
-    async.mapLimit(contentIDs, 20, reindexContentID, next);
+            log.debug('Successful envelope index', {
+              event: 'reindex',
+              contentID: contentID
+            });
+
+            state.successfulEnvelopes++;
+            state.totalEnvelopes++;
+            cb();
+          });
+        });
+      };
+
+      async.mapLimit(contentIDs, 20, reindexContentID, next);
+    });
+  };
+
+  let makeIndexActive = function (callback) {
+    storage.makeIndexActive(indexName, (err) => {
+      if (err) return handleError(err, 'Unable to make the index active', true);
+
+      callback(null);
+    });
+  };
+
+  async.series([
+    createIndex,
+    reindexAllContent,
+    makeIndexActive
+  ], (err) => {
+    if (err) return handleError(err, 'Top-level error', true);
+
+    state.elapsedMs = Date.now() - state.startedTs;
+    exports.completedCallback(null, state);
   });
 }
 

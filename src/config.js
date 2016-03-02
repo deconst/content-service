@@ -80,7 +80,7 @@ exports.configure = function (env) {
   configuration.storage.value = configuration.storage.value.toLowerCase();
 
   // If storage is not remote, remove remote-only-mandatory settings from the missing list.
-  if (configuration.storage !== 'remote') {
+  if (configuration.storage.value !== 'remote') {
     missing = _.without(missing,
       'RACKSPACE_USERNAME', 'RACKSPACE_APIKEY', 'RACKSPACE_REGION',
       'CONTENT_CONTAINER', 'ASSET_CONTAINER',

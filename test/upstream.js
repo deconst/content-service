@@ -59,7 +59,15 @@ describe('upstream', () => {
       .expect(404, done);
   });
 
-  it('reports non-404 failures from upstream as 502s');
+  it('reports non-404 failures from upstream as 502s', (done) => {
+    nock('https://upstream')
+      .get('/content/remote').reply(500, { message: 'wtf' });
+
+    request(server.create())
+      .get('/content/remote')
+      .set('Accept', 'application/json')
+      .expect(502, done);
+  });
 
   afterEach(before.reconfigure);
 });

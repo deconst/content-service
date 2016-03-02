@@ -35,6 +35,8 @@ describe('upstream', () => {
       .expect({ assets: {}, envelope: { body: 'local' } }, done);
   });
 
+  it('returns assets merged from local and upstream');
+
   it('queries the upstream content service when content is not found locally', (done) => {
     nock('https://upstream')
       .get('/content/remote').reply(200, { assets: {}, envelope: { body: 'remote' } });
@@ -56,6 +58,8 @@ describe('upstream', () => {
       .set('Accept', 'application/json')
       .expect(404, done);
   });
+
+  it('reports non-404 failures from upstream as 502s');
 
   afterEach(before.reconfigure);
 });

@@ -30,7 +30,7 @@ function reconfigure (overrides) {
       CONTENT_CONTAINER: 'the-content-container',
       ASSET_CONTAINER: 'the-asset-container',
       MONGODB_URL: 'mongodb-url',
-      CONTENT_LOG_LEVEL: process.env.CONTENT_LOG_LEVEL || 'error'
+      CONTENT_LOG_LEVEL: process.env.CONTENT_LOG_LEVEL || 'fatal'
     }, overrides));
   }
 }

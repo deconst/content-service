@@ -141,7 +141,7 @@ Access previously stored content by its URL-encoded *content ID*.
 
 An HTTP status of 404 will be returned if the content ID isn't recognized.
 
-### `POST /asset[?named=true]`
+### `POST /assets[?named=true]`
 
 **(Authorization required: any user)**
 
@@ -159,6 +159,19 @@ If the query parameter `named=true` is provided, each asset's CDN URI will also 
 {
   "file1.jpg": "https://assets.horse/url/for/file1-38be7d1b981f2fb6a4a0a052453f887373dc1fe8.jpg",
   "file2.css": "https://assets.horse/url/for/file2-d2da57e04b0818f7e3dd18da3b73c9b54a73cbe5.css"
+}
+```
+
+### `GET /assets`
+
+Enumerate named assets from the content service.
+
+*Response*
+
+```json
+{
+  "file1_jpg_url": "https://assets.horse/url/for/file1-38be7d1b981f2fb6a4a0a052453f887373dc1fe8.jpg",
+  "file2_css_url": "https://assets.horse/url/for/file2-d2da57e04b0818f7e3dd18da3b73c9b54a73cbe5.css"
 }
 ```
 

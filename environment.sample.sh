@@ -11,8 +11,10 @@ export RACKSPACE_REGION=
 export RACKSPACE_SERVICENET=
 export CONTENT_CONTAINER=
 export ASSET_CONTAINER=
-
 export ADMIN_APIKEY=
+
+# Enable to proxy failed content requests to another content service.
+# export PROXY_UPSTREAM=
 
 export CONTENT_LOG_LEVEL=debug
 export CONTENT_LOG_COLOR="true"

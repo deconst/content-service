@@ -28,6 +28,7 @@ content:
     ELASTICSEARCH_HOST: http://elasticsearch:9200/
     CONTENT_LOG_LEVEL:
     CONTENT_LOG_COLOR:
+    PROXY_UPSTREAM:
   volumes:
   - ".:/usr/src/app"
   command: script/inside/dev

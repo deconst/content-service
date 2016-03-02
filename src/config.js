@@ -44,6 +44,10 @@ var configuration = {
   contentLogColor: {
     env: 'CONTENT_LOG_COLOR',
     def: 'false'
+  },
+  proxyUpstream: {
+    env: 'PROXY_UPSTREAM',
+    def: null
   }
 };
 
@@ -67,7 +71,7 @@ exports.configure = function (env) {
 
     setting.value = value || setting.def;
 
-    if (!setting.value) {
+    if (setting.value === undefined) {
       missing.push(setting.env);
     }
   }

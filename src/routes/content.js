@@ -4,6 +4,7 @@
 const async = require('async');
 const request = require('request');
 const urljoin = require('urljoin');
+const _ = require('lodash');
 const assets = require('./assets');
 const storage = require('../storage');
 const config = require('../config');
@@ -84,6 +85,7 @@ exports.retrieve = function (req, res, next) {
   });
 
   let doc = { envelope: {}, assets: {} };
+  let isUpstreamContent = false;
 
   let downloadContent = (callback) => {
     storage.getContent(contentID, (err, envelope) => {
@@ -108,7 +110,7 @@ exports.retrieve = function (req, res, next) {
       action: 'contentretrieve',
       contentID,
       upstreamURL: url,
-      message: 'making upstream request.'
+      message: 'Making upstream content request.'
     });
 
     request({ url, json: true }, (err, response, body) => {
@@ -119,7 +121,7 @@ exports.retrieve = function (req, res, next) {
           action: 'contentretrieve',
           contentID,
           upstreamURL: url,
-          message: 'content not found in upstream.'
+          message: 'Content not found in upstream.'
         });
 
         let err = new Error('Content not found');
@@ -134,7 +136,8 @@ exports.retrieve = function (req, res, next) {
           action: 'contentretrieve',
           contentID,
           upstreamURL: url,
-          message: 'upstream proxy error'
+          statusCode: response.statusCode,
+          message: 'Upstream content request error'
         });
 
         let err = new Error('Upstream proxy error');
@@ -148,9 +151,10 @@ exports.retrieve = function (req, res, next) {
         action: 'contentretrieve',
         contentID,
         upstreamURL: url,
-        message: 'proxy request successful.'
+        message: 'Upstream content request successful.'
       });
 
+      isUpstreamContent = true;
       doc = body;
       callback(null);
     });
@@ -160,7 +164,49 @@ exports.retrieve = function (req, res, next) {
     assets.enumerateNamed((err, assets) => {
       if (err) return callback(err);
 
-      doc.assets = assets;
+      // Prefer the just-fetched assets.
+      doc.assets = _.merge(doc.assets || {}, assets);
+
+      // Upstream content already has upstream assets attached. For local content, query and append
+      // upstream named assets as well.
+      if (!isUpstreamContent && config.proxyUpstream()) {
+        return injectUpstreamAssetVars(callback);
+      }
+
+      callback(null);
+    });
+  };
+
+  let injectUpstreamAssetVars = (callback) => {
+    let url = urljoin(config.proxyUpstream(), 'assets');
+    log.debug({
+      action: 'contentretrieve',
+      contentID,
+      upstreamURL: url,
+      message: 'Making upstream asset request.'
+    });
+
+    request({ url, json: true }, (err, response, upstreamAssets) => {
+      if (err) return callback(err);
+
+      if (response.statusCode !== 200) {
+        let e = new Error('Unable to retrieve upstream assets');
+        e.statusCode = 502;
+
+        return callback(e);
+      }
+
+      log.debug({
+        action: 'contentretrieve',
+        contentID,
+        upstreamURL: url,
+        upstreamAssets,
+        message: 'Upstream asset request succeeded.'
+      });
+
+      // Prefer local assets.
+      doc.assets = _.merge(upstreamAssets, doc.assets);
+
       callback(null);
     });
   };

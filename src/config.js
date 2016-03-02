@@ -44,6 +44,10 @@ var configuration = {
   contentLogColor: {
     env: 'CONTENT_LOG_COLOR',
     def: 'false'
+  },
+  proxyUpstream: {
+    env: 'PROXY_UPSTREAM',
+    def: null
   }
 };
 
@@ -67,7 +71,7 @@ exports.configure = function (env) {
 
     setting.value = value || setting.def;
 
-    if (!setting.value) {
+    if (setting.value === undefined) {
       missing.push(setting.env);
     }
   }
@@ -76,7 +80,7 @@ exports.configure = function (env) {
   configuration.storage.value = configuration.storage.value.toLowerCase();
 
   // If storage is not remote, remove remote-only-mandatory settings from the missing list.
-  if (configuration.storage !== 'remote') {
+  if (configuration.storage.value !== 'remote') {
     missing = _.without(missing,
       'RACKSPACE_USERNAME', 'RACKSPACE_APIKEY', 'RACKSPACE_REGION',
       'CONTENT_CONTAINER', 'ASSET_CONTAINER',

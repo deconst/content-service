@@ -1,35 +1,14 @@
+'use strict';
 // Store, retrieve, and delete metadata envelopes.
 
-var async = require('async');
-var assets = require('./assets');
-var storage = require('../storage');
-var log = require('../logging').getLogger();
-
-/**
- * @description Download the raw metadata envelope from Cloud Files.
- */
-function downloadContent (contentID, callback) {
-  storage.getContent(contentID, function (err, envelope) {
-    if (err) return callback(err);
-
-    callback(null, { envelope: envelope });
-  });
-}
-
-/**
- * @description Inject asset variables included from the /assets endpoint into
- *   an outgoing metadata envelope.
- */
-function injectAssetVars (doc, callback) {
-  assets.enumerateNamed(function (err, assets) {
-    if (err) {
-      return callback(err);
-    }
-
-    doc.assets = assets;
-    callback(null, doc);
-  });
-}
+const async = require('async');
+const request = require('request');
+const urljoin = require('urljoin');
+const _ = require('lodash');
+const assets = require('./assets');
+const storage = require('../storage');
+const config = require('../config');
+const log = require('../logging').getLogger();
 
 /**
  * @description Store new content into the content service.
@@ -91,25 +70,155 @@ exports.store = function (req, res, next) {
 };
 
 /**
- * @description Retrieve content from the store by content ID.
+ * @description Retrieve content from the store by content ID. If PROXY_UPSTREAM is set, make a
+ * request to the configured upstream content service's API.
  */
 exports.retrieve = function (req, res, next) {
+  let reqStart = Date.now();
+  let contentID = req.params.id;
+
   log.debug({
     action: 'contentretrieve',
-    contentID: req.params.id,
+    startTs: reqStart,
+    contentID: contentID,
     message: 'Content ID request received.'
   });
 
-  var reqStart = Date.now();
+  let doc = { envelope: {}, assets: {} };
+  let isUpstreamContent = false;
 
-  async.waterfall([
-    async.apply(downloadContent, req.params.id),
+  let downloadContent = (callback) => {
+    storage.getContent(contentID, (err, envelope) => {
+      if (err) {
+        // If content is not found and a proxy server is configured, send a proxy request instead.
+        if (err.statusCode && err.statusCode === 404 && config.proxyUpstream()) {
+          return downloadUpstreamContent(callback);
+        }
+
+        return callback(err);
+      }
+
+      doc = { envelope };
+      callback(null);
+    });
+  };
+
+  let downloadUpstreamContent = (callback) => {
+    let url = urljoin(config.proxyUpstream(), 'content', encodeURIComponent(contentID));
+
+    log.debug({
+      action: 'contentretrieve',
+      contentID,
+      upstreamURL: url,
+      message: 'Making upstream content request.'
+    });
+
+    request({ url, json: true }, (err, response, body) => {
+      if (err) return callback(err);
+
+      if (response.statusCode === 404) {
+        log.debug({
+          action: 'contentretrieve',
+          contentID,
+          upstreamURL: url,
+          message: 'Content not found in upstream.'
+        });
+
+        let err = new Error('Content not found');
+        err.statusCode = 404;
+        err.responseBody = response.body;
+
+        return callback(err);
+      }
+
+      if (response.statusCode !== 200) {
+        log.error({
+          action: 'contentretrieve',
+          contentID,
+          upstreamURL: url,
+          statusCode: response.statusCode,
+          message: 'Upstream content request error'
+        });
+
+        let err = new Error('Upstream proxy error');
+        err.statusCode = 502;
+        err.responseBody = response.body;
+
+        return callback(err);
+      }
+
+      log.debug({
+        action: 'contentretrieve',
+        contentID,
+        upstreamURL: url,
+        message: 'Upstream content request successful.'
+      });
+
+      isUpstreamContent = true;
+      doc = body;
+      callback(null);
+    });
+  };
+
+  let injectAssetVars = (callback) => {
+    assets.enumerateNamed((err, assets) => {
+      if (err) return callback(err);
+
+      // Prefer the just-fetched assets.
+      doc.assets = _.merge(doc.assets || {}, assets);
+
+      // Upstream content already has upstream assets attached. For local content, query and append
+      // upstream named assets as well.
+      if (!isUpstreamContent && config.proxyUpstream()) {
+        return injectUpstreamAssetVars(callback);
+      }
+
+      callback(null);
+    });
+  };
+
+  let injectUpstreamAssetVars = (callback) => {
+    let url = urljoin(config.proxyUpstream(), 'assets');
+    log.debug({
+      action: 'contentretrieve',
+      contentID,
+      upstreamURL: url,
+      message: 'Making upstream asset request.'
+    });
+
+    request({ url, json: true }, (err, response, upstreamAssets) => {
+      if (err) return callback(err);
+
+      if (response.statusCode !== 200) {
+        let e = new Error('Unable to retrieve upstream assets');
+        e.statusCode = 502;
+
+        return callback(e);
+      }
+
+      log.debug({
+        action: 'contentretrieve',
+        contentID,
+        upstreamURL: url,
+        upstreamAssets,
+        message: 'Upstream asset request succeeded.'
+      });
+
+      // Prefer local assets.
+      doc.assets = _.merge(upstreamAssets, doc.assets);
+
+      callback(null);
+    });
+  };
+
+  async.series([
+    downloadContent,
     injectAssetVars
-  ], function (err, doc) {
+  ], (err) => {
     if (err) {
       var message = 'Unable to retrieve content.';
       if (err.statusCode && err.statusCode === 404) {
-        message = 'No content for ID [' + req.params.id + ']';
+        message = `No content for ID [${contentID}]`;
       }
 
       log.error({
@@ -129,7 +238,7 @@ exports.retrieve = function (req, res, next) {
     log.info({
       action: 'contentretrieve',
       statusCode: 200,
-      contentID: req.params.id,
+      contentID,
       totalReqDuration: Date.now() - reqStart,
       message: 'Content request successful.'
     });

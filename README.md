@@ -42,6 +42,10 @@ The content service is configured by passing environment variables to the Docker
  * `MONGODB_URL`: **(required if STORAGE=remote)** MongoDB connection string, including any required authentication information.
  * `ELASTICSEARCH_HOST`: **(required if STORAGE=remote)** Elasticsearch connection string, including any required authentication information.
 
+### Proxy
+
+ * `PROXY_UPSTREAM`: *(optional)* If a URL is specified, content not found in this content store will be requested from an upstream content store API. Named assets will be accumulated from the upstream content store and this service, with named assets from this service taking precedence.
+
 ### Logging
 
  * `CONTENT_LOG_LEVEL`: *(default: `"info"`)* Optional logging level, case-insensitive. The valid levels are `TRACE`, `DEBUG`, `VERBOSE`, `INFO`, `WARN`, and `ERROR`.

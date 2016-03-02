@@ -129,6 +129,21 @@ exports.retrieve = function (req, res, next) {
         return callback(err);
       }
 
+      if (response.statusCode !== 200) {
+        log.error({
+          action: 'contentretrieve',
+          contentID,
+          upstreamURL: url,
+          message: 'upstream proxy error'
+        });
+
+        let err = new Error('Upstream proxy error');
+        err.statusCode = 502;
+        err.responseBody = response.body;
+
+        return callback(err);
+      }
+
       log.debug({
         action: 'contentretrieve',
         contentID,

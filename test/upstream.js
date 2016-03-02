@@ -11,6 +11,7 @@ const chai = require('chai');
 const dirtyChai = require('dirty-chai');
 chai.use(dirtyChai);
 
+const nock = require('nock');
 const request = require('supertest');
 const storage = require('../src/storage');
 const server = require('../src/server');
@@ -19,7 +20,7 @@ const resetHelper = require('./helpers/reset');
 describe('upstream', () => {
   beforeEach(resetHelper);
   beforeEach(before.configureWith({
-    PROXY_UPSTREAM: 'upstream'
+    PROXY_UPSTREAM: 'https://upstream'
   }));
 
   // Prepopulate local storage with content.
@@ -34,7 +35,18 @@ describe('upstream', () => {
       .expect({ assets: {}, envelope: { body: 'local' } }, done);
   });
 
-  it('queries the upstream content service when content is not found locally');
+  it('queries the upstream content service when content is not found locally', (done) => {
+    nock('https://upstream')
+      .get('/content/remote').reply(200, { assets: {}, envelope: { body: 'remote' } });
+
+    request(server.create())
+      .get('/content/remote')
+      .set('Accept', 'application/json')
+      .expect(200)
+      .expect('Content-Type', 'application/json')
+      .expect({ assets: {}, envelope: { body: 'remote' } }, done);
+  });
+
   it('propagates failures from the upstream content service');
 
   afterEach(before.reconfigure);

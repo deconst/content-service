@@ -2,8 +2,11 @@
 // Store, retrieve, and delete metadata envelopes.
 
 const async = require('async');
+const request = require('request');
+const urljoin = require('urljoin');
 const assets = require('./assets');
 const storage = require('../storage');
+const config = require('../config');
 const log = require('../logging').getLogger();
 
 /**
@@ -84,14 +87,46 @@ exports.retrieve = function (req, res, next) {
 
   let downloadContent = (callback) => {
     storage.getContent(contentID, (err, envelope) => {
-      if (err) return callback(err);
+      if (err) {
+        // If content is not found and a proxy server is configured, send a proxy request instead.
+        if (err.statusCode && err.statusCode === 404 && config.proxyUpstream()) {
+          return downloadUpstreamContent(callback);
+        }
+
+        return callback(err);
+      }
 
       doc = { envelope };
       callback(null);
     });
   };
 
-  let injectAssetVars = (doc, callback) => {
+  let downloadUpstreamContent = (callback) => {
+    let url = urljoin(config.proxyUpstream(), 'content', encodeURIComponent(contentID));
+
+    log.debug({
+      action: 'contentretrieve',
+      contentID,
+      proxyURL: url,
+      message: 'making proxy request.'
+    });
+
+    request({ url, json: true }, (err, response, body) => {
+      if (err) return callback(err);
+
+      log.debug({
+        action: 'contentretrieve',
+        contentID,
+        proxyURL: url,
+        message: 'proxy request successful.'
+      });
+
+      doc = body;
+      callback(null);
+    });
+  };
+
+  let injectAssetVars = (callback) => {
     assets.enumerateNamed((err, assets) => {
       if (err) return callback(err);
 
@@ -107,7 +142,7 @@ exports.retrieve = function (req, res, next) {
     if (err) {
       var message = 'Unable to retrieve content.';
       if (err.statusCode && err.statusCode === 404) {
-        message = 'No content for ID [' + req.params.id + ']';
+        message = `No content for ID [${contentID}]`;
       }
 
       log.error({

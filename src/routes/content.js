@@ -1,35 +1,10 @@
+'use strict';
 // Store, retrieve, and delete metadata envelopes.
 
-var async = require('async');
-var assets = require('./assets');
-var storage = require('../storage');
-var log = require('../logging').getLogger();
-
-/**
- * @description Download the raw metadata envelope from Cloud Files.
- */
-function downloadContent (contentID, callback) {
-  storage.getContent(contentID, function (err, envelope) {
-    if (err) return callback(err);
-
-    callback(null, { envelope: envelope });
-  });
-}
-
-/**
- * @description Inject asset variables included from the /assets endpoint into
- *   an outgoing metadata envelope.
- */
-function injectAssetVars (doc, callback) {
-  assets.enumerateNamed(function (err, assets) {
-    if (err) {
-      return callback(err);
-    }
-
-    doc.assets = assets;
-    callback(null, doc);
-  });
-}
+const async = require('async');
+const assets = require('./assets');
+const storage = require('../storage');
+const log = require('../logging').getLogger();
 
 /**
  * @description Store new content into the content service.
@@ -91,21 +66,44 @@ exports.store = function (req, res, next) {
 };
 
 /**
- * @description Retrieve content from the store by content ID.
+ * @description Retrieve content from the store by content ID. If PROXY_UPSTREAM is set, make a
+ * request to the configured upstream content service's API.
  */
 exports.retrieve = function (req, res, next) {
+  let reqStart = Date.now();
+  let contentID = req.params.id;
+
   log.debug({
     action: 'contentretrieve',
-    contentID: req.params.id,
+    startTs: reqStart,
+    contentID: contentID,
     message: 'Content ID request received.'
   });
 
-  var reqStart = Date.now();
+  let doc = null;
 
-  async.waterfall([
-    async.apply(downloadContent, req.params.id),
+  let downloadContent = (callback) => {
+    storage.getContent(contentID, (err, envelope) => {
+      if (err) return callback(err);
+
+      doc = { envelope };
+      callback(null);
+    });
+  };
+
+  let injectAssetVars = (doc, callback) => {
+    assets.enumerateNamed((err, assets) => {
+      if (err) return callback(err);
+
+      doc.assets = assets;
+      callback(null);
+    });
+  };
+
+  async.series([
+    downloadContent,
     injectAssetVars
-  ], function (err, doc) {
+  ], (err) => {
     if (err) {
       var message = 'Unable to retrieve content.';
       if (err.statusCode && err.statusCode === 404) {
@@ -129,7 +127,7 @@ exports.retrieve = function (req, res, next) {
     log.info({
       action: 'contentretrieve',
       statusCode: 200,
-      contentID: req.params.id,
+      contentID,
       totalReqDuration: Date.now() - reqStart,
       message: 'Content request successful.'
     });

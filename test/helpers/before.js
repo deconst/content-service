@@ -1,21 +1,27 @@
+'use strict';
 /*
  * Suite-global initialization that should occur before any other files are required. It's probably
  * a code smell that I have to do this.
  */
 
-var config = require('../../src/config');
+const _ = require('lodash');
+const config = require('../../src/config');
 
-function reconfigure () {
+function reconfigure (overrides) {
+  if (overrides === undefined) {
+    overrides = {};
+  }
+
   if (process.env.INTEGRATION) {
     console.log('Integration test mode active.');
 
-    config.configure(process.env);
+    config.configure(_.merge(process.env, overrides));
 
     console.log('NOTE: This will leave files uploaded in Cloud Files containers.');
     console.log('Be sure to clear these containers after:');
     console.log('[' + config.contentContainer() + '] and [' + config.assetContainer() + ']');
   } else {
-    config.configure({
+    config.configure(_.merge({
       STORAGE: 'memory',
       RACKSPACE_USERNAME: 'me',
       RACKSPACE_APIKEY: '12345',
@@ -25,10 +31,14 @@ function reconfigure () {
       ASSET_CONTAINER: 'the-asset-container',
       MONGODB_URL: 'mongodb-url',
       CONTENT_LOG_LEVEL: process.env.CONTENT_LOG_LEVEL || 'error'
-    });
+    }, overrides));
   }
 }
 
-reconfigure();
+reconfigure({});
 
-exports.reconfigure = reconfigure;
+exports.reconfigure = () => reconfigure;
+
+exports.configureWith = function (overrides) {
+  return () => reconfigure(overrides);
+};

@@ -83,7 +83,7 @@ exports.retrieve = function (req, res, next) {
     message: 'Content ID request received.'
   });
 
-  let doc = null;
+  let doc = { envelope: {}, assets: {} };
 
   let downloadContent = (callback) => {
     storage.getContent(contentID, (err, envelope) => {
@@ -107,17 +107,32 @@ exports.retrieve = function (req, res, next) {
     log.debug({
       action: 'contentretrieve',
       contentID,
-      proxyURL: url,
-      message: 'making proxy request.'
+      upstreamURL: url,
+      message: 'making upstream request.'
     });
 
     request({ url, json: true }, (err, response, body) => {
       if (err) return callback(err);
 
+      if (response.statusCode === 404) {
+        log.debug({
+          action: 'contentretrieve',
+          contentID,
+          upstreamURL: url,
+          message: 'content not found in upstream.'
+        });
+
+        let err = new Error('Content not found');
+        err.statusCode = 404;
+        err.responseBody = response.body;
+
+        return callback(err);
+      }
+
       log.debug({
         action: 'contentretrieve',
         contentID,
-        proxyURL: url,
+        upstreamURL: url,
         message: 'proxy request successful.'
       });
 

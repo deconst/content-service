@@ -47,7 +47,15 @@ describe('upstream', () => {
       .expect({ assets: {}, envelope: { body: 'remote' } }, done);
   });
 
-  it('propagates failures from the upstream content service');
+  it('propagates lookup failures from the upstream content service', (done) => {
+    nock('https://upstream')
+      .get('/content/remote').reply(404);
+
+    request(server.create())
+      .get('/content/remote')
+      .set('Accept', 'application/json')
+      .expect(404, done);
+  });
 
   afterEach(before.reconfigure);
 });

@@ -37,7 +37,7 @@ function reconfigure (overrides) {
 
 reconfigure({});
 
-exports.reconfigure = () => reconfigure;
+exports.reconfigure = () => reconfigure({});
 
 exports.configureWith = function (overrides) {
   return () => reconfigure(overrides);

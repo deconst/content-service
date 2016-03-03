@@ -28,7 +28,8 @@ describe('config', () => {
       ASSET_CONTAINER: 'the-asset-container',
       MONGODB_URL: 'mongodb-url',
       CONTENT_LOG_LEVEL: 'debug',
-      PROXY_UPSTREAM: 'https://upstream.horse:9000/'
+      PROXY_UPSTREAM: 'https://upstream.horse:9000/',
+      STAGING_MODE: 'true'
     });
 
     expect(config.storage()).to.equal('memory');
@@ -42,6 +43,7 @@ describe('config', () => {
     expect(config.mongodbURL()).to.equal('mongodb-url');
     expect(config.contentLogLevel()).to.equal('debug');
     expect(config.proxyUpstream()).to.equal('https://upstream.horse:9000/');
+    expect(config.stagingMode()).to.equal(true);
   });
 
   afterEach(before.reconfigure);

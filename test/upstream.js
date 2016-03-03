@@ -141,5 +141,34 @@ describe('upstream', () => {
       .expect(502, done);
   });
 
+  describe('in staging mode', () => {
+    beforeEach(before.configureWith({
+      PROXY_UPSTREAM: 'https://upstream',
+      STAGING_MODE: 'true'
+    }));
+
+    it('removes the first path segment from each proxied content ID', (done) => {
+      nock('https://upstream')
+        .get('/content/https%3A%2F%2Fgithub.com%2Ffoo%2Fbar%2Fremote').reply(200, {
+          assets: { one: 'https://assets.horse/one-321321.jpg' },
+          envelope: { body: 'remote' }
+        });
+
+      request(server.create())
+        .get('/content/https%3A%2F%2Fgithub.com%2Fbuild-123456%2Ffoo%2Fbar%2Fremote')
+        .set('Accept', 'application/json')
+        .expect(200)
+        .expect('Content-Type', 'application/json')
+        .expect({
+          assets: {
+            one: 'https://assets.horse/one-321321.jpg',
+            'only-local': '/__local_asset__/only-local-123123.jpg',
+            'both': '/__local_asset__/both-456456.jpg'
+          },
+          envelope: { body: 'remote' }
+        }, done);
+    });
+  });
+
   afterEach(before.reconfigure);
 });

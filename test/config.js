@@ -12,12 +12,39 @@ const dirtyChai = require('dirty-chai');
 chai.use(dirtyChai);
 const expect = chai.expect;
 
+const _ = require('lodash');
 const before = require('./helpers/before');
 const config = require('../src/config');
 
 describe('config', () => {
+  const minimum = {
+    STORAGE: 'memory',
+    ADMIN_APIKEY: '12345'
+  };
+
+  it('accepts the minimim configuration', () => {
+    config.configure(minimum);
+
+    expect(config.storage()).to.equal('memory');
+    expect(config.adminAPIKey()).to.equal('12345');
+
+    expect(config.rackspaceUsername()).to.be.undefined();
+    expect(config.rackspaceAPIKey()).to.be.undefined();
+    expect(config.rackspaceRegion()).to.be.undefined();
+    expect(config.contentContainer()).to.be.undefined();
+    expect(config.assetContainer()).to.be.undefined();
+    expect(config.mongodbURL()).to.be.undefined();
+    expect(config.elasticsearchHost()).to.be.undefined();
+
+    expect(config.rackspaceServiceNet()).to.be.false();
+    expect(config.contentLogLevel()).to.equal('info');
+    expect(config.contentLogColor()).to.be.false();
+    expect(config.proxyUpstream()).to.be.null();
+    expect(config.stagingMode()).to.be.false();
+  });
+
   it('sets variables from the environment', () => {
-    config.configure({
+    config.configure(_.defaults({
       STORAGE: 'memory',
       RACKSPACE_USERNAME: 'me',
       RACKSPACE_APIKEY: '12345',
@@ -30,7 +57,7 @@ describe('config', () => {
       CONTENT_LOG_LEVEL: 'debug',
       PROXY_UPSTREAM: 'https://upstream.horse:9000/',
       STAGING_MODE: 'true'
-    });
+    }, minimum));
 
     expect(config.storage()).to.equal('memory');
     expect(config.rackspaceUsername()).to.equal('me');
@@ -44,6 +71,14 @@ describe('config', () => {
     expect(config.contentLogLevel()).to.equal('debug');
     expect(config.proxyUpstream()).to.equal('https://upstream.horse:9000/');
     expect(config.stagingMode()).to.equal(true);
+  });
+
+  it('requires PROXY_UPSTREAM when STAGING_MODE is active', () => {
+    expect(() => {
+      config.configure(_.defaults({
+        STAGING_MODE: 'true'
+      }, minimum));
+    }).to.throw(Error);
   });
 
   afterEach(before.reconfigure);

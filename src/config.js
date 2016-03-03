@@ -131,6 +131,13 @@ exports.configure = function (env) {
 
     throw new Error('Invalid configuration');
   }
+
+  // Ensure that PROXY_UPSTREAM is provided if STAGING_MODE is.
+  if (configuration.stagingMode.value && !configuration.proxyUpstream.value) {
+    console.error('PROXY_UPSTREAM must be set when STAGING_MODE is enabled.');
+
+    throw new Error('Invalid configuration');
+  }
 };
 
 // Export "getter" functions for each configuration option.

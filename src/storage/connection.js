@@ -56,35 +56,8 @@ function mongoInit (callback) {
     if (err) return callback(err);
 
     logger.debug('Connected to MongoDB database at [' + config.mongodbURL() + '].');
-
     exports.db = db;
-
-    var envelopes = db.collection('envelopes');
-
-    // Create indices on collections as necessary.
-    async.parallel([
-      function (callback) {
-        envelopes.createIndex('tags', {
-          sparse: true
-        }, callback);
-      },
-      function (callback) {
-        envelopes.createIndex('categories', {
-          sparse: true
-        }, callback);
-      },
-      function (callback) {
-        envelopes.createIndex('contentID', {
-          unique: true
-        }, callback);
-      }
-    ], function (err, db) {
-      if (err) return callback(err);
-
-      logger.debug('All indices created.');
-
-      callback(null);
-    });
+    callback(null);
   });
 }
 

@@ -41,6 +41,7 @@ describe('config', () => {
     expect(config.contentLogColor()).to.be.false();
     expect(config.proxyUpstream()).to.be.null();
     expect(config.stagingMode()).to.be.false();
+    expect(config.mongodbPrefix()).to.equal('');
   });
 
   it('sets variables from the environment', () => {
@@ -54,6 +55,7 @@ describe('config', () => {
       CONTENT_CONTAINER: 'the-content-container',
       ASSET_CONTAINER: 'the-asset-container',
       MONGODB_URL: 'mongodb-url',
+      MONGODB_PREFIX: 'foo-',
       CONTENT_LOG_LEVEL: 'debug',
       PROXY_UPSTREAM: 'https://upstream.horse:9000/',
       STAGING_MODE: 'true'
@@ -68,6 +70,7 @@ describe('config', () => {
     expect(config.contentContainer()).to.equal('the-content-container');
     expect(config.assetContainer()).to.equal('the-asset-container');
     expect(config.mongodbURL()).to.equal('mongodb-url');
+    expect(config.mongodbPrefix()).to.equal('foo-');
     expect(config.contentLogLevel()).to.equal('debug');
     expect(config.proxyUpstream()).to.equal('https://upstream.horse:9000/');
     expect(config.stagingMode()).to.equal(true);

@@ -105,7 +105,7 @@ exports.retrieve = function (req, res, next) {
   };
 
   let downloadUpstreamContent = (callback) => {
-    let upstreamContentID = removeRevisionID(contentID);
+    let upstreamContentID = config.stagingMode() ? removeRevisionID(contentID) : contentID;
     let url = urljoin(config.proxyUpstream(), 'content', encodeURIComponent(upstreamContentID));
 
     log.debug({

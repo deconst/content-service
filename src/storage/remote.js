@@ -91,7 +91,7 @@ RemoteStorage.prototype.storeAsset = function (asset, callback) {
  * same name if present.
  */
 RemoteStorage.prototype.nameAsset = function (asset, callback) {
-  connection.db.collection('layoutAssets').updateOne({
+  mongoCollection('layoutAssets').updateOne({
     key: asset.key
   }, {
     $set: {
@@ -111,7 +111,7 @@ RemoteStorage.prototype.nameAsset = function (asset, callback) {
  * @description List all assets that have been persisted in Mongo with nameAsset.
  */
 RemoteStorage.prototype.findNamedAssets = function (callback) {
-  connection.db.collection('layoutAssets').find().toArray(callback);
+  mongoCollection('layoutAssets').find().toArray(callback);
 };
 
 /**
@@ -154,14 +154,14 @@ RemoteStorage.prototype.getAsset = function (filename, callback) {
  * @description Store a newly generated API key in the keys collection.
  */
 RemoteStorage.prototype.storeKey = function (key, callback) {
-  connection.db.collection('apiKeys').insertOne(key, callback);
+  mongoCollection('apiKeys').insertOne(key, callback);
 };
 
 /**
  * @description Forget a previously stored API key by key value.
  */
 RemoteStorage.prototype.deleteKey = function (apikey, callback) {
-  connection.db.collection('apiKeys').deleteOne({
+  mongoCollection('apiKeys').deleteOne({
     apikey: apikey
   }, callback);
 };
@@ -171,7 +171,7 @@ RemoteStorage.prototype.deleteKey = function (apikey, callback) {
  *   return either zero or one results, but you never know.
  */
 RemoteStorage.prototype.findKeys = function (apikey, callback) {
-  connection.db.collection('apiKeys').find({
+  mongoCollection('apiKeys').find({
     apikey: apikey
   }).toArray(callback);
 };
@@ -373,7 +373,7 @@ RemoteStorage.prototype.unindexContent = function (contentID, callback) {
 };
 
 RemoteStorage.prototype.storeSHA = function (sha, callback) {
-  connection.db.collection('sha').updateOne({
+  mongoCollection('sha').updateOne({
     key: 'controlRepository'
   }, {
     $set: {
@@ -386,7 +386,7 @@ RemoteStorage.prototype.storeSHA = function (sha, callback) {
 };
 
 RemoteStorage.prototype.getSHA = function (callback) {
-  connection.db.collection('sha').findOne({key: 'controlRepository'}, function (err, doc) {
+  mongoCollection('sha').findOne({key: 'controlRepository'}, function (err, doc) {
     if (err) {
       return callback(err);
     }
@@ -398,6 +398,10 @@ RemoteStorage.prototype.getSHA = function (callback) {
     callback(null, doc.sha);
   });
 };
+
+function mongoCollection (name) {
+  return connection.db.collection(config.mongodbPrefix() + name);
+}
 
 module.exports = {
   RemoteStorage: RemoteStorage

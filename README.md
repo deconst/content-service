@@ -40,6 +40,7 @@ The content service is configured by passing environment variables to the Docker
  * `CONTENT_CONTAINER`: **(required if STORAGE=remote)** Container name to use for the stored metadata envelopes.
  * `ASSET_CONTAINER`: **(required if STORAGE=remote)** Container name to use for published assets.
  * `MONGODB_URL`: **(required if STORAGE=remote)** MongoDB connection string, including any required authentication information.
+ * `MONGODB_PREFIX`: **(default: `""`)** Prefix used to partition MongoDB collection names from other services using the same MongoDB database.
  * `ELASTICSEARCH_HOST`: **(required if STORAGE=remote)** Elasticsearch connection string, including any required authentication information.
 
 ### Staging

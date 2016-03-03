@@ -1,3 +1,4 @@
+'use strict';
 /* global describe it afterEach */
 
 /*
@@ -6,17 +7,16 @@
 
 require('./helpers/before');
 
-var chai = require('chai');
-var dirtyChai = require('dirty-chai');
-
+const chai = require('chai');
+const dirtyChai = require('dirty-chai');
 chai.use(dirtyChai);
-var expect = chai.expect;
+const expect = chai.expect;
 
-var before = require('./helpers/before');
-var config = require('../src/config');
+const before = require('./helpers/before');
+const config = require('../src/config');
 
-describe('config', function () {
-  it('sets variables from the environment', function () {
+describe('config', () => {
+  it('sets variables from the environment', () => {
     config.configure({
       STORAGE: 'memory',
       RACKSPACE_USERNAME: 'me',
@@ -27,7 +27,8 @@ describe('config', function () {
       CONTENT_CONTAINER: 'the-content-container',
       ASSET_CONTAINER: 'the-asset-container',
       MONGODB_URL: 'mongodb-url',
-      CONTENT_LOG_LEVEL: 'debug'
+      CONTENT_LOG_LEVEL: 'debug',
+      PROXY_UPSTREAM: 'https://upstream.horse:9000/'
     });
 
     expect(config.storage()).to.equal('memory');
@@ -40,6 +41,7 @@ describe('config', function () {
     expect(config.assetContainer()).to.equal('the-asset-container');
     expect(config.mongodbURL()).to.equal('mongodb-url');
     expect(config.contentLogLevel()).to.equal('debug');
+    expect(config.proxyUpstream()).to.equal('https://upstream.horse:9000/');
   });
 
   afterEach(before.reconfigure);

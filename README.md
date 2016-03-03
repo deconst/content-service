@@ -42,9 +42,10 @@ The content service is configured by passing environment variables to the Docker
  * `MONGODB_URL`: **(required if STORAGE=remote)** MongoDB connection string, including any required authentication information.
  * `ELASTICSEARCH_HOST`: **(required if STORAGE=remote)** Elasticsearch connection string, including any required authentication information.
 
-### Proxy
+### Staging
 
- * `PROXY_UPSTREAM`: *(optional)* If a URL is specified, content not found in this content store will be requested from an upstream content store API. Named assets will be accumulated from the upstream content store and this service, with named assets from this service taking precedence.
+ * `STAGING_MODE`: *(default: `"false"`)* Act as a staging store, to stage many revisions of content simultaneously. When staging mode is active, proxied content IDs will have their first URL path segment, the revision ID, removed when making the upstream request.
+ * `PROXY_UPSTREAM`: *(required if STAGING_MODE=true)* If a URL is specified, content not found in this content store will be requested from an upstream content store API. Named assets will be accumulated from the upstream content store and this service, with named assets from this service taking precedence.
 
 ### Logging
 

@@ -1,10 +1,11 @@
+'use strict';
 // Read configuration from the environment, reporting anything that's missing.
 
-var childProcess = require('child_process');
-var _ = require('lodash');
-var info = require('../package.json');
+const childProcess = require('child_process');
+const _ = require('lodash');
+const info = require('../package.json');
 
-var configuration = {
+const configuration = {
   storage: {
     env: 'STORAGE',
     def: 'remote'
@@ -48,10 +49,14 @@ var configuration = {
   proxyUpstream: {
     env: 'PROXY_UPSTREAM',
     def: null
+  },
+  stagingMode: {
+    env: 'STAGING_MODE',
+    def: 'false'
   }
 };
 
-var commit = childProcess.execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+const commit = childProcess.execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
 
 /**
  * @description Create a getter function for the named function.
@@ -62,12 +67,28 @@ function makeGetter (settingName) {
   };
 }
 
-exports.configure = function (env) {
-  var missing = [];
+function interpretAsBoolean (settingName) {
+  const v = configuration[settingName].value;
+  if (v !== null && v !== undefined && v !== '' && v !== 'true' && v !== 'false') {
+    console.error(`The boolean property ${configuration[settingName].env} does not have a correct value!`);
+    console.error('Boolean configuration settings must be either:');
+    console.error('* Omitted entirely');
+    console.error('* Blank');
+    console.error('* One of the strings "true" or "false"');
+    console.error(`This setting is currently: "${v}"`);
 
-  for (var name in configuration) {
-    var setting = configuration[name];
-    var value = env[setting.env];
+    throw new Error('Unrecognized boolean value');
+  }
+
+  configuration[settingName].value = v === 'true';
+}
+
+exports.configure = function (env) {
+  let missing = [];
+
+  for (let name in configuration) {
+    let setting = configuration[name];
+    let value = env[setting.env];
 
     setting.value = value || setting.def;
 
@@ -87,9 +108,10 @@ exports.configure = function (env) {
       'MONGODB_URL', 'ELASTICSEARCH_HOST');
   }
 
-  // Normalize rackspaceServiceNet and contentLogColor as booleans.
-  configuration.rackspaceServiceNet.value = (configuration.rackspaceServiceNet.value === 'true');
-  configuration.contentLogColor.value = (configuration.contentLogColor.value === 'true');
+  // Normalize rackspaceServiceNet, contentLogColor, and stagingMode as booleans.
+  interpretAsBoolean('rackspaceServiceNet');
+  interpretAsBoolean('contentLogColor');
+  interpretAsBoolean('stagingMode');
 
   if (missing.length !== 0) {
     console.error('Required configuration values are missing!');
@@ -106,6 +128,13 @@ exports.configure = function (env) {
   // Ensure that STORAGE is a recognized value.
   if (configuration.storage.value !== 'remote' && configuration.storage.value !== 'memory') {
     console.error('STORAGE must be either "remote" or "memory".');
+
+    throw new Error('Invalid configuration');
+  }
+
+  // Ensure that PROXY_UPSTREAM is provided if STAGING_MODE is.
+  if (configuration.stagingMode.value && !configuration.proxyUpstream.value) {
+    console.error('PROXY_UPSTREAM must be set when STAGING_MODE is enabled.');
 
     throw new Error('Invalid configuration');
   }

@@ -1,6 +1,7 @@
 'use strict';
 // Store, retrieve, and delete metadata envelopes.
 
+const url = require('url');
 const async = require('async');
 const request = require('request');
 const urljoin = require('urljoin');
@@ -104,11 +105,13 @@ exports.retrieve = function (req, res, next) {
   };
 
   let downloadUpstreamContent = (callback) => {
-    let url = urljoin(config.proxyUpstream(), 'content', encodeURIComponent(contentID));
+    let upstreamContentID = removeRevisionID(contentID);
+    let url = urljoin(config.proxyUpstream(), 'content', encodeURIComponent(upstreamContentID));
 
     log.debug({
       action: 'contentretrieve',
       contentID,
+      upstreamContentID,
       upstreamURL: url,
       message: 'Making upstream content request.'
     });
@@ -120,6 +123,7 @@ exports.retrieve = function (req, res, next) {
         log.debug({
           action: 'contentretrieve',
           contentID,
+          upstreamContentID,
           upstreamURL: url,
           message: 'Content not found in upstream.'
         });
@@ -135,6 +139,7 @@ exports.retrieve = function (req, res, next) {
         log.error({
           action: 'contentretrieve',
           contentID,
+          upstreamContentID,
           upstreamURL: url,
           statusCode: response.statusCode,
           message: 'Upstream content request error'
@@ -150,6 +155,7 @@ exports.retrieve = function (req, res, next) {
       log.debug({
         action: 'contentretrieve',
         contentID,
+        upstreamContentID,
         upstreamURL: url,
         message: 'Upstream content request successful.'
       });
@@ -299,4 +305,15 @@ exports.delete = function (req, res, next) {
 
     next();
   });
+};
+
+// Remove the revision ID from the first path segment of the contentID.
+let removeRevisionID = function (contentID) {
+  let asURL = url.parse(contentID);
+
+  let pathSegments = asURL.pathname.split('/');
+  pathSegments.splice(1, 1);
+  asURL.pathname = pathSegments.join('/');
+
+  return url.format(asURL);
 };

@@ -35,6 +35,10 @@ const configuration = {
   mongodbURL: {
     env: 'MONGODB_URL'
   },
+  mongodbPrefix: {
+    env: 'MONGODB_PREFIX',
+    def: ''
+  },
   elasticsearchHost: {
     env: 'ELASTICSEARCH_HOST'
   },

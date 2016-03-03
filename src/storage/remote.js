@@ -400,7 +400,7 @@ RemoteStorage.prototype.getSHA = function (callback) {
 };
 
 function mongoCollection (name) {
-  return connection.db.collection(config.mongodbPrefix + name);
+  return connection.db.collection(config.mongodbPrefix() + name);
 }
 
 module.exports = {

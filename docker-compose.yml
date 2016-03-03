@@ -24,11 +24,13 @@ content:
     ADMIN_APIKEY:
     CONTENT_CONTAINER:
     ASSET_CONTAINER:
+    MONGODB_PREFIX:
     MONGODB_URL: mongodb://mongo:27017/content
     ELASTICSEARCH_HOST: http://elasticsearch:9200/
     CONTENT_LOG_LEVEL:
     CONTENT_LOG_COLOR:
     PROXY_UPSTREAM:
+    STAGING_MODE:
   volumes:
   - ".:/usr/src/app"
   command: script/inside/dev

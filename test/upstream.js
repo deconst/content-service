@@ -169,7 +169,24 @@ describe('upstream', () => {
         }, done);
     });
 
-    it('merges assets from upstream and local, preferring local');
+    it('merges assets from upstream and local, preferring local', (done) => {
+      nock('https://upstream')
+        .get('/assets').reply(200, {
+          'only-upstream': 'https://assets.horse/up/only-upstream-123123.jpg',
+          'both': 'https://assets.horse/up/both-321321.jpg'
+        });
+
+      request(server.create())
+        .get('/assets')
+        .set('Accept', 'application/json')
+        .expect(200)
+        .expect('Content-Type', 'application/json')
+        .expect({
+          'only-upstream': 'https://assets.horse/up/only-upstream-123123.jpg',
+          'only-local': '/__local_asset__/only-local-123123.jpg',
+          'both': '/__local_asset__/both-456456.jpg'
+        }, done);
+    });
   });
 
   afterEach(before.reconfigure);

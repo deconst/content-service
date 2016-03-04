@@ -1,11 +1,16 @@
+'use strict';
 // Handler functions for the /assets endpoint.
 
-var async = require('async');
-var fs = require('fs');
-var path = require('path');
-var crypto = require('crypto');
-var storage = require('../storage');
-var log = require('../logging').getLogger();
+const async = require('async');
+const fs = require('fs');
+const path = require('path');
+const request = require('request');
+const crypto = require('crypto');
+const urljoin = require('urljoin');
+const _ = require('lodash');
+const config = require('../config');
+const storage = require('../storage');
+const log = require('../logging').getLogger();
 
 /**
  * @description Calculate a checksum of an uploaded file's contents to generate
@@ -223,6 +228,34 @@ exports.list = function (req, res, next) {
         stack: err.stack
       });
       return next(err);
+    }
+
+    if (config.proxyUpstream()) {
+      let url = urljoin(config.proxyUpstream(), 'assets');
+      log.debug('Requesting upstream assets', {
+        upstreamURL: url
+      });
+
+      request({ url, json: true }, (err, response, body) => {
+        if (err || response.statusCode !== 200) {
+          log.error('Unable to retrieve upstream assets.', {
+            action: 'assetlist',
+            statusCode: response.statusCode,
+            error: err ? err.message : null,
+            stack: err ? err.stack : null
+          });
+
+          let e = new Error('Unable to retrieve upstream assets.');
+          e.statusCode = 502;
+          return next(e);
+        }
+
+        assets = _.merge(body, assets);
+
+        res.send(assets);
+        next();
+      });
+      return;
     }
 
     res.send(assets);

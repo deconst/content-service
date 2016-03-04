@@ -168,6 +168,8 @@ describe('upstream', () => {
           envelope: { body: 'remote' }
         }, done);
     });
+
+    it('merges assets from upstream and local, preferring local');
   });
 
   afterEach(before.reconfigure);

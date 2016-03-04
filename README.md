@@ -132,8 +132,9 @@ Access previously stored content by its URL-encoded *content ID*.
 
 ```json
 {
-  "assets": {},
-  "envelope": {}
+  "envelope": {
+    body: "<h1>The content... </h1>"
+  }
 }
 ```
 

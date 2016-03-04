@@ -28,9 +28,6 @@ describe('upstream', () => {
     beforeEach((done) => storage.storeContent('local', { body: 'local' }, done));
 
     it('returns local content the same', (done) => {
-      nock('https://upstream')
-        .get('/assets').reply(200, {});
-
       request(server.create())
         .get('/content/local')
         .set('Accept', 'application/json')
@@ -41,13 +38,7 @@ describe('upstream', () => {
 
     it('queries the upstream content service when content is not found locally', (done) => {
       nock('https://upstream')
-        .get('/content/remote').reply(200, {
-          assets: {
-            'only-upstream': 'https://assets.horse/up/only-upstream-123123.jpg',
-            'both': 'https://assets.horse/up/both-321321.jpg'
-          },
-          envelope: { body: 'remote' }
-        });
+        .get('/content/remote').reply(200, { envelope: { body: 'remote' } });
 
       request(server.create())
         .get('/content/remote')

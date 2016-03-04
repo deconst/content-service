@@ -75,7 +75,7 @@ function ElasticLogs (config) {
   };
 
   this.error = makeLogHandler('error');
-  this.warning = makeLogHandler('warning');
+  this.warning = makeLogHandler('warn');
   this.info = makeLogHandler('info');
   this.debug = makeLogHandler('debug');
 

@@ -127,7 +127,6 @@ describe('/content', function () {
           .expect('Content-Type', 'application/json')
           .expect(200)
           .expect({
-            assets: [],
             envelope: {
               body: 'expected'
             }

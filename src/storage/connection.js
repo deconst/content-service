@@ -108,7 +108,7 @@ function ElasticLogs (config) {
  * Elasticsearch client as "elastic".
  */
 function elasticInit (callback) {
-  if (!config.elasticsearcHost()) {
+  if (!config.elasticsearchHost()) {
     logger.info('Omitting Elasticsearch connection. Search will be unavailable.');
 
     return callback(null);

@@ -40,7 +40,8 @@ const configuration = {
     def: ''
   },
   elasticsearchHost: {
-    env: 'ELASTICSEARCH_HOST'
+    env: 'ELASTICSEARCH_HOST',
+    def: null
   },
   contentLogLevel: {
     env: 'CONTENT_LOG_LEVEL',
@@ -109,7 +110,7 @@ exports.configure = function (env) {
     missing = _.without(missing,
       'RACKSPACE_USERNAME', 'RACKSPACE_APIKEY', 'RACKSPACE_REGION',
       'CONTENT_CONTAINER', 'ASSET_CONTAINER',
-      'MONGODB_URL', 'ELASTICSEARCH_HOST');
+      'MONGODB_URL');
   }
 
   // Normalize rackspaceServiceNet, contentLogColor, and stagingMode as booleans.

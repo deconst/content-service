@@ -34,9 +34,9 @@ describe('config', () => {
     expect(config.contentContainer()).to.be.undefined();
     expect(config.assetContainer()).to.be.undefined();
     expect(config.mongodbURL()).to.be.undefined();
-    expect(config.elasticsearchHost()).to.be.undefined();
 
     expect(config.rackspaceServiceNet()).to.be.false();
+    expect(config.elasticsearchHost()).to.be.null();
     expect(config.contentLogLevel()).to.equal('info');
     expect(config.contentLogColor()).to.be.false();
     expect(config.proxyUpstream()).to.be.null();
@@ -56,6 +56,7 @@ describe('config', () => {
       ASSET_CONTAINER: 'the-asset-container',
       MONGODB_URL: 'mongodb-url',
       MONGODB_PREFIX: 'foo-',
+      ELASTICSEARCH_HOST: 'https://elasticsearch:9200/',
       CONTENT_LOG_LEVEL: 'debug',
       PROXY_UPSTREAM: 'https://upstream.horse:9000/',
       STAGING_MODE: 'true'
@@ -71,6 +72,7 @@ describe('config', () => {
     expect(config.assetContainer()).to.equal('the-asset-container');
     expect(config.mongodbURL()).to.equal('mongodb-url');
     expect(config.mongodbPrefix()).to.equal('foo-');
+    expect(config.elasticsearchHost()).to.equal('https://elasticsearch:9200/');
     expect(config.contentLogLevel()).to.equal('debug');
     expect(config.proxyUpstream()).to.equal('https://upstream.horse:9000/');
     expect(config.stagingMode()).to.equal(true);

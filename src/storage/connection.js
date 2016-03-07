@@ -112,7 +112,9 @@ function elasticInit (callback) {
     host: config.elasticsearchHost(),
     apiVersion: '1.7',
     ssl: { rejectUnauthorized: true }, // Plz no trivial MITM attacks
-    log: ElasticLogs
+    log: ElasticLogs,
+    maxRetries: Infinity,
+    sniffOnStart: true
   });
 
   logger.debug('Connected to Elasticsearch.');

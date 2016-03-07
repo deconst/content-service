@@ -53,7 +53,15 @@ function makeContainerCreator (client, containerName, logicalName, cdn) {
  */
 function mongoInit (callback) {
   mongo.MongoClient.connect(config.mongodbURL(), function (err, db) {
-    if (err) return callback(err);
+    if (err) {
+      logger.warn('Error connecting to MongoDB database. Retrying in five seconds.', {
+        mongodbURL: config.mongodbURL(),
+        err: err.message
+      });
+
+      setTimeout(() => mongoInit(callback), 5000);
+      return;
+    }
 
     logger.debug('Connected to MongoDB database at [' + config.mongodbURL() + '].');
     exports.db = db;

@@ -108,6 +108,12 @@ function ElasticLogs (config) {
  * Elasticsearch client as "elastic".
  */
 function elasticInit (callback) {
+  if (!config.elasticsearcHost()) {
+    logger.info('Omitting Elasticsearch connection. Search will be unavailable.');
+
+    return callback(null);
+  }
+
   var client = new elasticsearch.Client({
     host: config.elasticsearchHost(),
     apiVersion: '1.7',

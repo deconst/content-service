@@ -22,6 +22,8 @@ RemoteStorage.prototype.setup = function (callback) {
   connection.setup((err) => {
     if (err) return callback(err);
 
+    if (!connection.elastic) return callback(null);
+
     // Attempt to create the latch index. If we can, we're responsible for setting up the initial
     // index and alias. Otherwise, another content service is on it.
     connection.elastic.indices.create({ index: 'latch', ignore: 400 }, (err, response, status) => {
@@ -270,6 +272,8 @@ RemoteStorage.prototype.listContent = function (callback) {
 };
 
 RemoteStorage.prototype.createNewIndex = function (indexName, callback) {
+  if (!connection.elastic) return callback(null);
+
   let envelopeMapping = {
     properties: {
       title: { type: 'string', index: 'analyzed' },
@@ -293,6 +297,8 @@ RemoteStorage.prototype.createNewIndex = function (indexName, callback) {
 };
 
 RemoteStorage.prototype._indexContent = function (contentID, envelope, indexName, callback) {
+  if (!connection.elastic) return callback(null);
+
   connection.elastic.index({
     index: indexName,
     type: 'envelope',
@@ -302,6 +308,8 @@ RemoteStorage.prototype._indexContent = function (contentID, envelope, indexName
 };
 
 RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
+  if (!connection.elastic) return callback(null);
+
   connection.elastic.indices.updateAliases({
     body: {
       actions: [
@@ -329,6 +337,15 @@ RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
 };
 
 RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, perPage, callback) {
+  if (!connection.elastic) {
+    return callback(null, {
+      hits: {
+        hits: [],
+        total: 0
+      }
+    });
+  }
+
   var q = {};
 
   if (!categories) {
@@ -358,6 +375,8 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
 };
 
 RemoteStorage.prototype.unindexContent = function (contentID, callback) {
+  if (!connection.elastic) return callback(null);
+
   connection.elastic.delete({
     index: 'envelopes_current',
     type: 'envelope',

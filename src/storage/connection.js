@@ -119,8 +119,7 @@ function elasticInit (callback) {
     apiVersion: '1.7',
     ssl: { rejectUnauthorized: true }, // Plz no trivial MITM attacks
     log: ElasticLogs,
-    maxRetries: Infinity,
-    sniffOnStart: true
+    maxRetries: Infinity
   });
 
   logger.debug('Connected to Elasticsearch.');

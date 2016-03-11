@@ -1,7 +1,10 @@
 // Manage the SHA of the latest control repository commit.
 
 var restify = require('restify');
+var request = require('request');
+var urljoin = require('urljoin');
 
+var config = require('../config');
 var storage = require('../storage');
 var log = require('../logging').getLogger();
 
@@ -27,6 +30,11 @@ exports.store = function (req, res, next) {
 };
 
 exports.retrieve = function (req, res, next) {
+  if (config.proxyUpstream()) {
+    request(urljoin(config.proxyUpstream(), 'control')).pipe(res);
+    return next();
+  }
+
   storage.getSHA(function (err, sha) {
     next.ifError(err);
 

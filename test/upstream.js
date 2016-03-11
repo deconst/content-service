@@ -142,7 +142,16 @@ describe('upstream', () => {
   });
 
   describe('control SHA', () => {
-    it('proxies /control directly to upstream');
+    it('proxies /control directly to upstream', (done) => {
+      nock('https://upstream')
+        .get('/control').reply(200, { sha: '12341234' });
+
+      request(server.create())
+        .get('/control')
+        .set('Accept', 'application/json')
+        .expect(200)
+        .expect({ sha: '12341234' }, done);
+    });
   });
 
   afterEach(before.reconfigure);

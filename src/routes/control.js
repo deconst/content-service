@@ -1,9 +1,13 @@
+'use strict';
 // Manage the SHA of the latest control repository commit.
 
-var restify = require('restify');
+const restify = require('restify');
+const request = require('request');
+const urljoin = require('urljoin');
 
-var storage = require('../storage');
-var log = require('../logging').getLogger();
+const config = require('../config');
+const storage = require('../storage');
+const logger = require('../logging').getLogger();
 
 exports.store = function (req, res, next) {
   if (req.params.sha === undefined) {
@@ -14,12 +18,12 @@ exports.store = function (req, res, next) {
     return next(new restify.InvalidContentError('Not a valid "sha"'));
   }
 
-  storage.storeSHA(req.params.sha, function (err) {
+  storage.storeSHA(req.params.sha, (err) => {
     next.ifError(err);
 
     res.send(204);
 
-    log.info('Stored control repository SHA', {
+    logger.info('Stored control repository SHA', {
       sha: req.params.sha
     });
     next();
@@ -27,7 +31,12 @@ exports.store = function (req, res, next) {
 };
 
 exports.retrieve = function (req, res, next) {
-  storage.getSHA(function (err, sha) {
+  if (config.proxyUpstream()) {
+    request(urljoin(config.proxyUpstream(), 'control')).pipe(res);
+    return next();
+  }
+
+  storage.getSHA((err, sha) => {
     next.ifError(err);
 
     res.json(200, {sha: sha});

@@ -141,5 +141,9 @@ describe('upstream', () => {
     });
   });
 
+  describe('control SHA', () => {
+    it('proxies /control directly to upstream');
+  });
+
   afterEach(before.reconfigure);
 });

@@ -167,7 +167,7 @@ exports.retrieve = function (req, res, next) {
       var message = 'Unable to retrieve content.';
       if (err.statusCode && err.statusCode === 404) {
         message = `No content for ID [${contentID}]`;
-        err.stack = null;
+        delete err.stack;
       }
 
       log.error({

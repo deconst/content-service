@@ -46,6 +46,22 @@ describe('/search', function () {
       }, done);
   });
 
+  it('returns a body excerpt when a match is only in the title', function (done) {
+    request(server.create())
+      .get('/search?q=second')
+      .expect(200)
+      .expect({
+        total: 1,
+        results: [
+          {
+            contentID: 'foo/bbb',
+            title: 'second',
+            excerpt: 'all bbb'
+          }
+        ]
+      }, done);
+  });
+
   it('responds with a 409 if no query is provided', function (done) {
     request(server.create())
       .get('/search')

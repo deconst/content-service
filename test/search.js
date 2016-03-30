@@ -46,6 +46,8 @@ describe('/search', function () {
       }, done);
   });
 
+  it('returns an empty excerpt when a match is only in the title');
+
   it('responds with a 409 if no query is provided', function (done) {
     request(server.create())
       .get('/search')

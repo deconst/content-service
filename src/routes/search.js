@@ -53,7 +53,7 @@ exports.query = function (req, res, next) {
         title: each._source.title
       };
 
-      if (each.highlight.body.length > 0) {
+      if (each.highlight && each.highlight.body.length > 0) {
         transformed.excerpt = each.highlight.body[0];
       } else {
         transformed.excerpt = each._source.body.substr(0, 150);

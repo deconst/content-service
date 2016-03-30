@@ -46,7 +46,7 @@ describe('/search', function () {
       }, done);
   });
 
-  it('returns an empty excerpt when a match is only in the title', function (done) {
+  it('returns a body excerpt when a match is only in the title', function (done) {
     request(server.create())
       .get('/search?q=second')
       .expect(200)
@@ -56,7 +56,7 @@ describe('/search', function () {
           {
             contentID: 'foo/bbb',
             title: 'second',
-            excerpt: ''
+            excerpt: 'all bbb'
           }
         ]
       }, done);

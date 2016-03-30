@@ -122,11 +122,23 @@ function elasticInit (callback) {
     maxRetries: Infinity
   });
 
-  logger.debug('Connected to Elasticsearch.');
+  client.ping(function (err) {
+    if (err) {
+      logger.warn('Unable to connect to Elasticsearch. Retrying in five seconds.', {
+        elasticsearchHost: config.elasticsearchHost(),
+        err: err.message
+      });
 
-  exports.elastic = client;
+      setTimeout(() => elasticInit(callback), 5000);
+      return;
+    }
 
-  callback(null);
+    logger.debug('Connected to Elasticsearch.');
+
+    exports.elastic = client;
+
+    callback(null);
+  });
 }
 
 exports.setup = function (callback) {

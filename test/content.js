@@ -190,51 +190,51 @@ describe('/content', function () {
         });
     });
   });
+});
 
-  describe('/bulk', function () {
-    it.only('uploads all envelopes from a tarball', function (done) {
-      const envelopes = getRawBody(targz().createReadStream(path.join(__dirname, 'fixtures', 'envelopes')));
+describe('/bulkcontent', function () {
+  it('uploads all envelopes from a tarball', function (done) {
+    const envelopes = getRawBody(targz().createReadStream(path.join(__dirname, 'fixtures', 'envelopes')));
 
-      async.series([
-        (cb) => {
-          request(server.create())
-            .post('/content/bulk')
-            .set('Authorization', authHelper.AUTH_USER)
-            .send(envelopes)
-            .expect(204)
-            .end(cb);
-        },
-        (cb) => {
-          storage.getContent('https://github.com/some/repository/one', (err, c) => {
-            if (err) return cb(err);
+    async.series([
+      (cb) => {
+        request(server.create())
+          .post('/bulkcontent')
+          .set('Authorization', authHelper.AUTH_USER)
+          .send(envelopes)
+          .expect(204)
+          .end(cb);
+      },
+      (cb) => {
+        storage.getContent('https://github.com/some/repository/one', (err, c) => {
+          if (err) return cb(err);
 
-            expect(c).to.deep.equal({
-              title: 'One',
-              body: 'Document one'
-            });
-
-            cb();
+          expect(c).to.deep.equal({
+            title: 'One',
+            body: 'Document one'
           });
-        },
-        (cb) => {
-          storage.getContent('https://github.com/some/repository/two', (err, c) => {
-            if (err) return cb(err);
 
-            expect(c).to.deep.equal({
-              title: 'Two',
-              body: 'Document two'
-            });
+          cb();
+        });
+      },
+      (cb) => {
+        storage.getContent('https://github.com/some/repository/two', (err, c) => {
+          if (err) return cb(err);
 
-            cb();
+          expect(c).to.deep.equal({
+            title: 'Two',
+            body: 'Document two'
           });
-        }
-      ], done);
-    });
 
-    it('fails unless .metadata/config.json exists');
-
-    it('deletes all other envelopes that share a groupID');
-
-    it('accepts .metadata/toc.html as a TOC for all envelopes');
+          cb();
+        });
+      }
+    ], done);
   });
+
+  it('fails unless .metadata/config.json exists');
+
+  it('deletes all other envelopes that share a groupID');
+
+  it('accepts .metadata/toc.html as a TOC for all envelopes');
 });

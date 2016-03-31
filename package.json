@@ -18,6 +18,7 @@
     "pkgcloud": "1.1.0",
     "request": "^2.69.0",
     "restify": "4.0.0",
+    "tar.gz": "1.0.3",
     "urljoin": "^0.1.5",
     "winston": "0.9.0"
   },
@@ -26,6 +27,7 @@
     "dirty-chai": "^1.2.2",
     "mocha": "^2.2.4",
     "nock": "^7.2.2",
+    "raw-body": "2.1.6",
     "semistandard": "^7.0.3",
     "supertest": "^0.15.0"
   }

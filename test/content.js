@@ -1,3 +1,4 @@
+'use strict';
 /* global describe it beforeEach */
 
 /*
@@ -6,17 +7,21 @@
 
 require('./helpers/before');
 
-var chai = require('chai');
-var dirtyChai = require('dirty-chai');
+const chai = require('chai');
+const dirtyChai = require('dirty-chai');
 
 chai.use(dirtyChai);
-var expect = chai.expect;
+const expect = chai.expect;
 
-var request = require('supertest');
-var storage = require('../src/storage');
-var authHelper = require('./helpers/auth');
-var resetHelper = require('./helpers/reset');
-var server = require('../src/server');
+const async = require('async');
+const targz = require('tar.gz');
+const getRawBody = require('raw-body');
+const path = require('path');
+const request = require('supertest');
+const storage = require('../src/storage');
+const authHelper = require('./helpers/auth');
+const resetHelper = require('./helpers/reset');
+const server = require('../src/server');
 
 describe('/content', function () {
   beforeEach(resetHelper);
@@ -187,7 +192,44 @@ describe('/content', function () {
   });
 
   describe('/bulk', function () {
-    it('uploads all envelopes from a tarball');
+    it.only('uploads all envelopes from a tarball', function (done) {
+      const envelopes = getRawBody(targz().createReadStream(path.join(__dirname, 'fixtures', 'envelopes')));
+
+      async.series([
+        (cb) => {
+          request(server.create())
+            .post('/content/bulk')
+            .set('Authorization', authHelper.AUTH_USER)
+            .send(envelopes)
+            .expect(204)
+            .end(cb);
+        },
+        (cb) => {
+          storage.getContent('https://github.com/some/repository/one', (err, c) => {
+            if (err) return cb(err);
+
+            expect(c).to.deep.equal({
+              title: 'One',
+              body: 'Document one'
+            });
+
+            cb();
+          });
+        },
+        (cb) => {
+          storage.getContent('https://github.com/some/repository/two', (err, c) => {
+            if (err) return cb(err);
+
+            expect(c).to.deep.equal({
+              title: 'Two',
+              body: 'Document two'
+            });
+
+            cb();
+          });
+        }
+      ], done);
+    });
 
     it('fails unless .metadata/config.json exists');
 

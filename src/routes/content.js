@@ -69,6 +69,15 @@ exports.store = function (req, res, next) {
 };
 
 /**
+ * @description Store new content into the content store from an uploaded tarball.
+ */
+exports.bulk = function (req, res, next) {
+  res.send(204);
+
+  next();
+};
+
+/**
  * @description Retrieve content from the store by content ID. If PROXY_UPSTREAM is set, make a
  * request to the configured upstream content service's API.
  */

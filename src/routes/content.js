@@ -5,6 +5,7 @@ const url = require('url');
 const async = require('async');
 const request = require('request');
 const urljoin = require('urljoin');
+const targz = require('tar.gz');
 const storage = require('../storage');
 const config = require('../config');
 const log = require('../logging').getLogger();
@@ -72,9 +73,30 @@ exports.store = function (req, res, next) {
  * @description Store new content into the content store from an uploaded tarball.
  */
 exports.bulk = function (req, res, next) {
-  res.send(204);
+  const parse = targz().createParseStream();
 
-  next();
+  parse.on('entry', (entry) => {
+    log.debug('Received tar entry', entry);
+  });
+
+  parse.on('end', () => {
+    res.send(204);
+
+    next();
+  });
+
+  parse.on('error', (err) => {
+    log.info('Corrupted tarball uploaded', {
+      err: err.message,
+      stack: err.stack
+    });
+
+    res.send(400, err);
+
+    next();
+  });
+
+  req.pipe(parse);
 };
 
 /**

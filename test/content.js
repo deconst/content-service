@@ -185,4 +185,14 @@ describe('/content', function () {
         });
     });
   });
+
+  describe('/bulk', function () {
+    it('uploads all envelopes from a tarball');
+
+    it('fails unless .metadata/config.json exists');
+
+    it('deletes all other envelopes that share a groupID');
+
+    it('accepts .metadata/toc.html as a TOC for all envelopes');
+  });
 });

@@ -193,6 +193,8 @@ describe('/content', function () {
 });
 
 describe('/bulkcontent', function () {
+  beforeEach(resetHelper);
+
   it('uploads all envelopes from a tarball', function (done) {
     const envelopes = getRawBody(targz().createReadStream(path.join(__dirname, 'fixtures', 'envelopes')));
 

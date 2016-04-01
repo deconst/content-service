@@ -76,13 +76,9 @@ exports.bulk = function (req, res, next) {
   const parse = targz().createParseStream();
 
   parse.on('entry', (entry) => {
-    log.debug('Received tar entry', entry);
-  });
+    if (entry.type !== 'File') return;
 
-  parse.on('end', () => {
-    res.send(204);
-
-    next();
+    log.debug('Received entry for path', { path: entry.path });
   });
 
   parse.on('error', (err) => {
@@ -93,6 +89,11 @@ exports.bulk = function (req, res, next) {
 
     res.send(400, err);
 
+    next();
+  });
+
+  parse.on('end', () => {
+    res.send(204);
     next();
   });
 

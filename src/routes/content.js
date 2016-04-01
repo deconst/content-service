@@ -93,6 +93,8 @@ exports.bulk = function (req, res, next) {
   });
 
   parse.on('end', () => {
+    log.debug('Tarball completed.');
+
     res.send(204);
     next();
   });

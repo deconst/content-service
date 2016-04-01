@@ -207,13 +207,14 @@ describe('/bulkcontent', function () {
         });
       },
       (cb) => {
-        request(server.create())
+        let r = request(server.create())
           .post('/bulkcontent')
           .set('Authorization', authHelper.AUTH_USER)
-          .set('Content-Type', 'application/tar+gzip')
-          .send(envelopes)
-          .expect(204)
-          .end(cb);
+          .set('Content-Type', 'application/tar+gzip');
+
+        r.write(envelopes);
+
+        r.expect(204).end(cb);
       },
       (cb) => {
         storage.getContent('https://github.com/some/repository/one', (err, c) => {

@@ -196,13 +196,21 @@ describe('/bulkcontent', function () {
   beforeEach(resetHelper);
 
   it('uploads all envelopes from a tarball', function (done) {
-    const envelopes = getRawBody(targz().createReadStream(path.join(__dirname, 'fixtures', 'envelopes')));
+    let envelopes = null;
 
     async.series([
+      (cb) => {
+        let tarball = targz().createReadStream(path.join(__dirname, 'fixtures', 'envelopes'));
+        getRawBody(tarball, (err, b) => {
+          envelopes = b;
+          cb(err);
+        });
+      },
       (cb) => {
         request(server.create())
           .post('/bulkcontent')
           .set('Authorization', authHelper.AUTH_USER)
+          .set('Content-Type', 'application/tar+gzip')
           .send(envelopes)
           .expect(204)
           .end(cb);

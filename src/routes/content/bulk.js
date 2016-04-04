@@ -73,12 +73,12 @@ exports.handler = function (req, res, next) {
   };
 
   const handleEnvelopeEntry = (entry) => {
+    let encodedContentID = path.basename(entry.path, '.json');
+    let contentID = decodeURIComponent(encodedContentID);
+    toKeep[contentID] = true;
+
     jsonFromStream(entry, (err, envelope) => {
       if (err) return reportError(err, entry.path, 'parsing metadata envelope');
-
-      let encodedContentID = path.basename(entry.path, '.json');
-      let contentID = decodeURIComponent(encodedContentID);
-      toKeep[contentID] = true;
 
       // TODO validate envelope contents against a schema
 

@@ -7,7 +7,7 @@ const logger = require('../../logging').getLogger();
 /**
  * @description Store new content into the content service.
  */
-module.exports = function (req, res, next) {
+exports.handler = function (req, res, next) {
   var reqStart = Date.now();
   var contentID = req.params.id;
   var envelope = req.body;
@@ -19,20 +19,7 @@ module.exports = function (req, res, next) {
     message: 'Content storage request received.'
   });
 
-  // Store the envelope in the primary key-value storage engine.
-  var kvStore = function (cb) {
-    storage.storeContent(contentID, envelope, cb);
-  };
-
-  // Index the envelope in the full text search storage engine.
-  var ftsStore = function (cb) {
-    storage.indexContent(contentID, envelope, cb);
-  };
-
-  async.parallel([
-    kvStore,
-    ftsStore
-  ], function (err) {
+  storeEnvelope(contentID, envelope, (err) => {
     if (err) {
       logger.error({
         action: 'contentstore',
@@ -62,3 +49,19 @@ module.exports = function (req, res, next) {
     next();
   });
 };
+
+const storeEnvelope = function (contentID, envelope, callback) {
+  // Store the envelope in the primary key-value storage engine.
+  const kvStore = function (cb) {
+    storage.storeContent(contentID, envelope, cb);
+  };
+
+  // Index the envelope in the full text search storage engine.
+  const ftsStore = function (cb) {
+    storage.indexContent(contentID, envelope, cb);
+  };
+
+  async.parallel([kvStore, ftsStore], callback);
+};
+
+exports.storeEnvelope = storeEnvelope;

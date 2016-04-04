@@ -4,7 +4,7 @@ const async = require('async');
 const storage = require('../../storage');
 const logger = require('../../logging').getLogger();
 
-module.exports = function (req, res, next) {
+exports.handler = function (req, res, next) {
   var contentID = req.params.id;
   logger.debug('Content deletion request received.', {
     action: 'content delete',

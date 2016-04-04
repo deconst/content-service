@@ -11,7 +11,7 @@ const logger = require('../../logging').getLogger();
  * @description Retrieve content from the store by content ID. If PROXY_UPSTREAM is set, make a
  * request to the configured upstream content service's API.
  */
-module.exports = function (req, res, next) {
+exports.handler = function (req, res, next) {
   let reqStart = Date.now();
   let contentID = req.params.id;
 

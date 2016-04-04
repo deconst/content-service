@@ -14,18 +14,7 @@ exports.handler = function (req, res, next) {
 
   var reqStart = Date.now();
 
-  var kvDelete = function (cb) {
-    storage.deleteContent(contentID, cb);
-  };
-
-  var ftsDelete = function (cb) {
-    storage.unindexContent(contentID, cb);
-  };
-
-  async.parallel([
-    kvDelete,
-    ftsDelete
-  ], function (err) {
+  removeEnvelope(contentID, function (err) {
     if (err) {
       err.statusCode = err.statusCode || err.status || 500;
 
@@ -53,4 +42,19 @@ exports.handler = function (req, res, next) {
 
     next();
   });
+};
+
+const removeEnvelope = exports.removeEnvelope = function (contentID, callback) {
+  var kvDelete = function (cb) {
+    storage.deleteContent(contentID, cb);
+  };
+
+  var ftsDelete = function (cb) {
+    storage.unindexContent(contentID, cb);
+  };
+
+  async.parallel([
+    kvDelete,
+    ftsDelete
+  ], callback);
 };

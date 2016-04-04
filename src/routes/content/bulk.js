@@ -1,9 +1,12 @@
 'use strict';
 
 const path = require('path');
+const async = require('async');
 const targz = require('tar.gz');
 const logger = require('../../logging').getLogger();
+const storage = require('../../storage');
 const storeEnvelope = require('./store').storeEnvelope;
+const removeEnvelope = require('./remove').removeEnvelope;
 
 /**
  * @description Store new content into the content store from an uploaded tarball.
@@ -13,6 +16,7 @@ exports.handler = function (req, res, next) {
 
   let contentIDBase = null;
   let envelopeCount = 0;
+  let deletionCount = 0;
   let toKeep = {};
 
   // Log an error and optionally report it to the user.
@@ -91,6 +95,42 @@ exports.handler = function (req, res, next) {
     });
   };
 
+  const removeDeletedContent = (cb) => {
+    if (!contentIDBase) {
+      logger.debug('Skipping content deletion.');
+      return cb(null);
+    }
+
+    let existingContentIDs = [];
+
+    storage.listContent(contentIDBase, (err, ids, next) => {
+      if (err) return cb(err);
+
+      if (ids.length > 0) {
+        // Page of content.
+        existingContentIDs = existingContentIDs.concat(ids);
+        next();
+      } else {
+        // All content consumed.
+        let toDelete = existingContentIDs.filter((id) => !toKeep[id]);
+        async.each(toDelete, removeEnvelope, cb);
+      }
+    });
+  };
+
+  const reportCompletion = () => {
+    logger.info('Bulk content upload completed successfully.', {
+      action: 'bulkcontentstore',
+      apikeyName: req.apikeyName,
+      acceptedCount: envelopeCount,
+      deletedCount: deletionCount,
+      totalReqDuration: Date.now() - reqStart
+    });
+
+    res.send(204);
+    next();
+  };
+
   const parse = targz().createParseStream();
 
   parse.on('entry', (entry) => {
@@ -138,10 +178,11 @@ exports.handler = function (req, res, next) {
   });
 
   parse.on('end', () => {
-    logger.debug('Tarball completed.');
+    removeDeletedContent((err) => {
+      if (err) return reportError(err, null, 'deleted content removal', true);
 
-    res.send(204);
-    next();
+      reportCompletion();
+    });
   });
 
   req.pipe(parse);

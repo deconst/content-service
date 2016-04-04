@@ -50,7 +50,7 @@ exports.handler = function (req, res, next) {
   });
 };
 
-const storeEnvelope = function (contentID, envelope, callback) {
+const storeEnvelope = exports.storeEnvelope = function (contentID, envelope, callback) {
   // Store the envelope in the primary key-value storage engine.
   const kvStore = function (cb) {
     storage.storeContent(contentID, envelope, cb);
@@ -63,5 +63,3 @@ const storeEnvelope = function (contentID, envelope, callback) {
 
   async.parallel([kvStore, ftsStore], callback);
 };
-
-exports.storeEnvelope = storeEnvelope;

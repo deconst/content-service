@@ -195,57 +195,88 @@ describe('/content', function () {
 describe('/bulkcontent', function () {
   beforeEach(resetHelper);
 
-  it('uploads all envelopes from a tarball', function (done) {
-    let envelopes = null;
+  const withFixtureTarball = function (fixtureName, andThen) {
+    return (cb) => {
+      let tarball = targz().createReadStream(path.join(__dirname, 'fixtures', fixtureName));
+      getRawBody(tarball, (err, tarball) => {
+        if (err) return cb(err);
 
+        andThen(tarball, cb);
+      });
+    };
+  };
+
+  const storeEnvelope = function (contentID, envelope) {
+    return (cb) => {
+      storage.storeContent(contentID, envelope, cb);
+    };
+  };
+
+  const expectStoredEnvelope = function (contentID, envelope) {
+    return (cb) => {
+      storage.getContent(contentID, (err, c) => {
+        if (err) return cb(err);
+        expect(c).to.deep.equal(envelope);
+        cb();
+      });
+    };
+  };
+
+  const expectNoEnvelope = function (contentID) {
+    return (cb) => {
+      storage.getContent(contentID, (err) => {
+        expect(err).not.to.be.null();
+        expect(err.statusCode).to.equal(404);
+
+        cb(null);
+      });
+    };
+  };
+
+  it('uploads all envelopes from a tarball', function (done) {
     async.series([
-      (cb) => {
-        let tarball = targz().createReadStream(path.join(__dirname, 'fixtures', 'envelopes'));
-        getRawBody(tarball, (err, b) => {
-          envelopes = b;
-          cb(err);
-        });
-      },
-      (cb) => {
+      withFixtureTarball('envelopes', (tarball, cb) => {
         let r = request(server.create())
           .post('/bulkcontent')
           .set('Authorization', authHelper.AUTH_USER)
           .set('Content-Type', 'application/tar+gzip');
 
-        r.write(envelopes);
+        r.write(tarball);
 
         r.expect(204).end(cb);
-      },
-      (cb) => {
-        storage.getContent('https://github.com/some/repository/one', (err, c) => {
-          if (err) return cb(err);
-
-          expect(c).to.deep.equal({
-            title: 'One',
-            body: 'Document one'
-          });
-
-          cb();
-        });
-      },
-      (cb) => {
-        storage.getContent('https://github.com/some/repository/two', (err, c) => {
-          if (err) return cb(err);
-
-          expect(c).to.deep.equal({
-            title: 'Two',
-            body: 'Document two'
-          });
-
-          cb();
-        });
-      }
+      }),
+      expectStoredEnvelope('https://github.com/some/repository/one', {
+        title: 'One',
+        body: 'Document one'
+      }),
+      expectStoredEnvelope('https://github.com/some/repository/two', {
+        title: 'Two',
+        body: 'Document two'
+      })
     ], done);
   });
 
-  it('fails unless .metadata/config.json exists');
+  it('deletes all other envelopes that share a content ID base', function (done) {
+    async.series([
+      storeEnvelope('https://github.com/some/repository/cruft', {
+        title: 'Cruft',
+        body: 'This should be deleted'
+      }),
+      withFixtureTarball('envelopes', (tarball, cb) => {
+        let r = request(server.create())
+          .post('/bulkcontent')
+          .set('Authorization', authHelper.AUTH_USER)
+          .set('Content-Type', 'application/tar+gzip');
 
-  it('deletes all other envelopes that share a groupID');
+        r.write(tarball);
 
-  it('accepts .metadata/toc.html as a TOC for all envelopes');
+        r.expect(204).end(cb);
+      }),
+      expectStoredEnvelope('https://github.com/some/repository/one', {
+        title: 'One',
+        body: 'Document one'
+      }),
+      expectNoEnvelope('https://github.com/some/repository/cruft')
+    ], done);
+  });
 });

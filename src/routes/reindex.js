@@ -51,7 +51,7 @@ function reindex () {
   };
 
   let reindexAllContent = function (callback) {
-    storage.listContent(function (err, contentIDs, next) {
+    storage.listContent(null, function (err, contentIDs, next) {
       if (err) return handleError(err, 'Unable to list content', true);
 
       if (contentIDs.length === 0) {

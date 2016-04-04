@@ -118,8 +118,12 @@ MemoryStorage.prototype.deleteContent = function (contentID, callback) {
   callback();
 };
 
-MemoryStorage.prototype.listContent = function (callback) {
+MemoryStorage.prototype.listContent = function (prefix, callback) {
   var ids = Object.keys(this.envelopes);
+
+  if (prefix) {
+    ids = ids.filter((id) => id.startsWith(prefix));
+  }
 
   callback(null, ids, function () {
     if (ids.length > 0) {

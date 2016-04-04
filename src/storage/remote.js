@@ -235,13 +235,16 @@ RemoteStorage.prototype.deleteContent = function (contentID, callback) {
   });
 };
 
-RemoteStorage.prototype.listContent = function (callback) {
+RemoteStorage.prototype.listContent = function (prefix, callback) {
   var perPage = 10000;
 
   var nextPage = function (marker) {
     var options = { limit: perPage };
     if (marker !== null) {
       options.marker = marker;
+    }
+    if (prefix !== null) {
+      options.prefix = prefix;
     }
 
     connection.client.getFiles(config.contentContainer(), options, function (err, files) {

@@ -6,6 +6,7 @@
 
 const _ = require('lodash');
 const config = require('../../src/config');
+const logging = require('../../src/logging');
 
 function reconfigure (overrides) {
   if (overrides === undefined) {
@@ -36,6 +37,7 @@ function reconfigure (overrides) {
 }
 
 reconfigure({});
+logging.getLogger();
 
 exports.reconfigure = () => reconfigure({});
 

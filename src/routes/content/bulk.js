@@ -16,6 +16,7 @@ exports.handler = function (req, res, next) {
 
   let contentIDBase = null;
   let envelopeCount = 0;
+  let failureCount = 0;
   let deletionCount = 0;
   let toKeep = {};
 
@@ -24,10 +25,29 @@ exports.handler = function (req, res, next) {
       contentID: task.contentID
     });
 
-    storeEnvelope(task.contentID, task.envelope, cb);
+    let storageStart = Date.now();
+
+    storeEnvelope(task.contentID, task.envelope, (err) => {
+      if (err) {
+        failureCount++;
+        reportError(err, null, 'storing metadata envelope');
+        return cb();
+      }
+
+      envelopeCount++;
+
+      logger.debug('Envelope stored successfully', {
+        contentID: task.contentID,
+        envelopeCount,
+        failureCount,
+        storageDuration: Date.now() - storageStart
+      });
+
+      cb();
+    });
   };
 
-  const uploadQueue = async.queue(envelopeWorker, 4);
+  const uploadQueue = async.queue(envelopeWorker, 10);
 
   // Log an error and optionally report it to the user.
   const reportError = (err, entryPath, description, fatal) => {
@@ -88,21 +108,14 @@ exports.handler = function (req, res, next) {
     toKeep[contentID] = true;
 
     jsonFromStream(entry, (err, envelope) => {
-      if (err) return reportError(err, entry.path, 'parsing metadata envelope');
+      if (err) {
+        failureCount++;
+        return reportError(err, entry.path, 'parsing metadata envelope');
+      }
 
       // TODO validate envelope contents against a schema
 
-      uploadQueue.push({ contentID, envelope }, (err) => {
-        if (err) return reportError(err, entry.path, 'storing metadata envelope');
-
-        envelopeCount++;
-
-        logger.debug('Envelope stored successfully', {
-          entryPath: entry.path,
-          contentID,
-          envelopeCount
-        });
-      });
+      uploadQueue.push({ contentID, envelope });
     });
   };
 
@@ -131,7 +144,7 @@ exports.handler = function (req, res, next) {
         removeEnvelopes(toDelete, (err, results) => {
           if (err) return cb(err);
 
-          logger.debug('Envelopes deleted.', results);
+          logger.debug('Envelopes deleted.');
 
           cb();
         });
@@ -144,6 +157,7 @@ exports.handler = function (req, res, next) {
       action: 'bulkcontentstore',
       apikeyName: req.apikeyName,
       acceptedCount: envelopeCount,
+      failedCount: failureCount,
       deletedCount: deletionCount,
       totalReqDuration: Date.now() - reqStart
     });
@@ -201,7 +215,9 @@ exports.handler = function (req, res, next) {
   parse.on('end', () => {
     const finishRequest = () => {
       removeDeletedContent((err) => {
-        if (err) return reportError(err, null, 'deleted content removal', true);
+        if (err) {
+          reportError(err, null, 'deleted content removal', true);
+        }
 
         reportCompletion();
       });

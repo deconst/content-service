@@ -184,7 +184,7 @@ RemoteStorage.prototype._storeContent = function (contentID, content, callback) 
     remote: encodeURIComponent(contentID)
   });
 
-  dest.on('err', callback);
+  dest.on('error', callback);
 
   dest.on('success', function () {
     callback();

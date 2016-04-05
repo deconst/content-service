@@ -45,6 +45,10 @@ exports.handler = function (req, res, next) {
 };
 
 const removeEnvelopes = exports.removeEnvelopes = function (contentIDs, callback) {
+  if (contentIDs.length === 0) {
+    return process.nextTick(callback);
+  }
+
   var kvDelete = function (cb) {
     if (contentIDs.length === 1) {
       storage.deleteContent(contentIDs[0], cb);

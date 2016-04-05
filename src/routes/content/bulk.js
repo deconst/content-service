@@ -201,11 +201,19 @@ exports.handler = function (req, res, next) {
   });
 
   parse.on('end', () => {
-    removeDeletedContent((err) => {
-      if (err) return reportError(err, null, 'deleted content removal', true);
+    const finishRequest = () => {
+      removeDeletedContent((err) => {
+        if (err) return reportError(err, null, 'deleted content removal', true);
 
-      reportCompletion();
-    });
+        reportCompletion();
+      });
+    };
+
+    if (uploadQueue.running()) {
+      uploadQueue.drain = finishRequest;
+    } else {
+      finishRequest();
+    }
   });
 
   req.pipe(parse);

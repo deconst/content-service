@@ -126,9 +126,7 @@ exports.handler = function (req, res, next) {
         let toDelete = existingContentIDs.filter((id) => !toKeep[id]);
         deletionCount = toDelete.length;
 
-        logger.debug('Deleting removed envelopes.', {
-          deletionCount
-        });
+        logger.debug('Deleting removed envelopes.', { deletionCount });
 
         removeEnvelopes(toDelete, (err, results) => {
           if (err) return cb(err);

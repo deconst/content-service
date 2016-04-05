@@ -1,12 +1,11 @@
 'use strict';
 
 const path = require('path');
-const async = require('async');
 const targz = require('tar.gz');
 const logger = require('../../logging').getLogger();
 const storage = require('../../storage');
 const storeEnvelope = require('./store').storeEnvelope;
-const removeEnvelope = require('./remove').removeEnvelope;
+const removeEnvelopes = require('./remove').removeEnvelopes;
 
 /**
  * @description Store new content into the content store from an uploaded tarball.
@@ -113,7 +112,7 @@ exports.handler = function (req, res, next) {
       } else {
         // All content consumed.
         let toDelete = existingContentIDs.filter((id) => !toKeep[id]);
-        async.each(toDelete, removeEnvelope, cb);
+        removeEnvelopes(toDelete, cb);
       }
     });
   };

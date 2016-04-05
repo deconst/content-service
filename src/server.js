@@ -10,6 +10,8 @@ var log = require('./logging').getLogger();
 exports.create = function () {
   var server = restify.createServer();
 
+  server.server.setTimeout(600000);
+
   server.pre(restify.pre.sanitizePath());
 
   server.name = config.info.name;

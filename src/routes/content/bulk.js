@@ -19,6 +19,7 @@ exports.handler = function (req, res, next) {
   let deletionCount = 0;
   let toKeep = {};
 
+  const envelopeWorker = (task, cb) => storeEnvelope(task.contentID, task.envelope, cb);
   const uploadQueue = async.queue(envelopeWorker, 10);
 
   // Log an error and optionally report it to the user.
@@ -95,10 +96,6 @@ exports.handler = function (req, res, next) {
         });
       });
     });
-  };
-
-  const envelopeWorker = (task, cb) => {
-    storeEnvelope(task.contentID, task.envelope, cb);
   };
 
   const removeDeletedContent = (cb) => {

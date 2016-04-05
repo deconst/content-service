@@ -1,5 +1,6 @@
 'use strict';
 
+const async = require('async');
 const path = require('path');
 const targz = require('tar.gz');
 const logger = require('../../logging').getLogger();
@@ -17,6 +18,8 @@ exports.handler = function (req, res, next) {
   let envelopeCount = 0;
   let deletionCount = 0;
   let toKeep = {};
+
+  const uploadQueue = async.queue(envelopeWorker, 10);
 
   // Log an error and optionally report it to the user.
   const reportError = (err, entryPath, description, fatal) => {
@@ -81,7 +84,7 @@ exports.handler = function (req, res, next) {
 
       // TODO validate envelope contents against a schema
 
-      storeEnvelope(contentID, envelope, (err) => {
+      uploadQueue.push({ contentID, envelope }, (err) => {
         if (err) return reportError(err, entry.path, 'storing metadata envelope');
 
         envelopeCount++;
@@ -92,6 +95,10 @@ exports.handler = function (req, res, next) {
         });
       });
     });
+  };
+
+  const envelopeWorker = (task, cb) => {
+    storeEnvelope(task.contentID, task.envelope, cb);
   };
 
   const removeDeletedContent = (cb) => {
@@ -112,6 +119,11 @@ exports.handler = function (req, res, next) {
       } else {
         // All content consumed.
         let toDelete = existingContentIDs.filter((id) => !toKeep[id]);
+
+        logger.debug('Deleting removed envelopes.', {
+          deleteCount: toDelete.length
+        });
+
         removeEnvelopes(toDelete, cb);
       }
     });

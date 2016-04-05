@@ -19,8 +19,15 @@ exports.handler = function (req, res, next) {
   let deletionCount = 0;
   let toKeep = {};
 
-  const envelopeWorker = (task, cb) => storeEnvelope(task.contentID, task.envelope, cb);
-  const uploadQueue = async.queue(envelopeWorker, 10);
+  const envelopeWorker = (task, cb) => {
+    logger.debug('Beginning envelope storage', {
+      contentID: task.contentID
+    });
+
+    storeEnvelope(task.contentID, task.envelope, cb);
+  };
+
+  const uploadQueue = async.queue(envelopeWorker, 4);
 
   // Log an error and optionally report it to the user.
   const reportError = (err, entryPath, description, fatal) => {
@@ -92,6 +99,7 @@ exports.handler = function (req, res, next) {
 
         logger.debug('Envelope stored successfully', {
           entryPath: entry.path,
+          contentID,
           envelopeCount
         });
       });
@@ -116,12 +124,19 @@ exports.handler = function (req, res, next) {
       } else {
         // All content consumed.
         let toDelete = existingContentIDs.filter((id) => !toKeep[id]);
+        deletionCount = toDelete.length;
 
         logger.debug('Deleting removed envelopes.', {
-          deleteCount: toDelete.length
+          deletionCount
         });
 
-        removeEnvelopes(toDelete, cb);
+        removeEnvelopes(toDelete, (err, results) => {
+          if (err) return cb(err);
+
+          logger.debug('Envelopes deleted.', results);
+
+          cb();
+        });
       }
     });
   };

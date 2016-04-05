@@ -236,9 +236,9 @@ RemoteStorage.prototype.deleteContent = function (contentID, callback) {
 };
 
 RemoteStorage.prototype.bulkDeleteContent = function (contentIDs, callback) {
-  const escapedIDs = contentIDs.map((id) => encodeURIComponent(id));
+  const encodedIDs = contentIDs.map((id) => encodeURIComponent(encodeURIComponent(id)));
 
-  connection.client.bulkDelete(config.contentContainer(), escapedIDs, callback);
+  connection.client.bulkDelete(config.contentContainer(), encodedIDs, callback);
 };
 
 RemoteStorage.prototype.listContent = function (prefix, callback) {
@@ -250,7 +250,7 @@ RemoteStorage.prototype.listContent = function (prefix, callback) {
       options.marker = marker;
     }
     if (prefix !== null) {
-      options.prefix = prefix;
+      options.prefix = encodeURIComponent(prefix);
     }
 
     connection.client.getFiles(config.contentContainer(), options, function (err, files) {

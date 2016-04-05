@@ -235,6 +235,12 @@ RemoteStorage.prototype.deleteContent = function (contentID, callback) {
   });
 };
 
+RemoteStorage.prototype.bulkDeleteContent = function (contentIDs, callback) {
+  const escapedIDs = contentIDs.map((id) => encodeURIComponent(id));
+
+  connection.client.bulkDelete(config.contentContainer(), escapedIDs, callback);
+};
+
 RemoteStorage.prototype.listContent = function (prefix, callback) {
   var perPage = 10000;
 
@@ -392,6 +398,16 @@ RemoteStorage.prototype.unindexContent = function (contentID, callback) {
 
     callback(err);
   });
+};
+
+RemoteStorage.prototype.bulkUnindexContent = function (contentIDs, callback) {
+  if (!connection.elastic) return callback(null);
+
+  const actions = contentIDs.map((id) => {
+    return { delete: { _index: 'envelopes_current', _type: 'envelope', _id: id } };
+  });
+
+  connection.elastic.bulk({ body: actions }, callback);
 };
 
 RemoteStorage.prototype.storeSHA = function (sha, callback) {

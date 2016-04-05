@@ -1,4 +1,7 @@
-var _ = require('lodash');
+'use strict';
+
+const _ = require('lodash');
+const async = require('async');
 
 /**
  * @description Storage driver that uses entirely in-memory data structures.
@@ -118,6 +121,10 @@ MemoryStorage.prototype.deleteContent = function (contentID, callback) {
   callback();
 };
 
+MemoryStorage.prototype.bulkDeleteContent = function (contentIDs, callback) {
+  async.each(contentIDs, (id, cb) => this.deleteContent(id, cb), callback);
+};
+
 MemoryStorage.prototype.listContent = function (prefix, callback) {
   var ids = Object.keys(this.envelopes);
 
@@ -187,6 +194,10 @@ MemoryStorage.prototype.unindexContent = function (contentID, callback) {
   });
 
   callback(null);
+};
+
+MemoryStorage.prototype.bulkUnindexContent = function (contentIDs, callback) {
+  async.each(contentIDs, (id, cb) => this.unindexContent(id, cb), callback);
 };
 
 MemoryStorage.prototype.storeSHA = function (sha, callback) {

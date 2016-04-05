@@ -22,12 +22,14 @@ var delegates = exports.delegates = [
   '_storeContent',
   '_getContent',
   'deleteContent',
+  'bulkDeleteContent',
   'listContent',
   'createNewIndex',
   '_indexContent',
   'makeIndexActive',
   'queryContent',
   'unindexContent',
+  'bulkUnindexContent',
   'storeSHA',
   'getSHA'
 ];

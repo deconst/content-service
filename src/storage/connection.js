@@ -163,7 +163,6 @@ exports.setup = function (callback) {
     exports.cloud = cloud;
 
     async.parallel([
-      makeContainerCreator(cloud, config.contentContainer(), 'contentContainer', false),
       makeContainerCreator(cloud, config.assetContainer(), 'assetContainer', true),
       mongoInit,
       elasticInit

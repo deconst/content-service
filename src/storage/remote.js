@@ -21,31 +21,39 @@ exports.RemoteStorage = RemoteStorage;
  * @description Initialize connections to external systems.
  */
 RemoteStorage.prototype.setup = function (callback) {
-  connection.setup((err) => {
-    if (err) return callback(err);
+  const mongoIndices = (cb) => {
+    mongoCollection('envelopes').createIndex({ contentID: 1 }, { unique: true }, cb);
+  };
 
-    if (!connection.elastic) return callback(null);
+  const elasticIndices = (cb) => {
+    if (!connection.elastic) return cb(null);
 
     // Attempt to create the latch index. If we can, we're responsible for setting up the initial
     // index and alias. Otherwise, another content service is on it.
     connection.elastic.indices.create({ index: 'latch', ignore: 400 }, (err, response, status) => {
-      if (err) return callback(err);
+      if (err) return cb(err);
 
       if (status === 400) {
         // The latch index already existed, so another service is creating the search indices.
         // Note that there's a race condition that occurs when a service that *isn't* creating
         // the search indices attempts to store content between the creation of the latch index
         // and the makeIndexActive() call below in the service that is.
-        return callback(null);
+        return cb(null);
       }
 
       let indexName = `envelopes_${Date.now()}`;
       this.createNewIndex(indexName, (err) => {
-        if (err) return callback(err);
+        if (err) return cb(err);
 
-        this.makeIndexActive(indexName, callback);
+        this.makeIndexActive(indexName, cb);
       });
     });
+  };
+
+  connection.setup((err) => {
+    if (err) return callback(err);
+
+    async.parallel([mongoIndices, elasticIndices], callback);
   });
 };
 

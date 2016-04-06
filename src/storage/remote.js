@@ -180,14 +180,9 @@ RemoteStorage.prototype.findKeys = function (apikey, callback) {
   }).toArray(callback);
 };
 
-RemoteStorage.prototype._storeEnvelope = function (contentID, envelope, callback) {
+RemoteStorage.prototype._storeEnvelope = function (contentID, doc, callback) {
   const filter = { contentID };
   const options = { upsert: true };
-  const doc = {
-    contentID,
-    lastUpdate: Date.now(),
-    envelope
-  };
 
   mongoCollection('envelopes').findOneAndReplace(filter, doc, options, callback);
 };

@@ -243,7 +243,9 @@ describe('/bulkcontent', function () {
 
         r.write(tarball);
 
-        r.expect(204).end(cb);
+        r.expect(200)
+          .expect({ accepted: 2, failed: 0, deleted: 0 })
+          .end(cb);
       }),
       expectStoredEnvelope('https://github.com/some/repository/one', {
         title: 'One',
@@ -270,7 +272,9 @@ describe('/bulkcontent', function () {
 
         r.write(tarball);
 
-        r.expect(204).end(cb);
+        r.expect(200)
+          .expect({ accepted: 2, failed: 0, deleted: 1 })
+          .end(cb);
       }),
       expectStoredEnvelope('https://github.com/some/repository/one', {
         title: 'One',

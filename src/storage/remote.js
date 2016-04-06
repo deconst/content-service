@@ -171,100 +171,50 @@ RemoteStorage.prototype.findKeys = function (apikey, callback) {
   }).toArray(callback);
 };
 
-RemoteStorage.prototype._storeContent = function (contentID, content, callback) {
-  const dest = connection.cloud.upload({
-    container: config.contentContainer(),
-    remote: encodeURIComponent(contentID)
-  });
+RemoteStorage.prototype._storeContent = function (contentID, envelope, callback) {
+  const filter = { contentID };
+  const options = { upsert: true };
+  const doc = {
+    contentID,
+    lastUpdate: Date.now(),
+    envelope
+  };
 
-  dest.on('error', callback);
-
-  dest.on('success', () => callback());
-
-  dest.end(content);
+  mongoCollection('envelopes').findOneAndReplace(filter, doc, options, callback);
 };
 
 RemoteStorage.prototype._getContent = function (contentID, callback) {
-  const source = connection.cloud.download({
-    container: config.contentContainer(),
-    remote: encodeURIComponent(contentID)
-  });
-  const chunks = [];
-
-  source.on('error', callback);
-
-  source.on('data', (chunk) => chunks.push(chunk));
-
-  source.on('complete', (resp) => {
-    const complete = Buffer.concat(chunks);
-
-    if (resp.statusCode > 400) {
-      const err = new Error('Cloud Files error');
-
-      err.statusCode = resp.statusCode;
-      err.responseBody = complete;
-
-      return callback(err);
-    }
-
-    callback(null, complete);
+  mongoCollection('envelopes').find({ contentID }).limit(1).next((err, envelope) => {
+    if (err) return callback(err);
+    return callback(envelope);
   });
 };
 
 RemoteStorage.prototype.deleteContent = function (contentID, callback) {
-  connection.cloud.removeFile(config.contentContainer(), encodeURIComponent(contentID), (err) => {
-    if (err && err.statusCode === 404) {
-      // It's already deleted, so this is fine. Everything is fine.
-      return callback(null);
-    }
-
-    callback(err);
-  });
+  mongoCollection('envelopes').deleteOne({ contentID }, callback);
 };
 
 RemoteStorage.prototype.bulkDeleteContent = function (contentIDs, callback) {
-  const encodedIDs = contentIDs.map((id) => encodeURIComponent(encodeURIComponent(id)));
+  const ops = contentIDs.map((contentID) => {
+    return { deleteOne: { filter: { contentID } } };
+  });
 
-  connection.client.bulkDelete(config.contentContainer(), encodedIDs, callback);
+  const options = { ordered: false };
+
+  mongoCollection('envelopes').bulkWrite(ops, options, callback);
 };
 
-RemoteStorage.prototype.listContent = function (prefix, callback) {
-  var perPage = 10000;
+RemoteStorage.prototype.listContent = function (prefix, eachCallback, endCallback) {
+  let filter = {};
 
-  var nextPage = function (marker) {
-    var options = { limit: perPage };
-    if (marker !== null) {
-      options.marker = marker;
-    }
-    if (prefix !== null) {
-      options.prefix = encodeURIComponent(prefix);
-    }
+  if (prefix) {
+    filter = { contentID: { $regex: `^${prefix}` } };
+  }
 
-    connection.cloud.getFiles(config.contentContainer(), options, function (err, files) {
-      if (err) return callback(err);
+  const iter = (doc) => eachCallback(null, doc);
+  const end = (err) => endCallback(err);
 
-      var fileNames = files.map(function (e) { return decodeURIComponent(e.name); });
-
-      var next = function () {
-        // The last page was empty. We're done and we've already sent our done sentinel.
-        if (fileNames.length === 0) return;
-
-        if (fileNames.length < perPage) {
-          // Enumeration is complete. Invoke the callback a final time with an empty result set
-          // to signal completion.
-          callback(null, [], function () {});
-          return;
-        }
-
-        // We (may) still have files to go. Onward to the next page.
-        nextPage(fileNames[fileNames.length - 1]);
-      };
-
-      callback(null, fileNames, next);
-    });
-  };
-
-  nextPage(null);
+  mongoCollection('envelopes').find(filter).forEach(iter, end);
 };
 
 RemoteStorage.prototype.createNewIndex = function (indexName, callback) {

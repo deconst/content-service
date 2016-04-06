@@ -85,20 +85,19 @@ exports.setup = function (callback) {
 // Facade functions to perform common input preprocessing.
 
 exports.storeContent = function (contentID, envelope, callback) {
-  exports._storeContent(contentID, JSON.stringify(envelope), callback);
+  const doc = {
+    contentID,
+    envelope,
+    lastUpdated: Date.now()
+  };
+
+  exports._storeContent(contentID, doc, callback);
 };
 
 exports.getContent = function (contentID, callback) {
-  exports._getContent(contentID, function (err, raw) {
+  exports._getContent(contentID, function (err, doc) {
     if (err) return callback(err);
-
-    try {
-      var envelope = JSON.parse(raw);
-    } catch (e) {
-      return callback(e);
-    }
-
-    callback(null, envelope);
+    callback(null, doc.envelope);
   });
 };
 

@@ -125,18 +125,18 @@ MemoryStorage.prototype.bulkDeleteContent = function (contentIDs, callback) {
   async.each(contentIDs, (id, cb) => this.deleteContent(id, cb), callback);
 };
 
-MemoryStorage.prototype.listContent = function (prefix, callback) {
+MemoryStorage.prototype.listContent = function (prefix, eachCallback, endCallback) {
   var ids = Object.keys(this.envelopes);
 
   if (prefix) {
     ids = ids.filter((id) => id.startsWith(prefix));
   }
 
-  callback(null, ids, function () {
-    if (ids.length > 0) {
-      callback(null, [], function () {});
-    }
+  ids.forEach((id) => {
+    eachCallback(null, this.envelopes[id]);
   });
+
+  endCallback(null, null);
 };
 
 MemoryStorage.prototype.createNewIndex = function (indexName, callback) {

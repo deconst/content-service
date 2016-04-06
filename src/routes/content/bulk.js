@@ -151,7 +151,7 @@ exports.handler = function (req, res, next) {
   };
 
   const reportCompletion = () => {
-    logger.info('Bulk content upload completed successfully.', {
+    logger.info('Bulk content upload completed.', {
       action: 'bulkcontentstore',
       apikeyName: req.apikeyName,
       acceptedCount: envelopeCount,
@@ -160,7 +160,10 @@ exports.handler = function (req, res, next) {
       totalReqDuration: Date.now() - reqStart
     });
 
-    res.send(200, { accepted: envelopeCount, failed: failureCount, deleted: deletionCount });
+    let payload = { accepted: envelopeCount, failed: failureCount, deleted: deletionCount };
+    let status = failureCount === 0 ? 200 : 500;
+
+    res.send(status, payload);
     next();
   };
 

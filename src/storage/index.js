@@ -97,7 +97,7 @@ exports.storeEnvelope = function (contentID, envelope, callback) {
 exports.getEnvelope = function (contentID, callback) {
   exports._getEnvelope(contentID, function (err, doc) {
     if (err) return callback(err);
-    callback(null, doc.envelope);
+    callback(null, doc ? doc.envelope : null);
   });
 };
 

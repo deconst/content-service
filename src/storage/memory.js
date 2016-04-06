@@ -122,7 +122,7 @@ MemoryStorage.prototype.deleteEnvelope = function (contentID, callback) {
 };
 
 MemoryStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
-  async.each(contentIDs, (id, cb) => this.deleteContent(id, cb), callback);
+  async.each(contentIDs, (id, cb) => this.deleteEnvelope(id, cb), callback);
 };
 
 MemoryStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
@@ -132,7 +132,7 @@ MemoryStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallb
     ids = ids.filter((id) => id.startsWith(prefix));
   }
 
-  ids.forEach((id) => eachCallback(null, this.envelopes[id].envelope));
+  ids.forEach((id) => eachCallback(null, this.envelopes[id]));
 
   endCallback(null);
 };
@@ -195,7 +195,7 @@ MemoryStorage.prototype.unindexEnvelope = function (contentID, callback) {
 };
 
 MemoryStorage.prototype.bulkUnindexEnvelopes = function (contentIDs, callback) {
-  async.each(contentIDs, (id, cb) => this.unindexContent(id, cb), callback);
+  async.each(contentIDs, (id, cb) => this.unindexEnvelopes(id, cb), callback);
 };
 
 MemoryStorage.prototype.storeSHA = function (sha, callback) {

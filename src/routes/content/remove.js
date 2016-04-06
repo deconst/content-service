@@ -51,17 +51,17 @@ const removeEnvelopes = exports.removeEnvelopes = function (contentIDs, callback
 
   var kvDelete = function (cb) {
     if (contentIDs.length === 1) {
-      storage.deleteContent(contentIDs[0], cb);
+      storage.deleteEnvelope(contentIDs[0], cb);
     } else {
-      storage.bulkDeleteContent(contentIDs, cb);
+      storage.bulkDeleteEnvelopes(contentIDs, cb);
     }
   };
 
   var ftsDelete = function (cb) {
     if (contentIDs.length === 1) {
-      storage.unindexContent(contentIDs[0], cb);
+      storage.unindexEnvelope(contentIDs[0], cb);
     } else {
-      storage.bulkUnindexContent(contentIDs, cb);
+      storage.bulkUnindexEnvelopes(contentIDs, cb);
     }
   };
 

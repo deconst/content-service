@@ -53,12 +53,12 @@ exports.handler = function (req, res, next) {
 const storeEnvelope = exports.storeEnvelope = function (contentID, envelope, callback) {
   // Store the envelope in the primary key-value storage engine.
   const kvStore = function (cb) {
-    storage.storeContent(contentID, envelope, cb);
+    storage.storeEnvelope(contentID, envelope, cb);
   };
 
   // Index the envelope in the full text search storage engine.
   const ftsStore = function (cb) {
-    storage.indexContent(contentID, envelope, cb);
+    storage.indexEnvelope(contentID, envelope, cb);
   };
 
   async.parallel([kvStore, ftsStore], callback);

@@ -265,7 +265,7 @@ RemoteStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallb
     filter = { contentID: { $regex: `^${prefix}` } };
   }
 
-  const iter = (doc) => eachCallback(null, doc.envelope);
+  const iter = (doc) => eachCallback(null, doc);
   const end = (err) => endCallback(err);
 
   mongoCollection('envelopes').find(filter).forEach(iter, end);

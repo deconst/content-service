@@ -38,7 +38,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.getContent('foo&bar/', function (err, uploaded) {
+          storage.getEnvelope('foo&bar/', function (err, uploaded) {
             expect(err).to.be.null();
             expect(uploaded).to.deep.equal({ body: 'something' });
 
@@ -58,7 +58,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('ccc', null, 1, 10, function (err, results) {
+          storage.queryEnvelopes('ccc', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(1);
 
@@ -82,7 +82,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('nope', null, 1, 10, function (err, results) {
+          storage.queryEnvelopes('nope', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(0);
 
@@ -102,7 +102,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('ccc', null, 1, 10, function (err, results) {
+          storage.queryEnvelopes('ccc', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(0);
 
@@ -124,7 +124,7 @@ describe('/content', function () {
 
   describe('#retrieve', function () {
     it('retrieves existing content from Cloud Files', function (done) {
-      storage.storeContent('what&huh', { body: 'expected' }, function (err) {
+      storage.storeEnvelope('what&huh', { body: 'expected' }, function (err) {
         expect(err).not.to.exist();
 
         request(server.create())
@@ -142,10 +142,10 @@ describe('/content', function () {
 
   describe('#delete', function () {
     beforeEach(function (done) {
-      storage.storeContent('er&okay', { body: 'expected' }, done);
+      storage.storeEnvelope('er&okay', { body: 'expected' }, done);
     });
     beforeEach(function (done) {
-      storage.indexContent('er&okay', { body: 'expected' }, done);
+      storage.indexEnvelope('er&okay', { body: 'expected' }, done);
     });
 
     it('requires authentication', function (done) {
@@ -163,7 +163,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.getContent('er&okay', function (err, uploaded) {
+          storage.getEnvelope('er&okay', function (err, uploaded) {
             expect(err).not.to.be.null();
             expect(err.statusCode).to.equal(404);
 
@@ -180,7 +180,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('expected', null, 1, 10, function (err, found) {
+          storage.queryEnvelopes('expected', null, 1, 10, function (err, found) {
             expect(err).to.be.null();
             expect(found.hits.total).to.equal(0);
             expect(found.hits.hits.length).to.equal(0);
@@ -208,13 +208,13 @@ describe('/bulkcontent', function () {
 
   const storeEnvelope = function (contentID, envelope) {
     return (cb) => {
-      storage.storeContent(contentID, envelope, cb);
+      storage.storeEnvelope(contentID, envelope, cb);
     };
   };
 
   const expectStoredEnvelope = function (contentID, envelope) {
     return (cb) => {
-      storage.getContent(contentID, (err, c) => {
+      storage.getEnvelope(contentID, (err, c) => {
         if (err) return cb(err);
         expect(c).to.deep.equal(envelope);
         cb();
@@ -224,7 +224,7 @@ describe('/bulkcontent', function () {
 
   const expectNoEnvelope = function (contentID) {
     return (cb) => {
-      storage.getContent(contentID, (err) => {
+      storage.getEnvelope(contentID, (err) => {
         expect(err).not.to.be.null();
         expect(err.statusCode).to.equal(404);
 

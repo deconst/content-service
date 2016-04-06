@@ -11,13 +11,13 @@ describe('/search', function () {
   beforeEach(resetHelper);
 
   beforeEach(function (done) {
-    storage.indexContent('foo/aaa', { title: 'first', body: 'all aaa', keywords: '' }, done);
+    storage.indexEnvelope('foo/aaa', { title: 'first', body: 'all aaa', keywords: '' }, done);
   });
   beforeEach(function (done) {
-    storage.indexContent('foo/bbb', { title: 'second', body: 'all bbb', keywords: '' }, done);
+    storage.indexEnvelope('foo/bbb', { title: 'second', body: 'all bbb', keywords: '' }, done);
   });
   beforeEach(function (done) {
-    storage.indexContent('foo/ccc', { title: 'third', body: 'all ccc', keywords: '' }, done);
+    storage.indexEnvelope('foo/ccc', { title: 'third', body: 'all ccc', keywords: '' }, done);
   });
 
   it('returns IDs of matching documents', function (done) {

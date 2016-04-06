@@ -29,7 +29,7 @@ var delegates = exports.delegates = [
   'makeIndexActive',
   'queryEnvelopes',
   'unindexEnvelope',
-  'bulkUnindexEnvelope',
+  'bulkUnindexEnvelopes',
   'storeSHA',
   'getSHA'
 ];

@@ -127,28 +127,26 @@ exports.handler = function (req, res, next) {
 
     let existingContentIDs = [];
 
-    storage.listContent(contentIDBase, (err, ids, next) => {
+    storage.listEnvelopes(contentIDBase, (err, doc) => {
       if (err) return cb(err);
 
-      if (ids.length > 0) {
-        // Page of content.
-        existingContentIDs = existingContentIDs.concat(ids);
-        next();
-      } else {
-        // All content consumed.
-        let toDelete = existingContentIDs.filter((id) => !toKeep[id]);
-        deletionCount = toDelete.length;
+      existingContentIDs.push(doc.contentID);
+    }, (err) => {
+      if (err) return cb(err);
 
-        logger.debug('Deleting removed envelopes.', { deletionCount });
+      // All content consumed.
+      let toDelete = existingContentIDs.filter((id) => !toKeep[id]);
+      deletionCount = toDelete.length;
 
-        removeEnvelopes(toDelete, (err, results) => {
-          if (err) return cb(err);
+      logger.debug('Deleting removed envelopes.', { deletionCount });
 
-          logger.debug('Envelopes deleted.');
+      removeEnvelopes(toDelete, (err, results) => {
+        if (err) return cb(err);
 
-          cb();
-        });
-      }
+        logger.debug('Envelopes deleted.');
+
+        cb();
+      });
     });
   };
 

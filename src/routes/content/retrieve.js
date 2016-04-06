@@ -25,7 +25,7 @@ exports.handler = function (req, res, next) {
   let doc = { envelope: {} };
 
   let downloadContent = (callback) => {
-    storage.getContent(contentID, (err, envelope) => {
+    storage.getEnvelope(contentID, (err, envelope) => {
       if (err) {
         // If content is not found and a proxy server is configured, send a proxy request instead.
         if (err.statusCode && err.statusCode === 404 && config.proxyUpstream()) {

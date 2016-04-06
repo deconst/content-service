@@ -22,19 +22,19 @@ var reindex = require('../src/routes/reindex');
 describe('/reindex', function () {
   beforeEach(resetHelper);
 
-  // Sniff the indexContent call.
+  // Sniff the indexEnvelope call.
   var indexed = null;
-  var realIndexContent = null;
+  var realIndexEnvelope = null;
   beforeEach(function () {
     indexed = {};
-    realIndexContent = storage._indexContent;
-    storage._indexContent = function (contentID, envelope, indexName, callback) {
+    realIndexEnvelope = storage._indexEnvelope;
+    storage._indexEnvelope = function (contentID, envelope, indexName, callback) {
       indexed[contentID] = envelope;
-      realIndexContent(contentID, envelope, indexName, callback);
+      realIndexEnvelope(contentID, envelope, indexName, callback);
     };
   });
   afterEach(function () {
-    storage._indexContent = realIndexContent;
+    storage._indexEnvelope = realIndexEnvelope;
   });
 
   it('requires an admin key', function (done) {
@@ -45,13 +45,13 @@ describe('/reindex', function () {
 
   describe('with content', function () {
     beforeEach(function (done) {
-      storage.storeContent('idOne', { body: 'aaa bbb ccc' }, done);
+      storage.storeEnvelope('idOne', { body: 'aaa bbb ccc' }, done);
     });
     beforeEach(function (done) {
-      storage.storeContent('idTwo', { body: 'ddd eee fff' }, done);
+      storage.storeEnvelope('idTwo', { body: 'ddd eee fff' }, done);
     });
     beforeEach(function (done) {
-      storage.storeContent('idThree', { body: 'ggg hhh iii' }, done);
+      storage.storeEnvelope('idThree', { body: 'ggg hhh iii' }, done);
     });
 
     it('reindexes all known content', function (done) {

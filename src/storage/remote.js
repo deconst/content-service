@@ -184,9 +184,63 @@ RemoteStorage.prototype._storeContent = function (contentID, envelope, callback)
 };
 
 RemoteStorage.prototype._getContent = function (contentID, callback) {
-  mongoCollection('envelopes').find({ contentID }).limit(1).next((err, envelope) => {
+  let mongoErr = null;
+  let cloudErr = null;
+
+  const getMongo = (cb) => {
+    mongoCollection('envelopes').find({ contentID }).limit(1).next((err, envelope) => {
+      if (err) {
+        mongoErr = err;
+        return cb(null);
+      }
+      return cb(null, envelope);
+    });
+  };
+
+  const getCloud = (cb) => {
+    const source = connection.cloud.download({
+      container: config.contentContainer(),
+      remote: encodeURIComponent(contentID)
+    });
+    const chunks = [];
+
+    source.on('error', (err) => {
+      cloudErr = err;
+      cb(null);
+    });
+
+    source.on('data', (chunk) => chunks.push(chunk));
+
+    source.on('complete', (resp) => {
+      const complete = Buffer.concat(chunks);
+
+      if (resp.statusCode > 400) {
+        // Content not found in Cloud Files.
+        return cb(null);
+      }
+
+      let envelope = null;
+      try {
+        envelope = JSON.parse(complete);
+      } catch (e) {
+        cloudErr = e;
+        return cb(null);
+      }
+
+      cb(null, { contentID, envelope });
+    });
+  };
+
+  async.race([getMongo, getCloud], (err, doc) => {
     if (err) return callback(err);
-    return callback(envelope);
+
+    if (doc === null) {
+      if (mongoErr) return callback(mongoErr);
+      if (cloudErr) return callback(cloudErr);
+      // Otherwise, yield (null, null) normally
+    }
+
+    callback(null, doc);
   });
 };
 

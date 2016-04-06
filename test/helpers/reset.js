@@ -1,13 +1,15 @@
-var async = require('async');
+'use strict';
 
-var config = require('../../src/config');
-var storage = require('../../src/storage');
-var connection = require('../../src/storage/connection');
-var auth = require('./auth');
+const async = require('async');
+
+const config = require('../../src/config');
+const storage = require('../../src/storage');
+const connection = require('../../src/storage/connection');
+const auth = require('./auth');
 
 function clearCollection (name, callback) {
-  var collection = connection.db.collection(name);
-  collection.count({}, function (err, count) {
+  var collection = connection.mongo.collection(config.mongodbPrefix() + name);
+  collection.count({}, (err, count) => {
     if (err) return callback(err);
 
     if (count > 0) {

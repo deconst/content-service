@@ -1,19 +1,20 @@
 'use strict';
 
-var async = require('async');
-var connection = require('./connection');
-var config = require('../config');
+const async = require('async');
+const connection = require('./connection');
+const config = require('../config');
 
 /**
  * @description Storage driver that persists:
  *
- * * Metadata envelopes in a private Cloud Files container.
  * * Assets in a CDN-enabled Cloud Files container.
- * * API keys in MongoDB.
+ * * Metadata envelopes and API keys in MongoDB.
  *
  * This is used in deployed clusters.
  */
 function RemoteStorage () {}
+
+exports.RemoteStorage = RemoteStorage;
 
 /**
  * @description Initialize connections to external systems.
@@ -65,7 +66,7 @@ RemoteStorage.prototype.assetURLPrefix = function () {
  * @description Upload an asset to the Cloud Files asset container.
  */
 RemoteStorage.prototype.storeAsset = function (asset, callback) {
-  var up = connection.client.upload({
+  var up = connection.cloud.upload({
     container: config.assetContainer(),
     remote: asset.filename,
     contentType: asset.type,
@@ -76,14 +77,12 @@ RemoteStorage.prototype.storeAsset = function (asset, callback) {
 
   up.on('error', callback);
 
-  up.on('success', function () {
+  up.on('success', () => {
     asset.publicURL = this.assetURLPrefix() + encodeURIComponent(asset.filename);
     callback(null, asset);
-  }.bind(this));
-
-  asset.chunks.forEach(function (chunk) {
-    up.write(chunk);
   });
+
+  asset.chunks.forEach((chunk) => up.write(chunk));
 
   up.end();
 };
@@ -103,9 +102,7 @@ RemoteStorage.prototype.nameAsset = function (asset, callback) {
   }, {
     upsert: true
   },
-    function (err) {
-      callback(err, asset);
-    }
+    (err) => callback(err, asset)
   );
 };
 
@@ -122,25 +119,21 @@ RemoteStorage.prototype.findNamedAssets = function (callback) {
  *  parity with memory storage.
  */
 RemoteStorage.prototype.getAsset = function (filename, callback) {
-  var source = connection.client.download({
+  const source = connection.cloud.download({
     container: config.assetContainer(),
     remote: filename
   });
-  var chunks = [];
+  const chunks = [];
 
-  source.on('error', function (err) {
-    callback(err);
-  });
+  source.on('error', callback);
 
-  source.on('data', function (chunk) {
-    chunks.push(chunk);
-  });
+  source.on('data', (chunk) => chunks.push(chunk));
 
-  source.on('complete', function (resp) {
-    var complete = Buffer.concat(chunks);
+  source.on('complete', (resp) => {
+    const complete = Buffer.concat(chunks);
 
     if (resp.statusCode > 400) {
-      var err = new Error('Cloud Files error');
+      const err = new Error('Cloud Files error');
 
       err.statusCode = resp.statusCode;
       err.responseBody = complete;
@@ -179,40 +172,34 @@ RemoteStorage.prototype.findKeys = function (apikey, callback) {
 };
 
 RemoteStorage.prototype._storeContent = function (contentID, content, callback) {
-  var dest = connection.client.upload({
+  const dest = connection.cloud.upload({
     container: config.contentContainer(),
     remote: encodeURIComponent(contentID)
   });
 
   dest.on('error', callback);
 
-  dest.on('success', function () {
-    callback();
-  });
+  dest.on('success', () => callback());
 
   dest.end(content);
 };
 
 RemoteStorage.prototype._getContent = function (contentID, callback) {
-  var source = connection.client.download({
+  const source = connection.cloud.download({
     container: config.contentContainer(),
     remote: encodeURIComponent(contentID)
   });
-  var chunks = [];
+  const chunks = [];
 
-  source.on('error', function (err) {
-    callback(err);
-  });
+  source.on('error', callback);
 
-  source.on('data', function (chunk) {
-    chunks.push(chunk);
-  });
+  source.on('data', (chunk) => chunks.push(chunk));
 
-  source.on('complete', function (resp) {
-    var complete = Buffer.concat(chunks);
+  source.on('complete', (resp) => {
+    const complete = Buffer.concat(chunks);
 
     if (resp.statusCode > 400) {
-      var err = new Error('Cloud Files error');
+      const err = new Error('Cloud Files error');
 
       err.statusCode = resp.statusCode;
       err.responseBody = complete;
@@ -225,7 +212,7 @@ RemoteStorage.prototype._getContent = function (contentID, callback) {
 };
 
 RemoteStorage.prototype.deleteContent = function (contentID, callback) {
-  connection.client.removeFile(config.contentContainer(), encodeURIComponent(contentID), function (err) {
+  connection.cloud.removeFile(config.contentContainer(), encodeURIComponent(contentID), (err) => {
     if (err && err.statusCode === 404) {
       // It's already deleted, so this is fine. Everything is fine.
       return callback(null);
@@ -253,7 +240,7 @@ RemoteStorage.prototype.listContent = function (prefix, callback) {
       options.prefix = encodeURIComponent(prefix);
     }
 
-    connection.client.getFiles(config.contentContainer(), options, function (err, files) {
+    connection.cloud.getFiles(config.contentContainer(), options, function (err, files) {
       if (err) return callback(err);
 
       var fileNames = files.map(function (e) { return decodeURIComponent(e.name); });
@@ -355,7 +342,7 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
     });
   }
 
-  var q = {};
+  const q = {};
 
   if (!categories) {
     q.match = { _all: query };
@@ -390,7 +377,7 @@ RemoteStorage.prototype.unindexContent = function (contentID, callback) {
     index: 'envelopes_current',
     type: 'envelope',
     id: contentID
-  }, function (err) {
+  }, (err) => {
     if (err && err.status === '404') {
       // It's already gone. Disregard.
       return callback(null);
@@ -424,10 +411,8 @@ RemoteStorage.prototype.storeSHA = function (sha, callback) {
 };
 
 RemoteStorage.prototype.getSHA = function (callback) {
-  mongoCollection('sha').findOne({key: 'controlRepository'}, function (err, doc) {
-    if (err) {
-      return callback(err);
-    }
+  mongoCollection('sha').findOne({key: 'controlRepository'}, (err, doc) => {
+    if (err) return callback(err);
 
     if (doc === null) {
       return callback(null, null);
@@ -438,9 +423,5 @@ RemoteStorage.prototype.getSHA = function (callback) {
 };
 
 function mongoCollection (name) {
-  return connection.db.collection(config.mongodbPrefix() + name);
+  return connection.mongo.collection(config.mongodbPrefix() + name);
 }
-
-module.exports = {
-  RemoteStorage: RemoteStorage
-};

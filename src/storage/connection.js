@@ -1,58 +1,58 @@
+'use strict';
+
 // Manage a connection to the Rackspace cloud. Retain and export handles to created resources.
 
-var url = require('url');
-var async = require('async');
-var pkgcloud = require('pkgcloud');
-var mongo = require('mongodb');
-var elasticsearch = require('elasticsearch');
-var config = require('../config');
-var logger = require('../logging').getLogger();
+const url = require('url');
+const async = require('async');
+const pkgcloud = require('pkgcloud');
+const mongo = require('mongodb');
+const elasticsearch = require('elasticsearch');
+const config = require('../config');
+const logger = require('../logging').getLogger();
 
 /**
  * @description Create a function that asynchronously creates a Rackspace container if it
  *   doesn't already exist.
  */
-function makeContainerCreator (client, containerName, logicalName, cdn) {
-  return function (callback) {
-    var reportBack = function (err, container) {
+function makeContainerCreator (cloud, containerName, logicalName, cdn) {
+  return (callback) => {
+    const reportBack = (err, container) => {
       if (err) return callback(err);
 
       exports[logicalName] = container;
 
-      logger.debug('Container [' + container.name + '] now exists.');
+      logger.debug(`Container [${container.name}] now exists.`);
 
       callback(null, container);
     };
 
-    var cdnEnable = function (err, container) {
+    const cdnEnable = (err, container) => {
       if (err) return callback(err);
 
-      logger.debug('Enabling CDN on container [' + container.name + '].');
+      logger.debug(`Enabling CDN on container [${container.name}].`);
 
-      client.setCdnEnabled(container, {
+      cloud.setCdnEnabled(container, {
         ttl: 31536000,
         enabled: true
       }, reportBack);
     };
 
-    var handleCreation = cdn ? cdnEnable : reportBack;
+    const handleCreation = cdn ? cdnEnable : reportBack;
 
-    logger.info('Ensuring that container [' + containerName + '] exists.');
+    logger.info(`Ensuring that container [${containerName}] exists.`);
 
     // Instead of checking if the container exists first, we try to create it, and
     // if it already exists, we get a no-op (202) and move on.
-    client.createContainer({
-      name: containerName
-    }, handleCreation);
+    cloud.createContainer({ name: containerName }, handleCreation);
   };
 }
 
 /**
- * @description Authenticate to MongoDB, export the active MongoDB connection as "db", and
+ * @description Authenticate to MongoDB, export the active MongoDB connection as "mongo", and
  *   perform any necessary one-time initialization.
  */
 function mongoInit (callback) {
-  mongo.MongoClient.connect(config.mongodbURL(), function (err, db) {
+  mongo.MongoClient.connect(config.mongodbURL(), (err, mongo) => {
     if (err) {
       logger.warn('Error connecting to MongoDB database. Retrying in five seconds.', {
         mongodbURL: config.mongodbURL(),
@@ -63,8 +63,8 @@ function mongoInit (callback) {
       return;
     }
 
-    logger.debug('Connected to MongoDB database at [' + config.mongodbURL() + '].');
-    exports.db = db;
+    logger.debug(`Connected to MongoDB database at [${config.mongodbURL()}].`);
+    exports.mongo = mongo;
     callback(null);
   });
 }
@@ -73,8 +73,8 @@ function mongoInit (callback) {
  * @description Shunt Elasticsearch log messages to the existing logger.
  */
 function ElasticLogs (config) {
-  var makeLogHandler = function (level) {
-    return function (message) {
+  const makeLogHandler = (level) => {
+    return (message) => {
       logger[level]({
         action: 'elasticsearch',
         message: message
@@ -87,7 +87,7 @@ function ElasticLogs (config) {
   this.info = makeLogHandler('info');
   this.debug = makeLogHandler('debug');
 
-  this.trace = function (httpMethod, requestUrl, requestBody, responseBody, responseStatus) {
+  this.trace = (httpMethod, requestUrl, requestBody, responseBody, responseStatus) => {
     requestUrl.pathname = requestUrl.path;
 
     logger.trace({
@@ -98,9 +98,9 @@ function ElasticLogs (config) {
       responseBody: responseBody,
       responseStatus: responseStatus
     });
-
-    this.close = function () {};
   };
+
+  this.close = () => {};
 }
 
 /**
@@ -114,7 +114,7 @@ function elasticInit (callback) {
     return callback(null);
   }
 
-  var client = new elasticsearch.Client({
+  const client = new elasticsearch.Client({
     host: config.elasticsearchHost(),
     apiVersion: '1.7',
     ssl: { rejectUnauthorized: true }, // Plz no trivial MITM attacks
@@ -122,7 +122,7 @@ function elasticInit (callback) {
     maxRetries: Infinity
   });
 
-  client.ping(function (err) {
+  client.ping((err) => {
     if (err) {
       logger.warn('Unable to connect to Elasticsearch. Retrying in five seconds.', {
         elasticsearchHost: config.elasticsearchHost(),
@@ -142,14 +142,14 @@ function elasticInit (callback) {
 }
 
 exports.setup = function (callback) {
-  var client = pkgcloud.providers.rackspace.storage.createClient({
+  const cloud = pkgcloud.providers.rackspace.storage.createClient({
     username: config.rackspaceUsername(),
     apiKey: config.rackspaceAPIKey(),
     region: config.rackspaceRegion(),
     useInternal: config.rackspaceServiceNet()
   });
 
-  client.on('log::*', function (message, object) {
+  cloud.on('log::*', function (message, object) {
     if (object) {
       logger.log(this.event.split('::')[1], message, object);
     } else {
@@ -157,14 +157,14 @@ exports.setup = function (callback) {
     }
   });
 
-  client.auth(function (err) {
+  cloud.auth(function (err) {
     if (err) return callback(err);
 
-    exports.client = client;
+    exports.cloud = cloud;
 
     async.parallel([
-      makeContainerCreator(client, config.contentContainer(), 'contentContainer', false),
-      makeContainerCreator(client, config.assetContainer(), 'assetContainer', true),
+      makeContainerCreator(cloud, config.contentContainer(), 'contentContainer', false),
+      makeContainerCreator(cloud, config.assetContainer(), 'assetContainer', true),
       mongoInit,
       elasticInit
     ], callback);

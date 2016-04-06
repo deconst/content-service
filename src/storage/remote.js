@@ -3,6 +3,7 @@
 const async = require('async');
 const connection = require('./connection');
 const config = require('../config');
+const logger = require('../logging').getLogger();
 
 /**
  * @description Storage driver that persists:
@@ -184,63 +185,107 @@ RemoteStorage.prototype._storeEnvelope = function (contentID, envelope, callback
 };
 
 RemoteStorage.prototype._getEnvelope = function (contentID, callback) {
-  let mongoErr = null;
-  let cloudErr = null;
+  let results = {};
+  let failures = {};
+  let responded = false;
 
-  const getMongo = (cb) => {
-    mongoCollection('envelopes').find({ contentID }).limit(1).next((err, envelope) => {
-      if (err) {
-        mongoErr = err;
-        return cb(null);
-      }
-      return cb(null, envelope);
-    });
-  };
+  const success = (envelope, source) => {
+    if (responded) return;
 
-  const getCloud = (cb) => {
-    const source = connection.cloud.download({
-      container: config.contentContainer(),
-      remote: encodeURIComponent(contentID)
-    });
-    const chunks = [];
+    results[source] = envelope;
 
-    source.on('error', (err) => {
-      cloudErr = err;
-      cb(null);
-    });
-
-    source.on('data', (chunk) => chunks.push(chunk));
-
-    source.on('complete', (resp) => {
-      const complete = Buffer.concat(chunks);
-
-      if (resp.statusCode > 400) {
-        // Content not found in Cloud Files.
-        return cb(null);
-      }
-
-      let envelope = null;
-      try {
-        envelope = JSON.parse(complete);
-      } catch (e) {
-        cloudErr = e;
-        return cb(null);
-      }
-
-      cb(null, { contentID, envelope });
-    });
-  };
-
-  async.race([getMongo, getCloud], (err, doc) => {
-    if (err) return callback(err);
-
-    if (doc === null) {
-      if (mongoErr) return callback(mongoErr);
-      if (cloudErr) return callback(cloudErr);
-      // Otherwise, yield (null, null) normally
+    // Prefer the result from MongoDB.
+    if (source === 'mongodb') {
+      responded = true;
+      return callback(null, envelope);
     }
 
-    callback(null, doc);
+    // If MongoDB has already failed, prefer Cloud Files.
+    if (failures.mongodb) {
+      responded = true;
+
+      // TODO Crank this up to warn once we've deployed this and run some builds to catch
+      // straggling content.
+      logger.debug('Returning content from Cloud Files.', { contentID });
+
+      return callback(null, envelope);
+    }
+  };
+
+  const failure = (err, source) => {
+    if (responded) return;
+
+    failures[source] = err;
+
+    // If MongoDB fails but Cloud Files has already succeeded, return the saved result.
+    if (source === 'mongodb' && results.cloudfiles) {
+      responded = true;
+
+      // TODO Crank this up to warn once we've deployed this and run some builds to catch
+      // straggling content.
+      logger.debug('Returning content from Cloud Files.', { contentID });
+
+      return callback(null, results.cloudfiles);
+    }
+
+    // If Cloud Files fails but MongoDB has already succeeded, return the saved result.
+    if (source === 'cloudfiles' && results.mongodb) {
+      responded = true;
+      return callback(null, results.mongodb);
+    }
+
+    // If both have failed, return the Mongo error.
+    if (failures.mongodb && failures.cloudfiles) {
+      responded = true;
+      return callback(failures.mongodb);
+    }
+  };
+
+  // MongoDB fetch
+  mongoCollection('envelopes').find({ contentID }).limit(1).next((err, envelope) => {
+    if (err) return failure(err, 'mongodb');
+
+    if (envelope === null) {
+      let err = new Error('Envelope not found');
+      err.statusCode = 404;
+      return failure(err, 'mongodb');
+    }
+
+    return success(envelope, 'mongodb');
+  });
+
+  // Cloud Files fetch
+  const source = connection.cloud.download({
+    container: config.contentContainer(),
+    remote: encodeURIComponent(contentID)
+  });
+  const chunks = [];
+
+  source.on('error', (err) => failure(err, 'cloudfiles'));
+
+  source.on('data', (chunk) => chunks.push(chunk));
+
+  source.on('complete', (resp) => {
+    const complete = Buffer.concat(chunks);
+
+    if (resp.statusCode > 400) {
+      // Content not found in Cloud Files.
+      let message = resp.statusCode === 404 ? 'Envelope not found' : 'Cloud files error';
+
+      let err = new Error(message);
+      err.statusCode = resp.statusCode;
+      err.responseBody = complete;
+      return failure(err, 'cloudfiles');
+    }
+
+    let envelope = null;
+    try {
+      envelope = JSON.parse(complete);
+    } catch (err) {
+      return failure(err, 'cloudfiles');
+    }
+
+    success({ contentID, envelope }, 'cloudfiles');
   });
 };
 

@@ -19,17 +19,17 @@ var delegates = exports.delegates = [
   'storeKey',
   'deleteKey',
   'findKeys',
-  '_storeContent',
-  '_getContent',
-  'deleteContent',
-  'bulkDeleteContent',
-  'listContent',
+  '_storeEnvelope',
+  '_getEnvelope',
+  'deleteEnvelope',
+  'bulkDeleteEnvelopes',
+  'listEnvelopes',
   'createNewIndex',
-  '_indexContent',
+  '_indexEnvelope',
   'makeIndexActive',
-  'queryContent',
-  'unindexContent',
-  'bulkUnindexContent',
+  'queryEnvelopes',
+  'unindexEnvelope',
+  'bulkUnindexEnvelope',
   'storeSHA',
   'getSHA'
 ];
@@ -84,24 +84,24 @@ exports.setup = function (callback) {
 
 // Facade functions to perform common input preprocessing.
 
-exports.storeContent = function (contentID, envelope, callback) {
+exports.storeEnvelope = function (contentID, envelope, callback) {
   const doc = {
     contentID,
     envelope,
     lastUpdated: Date.now()
   };
 
-  exports._storeContent(contentID, doc, callback);
+  exports._storeEnvelope(contentID, doc, callback);
 };
 
-exports.getContent = function (contentID, callback) {
-  exports._getContent(contentID, function (err, doc) {
+exports.getEnvelope = function (contentID, callback) {
+  exports._getEnvelope(contentID, function (err, doc) {
     if (err) return callback(err);
     callback(null, doc.envelope);
   });
 };
 
-exports.indexContent = function (contentID, envelope, indexName, callback) {
+exports.indexEnvelope = function (contentID, envelope, indexName, callback) {
   // indexName is optional and defaults to the alias "envelopes_current".
   if (!callback) {
     callback = indexName;
@@ -125,5 +125,5 @@ exports.indexContent = function (contentID, envelope, indexName, callback) {
     categories: envelope.categories || []
   };
 
-  exports._indexContent(contentID, subset, indexName, callback);
+  exports._indexEnvelope(contentID, subset, indexName, callback);
 };

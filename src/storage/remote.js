@@ -171,7 +171,7 @@ RemoteStorage.prototype.findKeys = function (apikey, callback) {
   }).toArray(callback);
 };
 
-RemoteStorage.prototype._storeContent = function (contentID, envelope, callback) {
+RemoteStorage.prototype._storeEnvelope = function (contentID, envelope, callback) {
   const filter = { contentID };
   const options = { upsert: true };
   const doc = {
@@ -183,7 +183,7 @@ RemoteStorage.prototype._storeContent = function (contentID, envelope, callback)
   mongoCollection('envelopes').findOneAndReplace(filter, doc, options, callback);
 };
 
-RemoteStorage.prototype._getContent = function (contentID, callback) {
+RemoteStorage.prototype._getEnvelope = function (contentID, callback) {
   let mongoErr = null;
   let cloudErr = null;
 
@@ -244,11 +244,11 @@ RemoteStorage.prototype._getContent = function (contentID, callback) {
   });
 };
 
-RemoteStorage.prototype.deleteContent = function (contentID, callback) {
+RemoteStorage.prototype.deleteEnvelope = function (contentID, callback) {
   mongoCollection('envelopes').deleteOne({ contentID }, callback);
 };
 
-RemoteStorage.prototype.bulkDeleteContent = function (contentIDs, callback) {
+RemoteStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
   const ops = contentIDs.map((contentID) => {
     return { deleteOne: { filter: { contentID } } };
   });
@@ -258,14 +258,14 @@ RemoteStorage.prototype.bulkDeleteContent = function (contentIDs, callback) {
   mongoCollection('envelopes').bulkWrite(ops, options, callback);
 };
 
-RemoteStorage.prototype.listContent = function (prefix, eachCallback, endCallback) {
+RemoteStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
   let filter = {};
 
   if (prefix) {
     filter = { contentID: { $regex: `^${prefix}` } };
   }
 
-  const iter = (doc) => eachCallback(null, doc);
+  const iter = (doc) => eachCallback(null, doc.envelope);
   const end = (err) => endCallback(err);
 
   mongoCollection('envelopes').find(filter).forEach(iter, end);
@@ -296,7 +296,7 @@ RemoteStorage.prototype.createNewIndex = function (indexName, callback) {
   });
 };
 
-RemoteStorage.prototype._indexContent = function (contentID, envelope, indexName, callback) {
+RemoteStorage.prototype._indexEnvelope = function (contentID, envelope, indexName, callback) {
   if (!connection.elastic) return callback(null);
 
   connection.elastic.index({
@@ -336,7 +336,7 @@ RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
   });
 };
 
-RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, perPage, callback) {
+RemoteStorage.prototype.queryEnvelopes = function (query, categories, pageNumber, perPage, callback) {
   if (!connection.elastic) {
     return callback(null, {
       hits: {
@@ -374,7 +374,7 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
   }, callback);
 };
 
-RemoteStorage.prototype.unindexContent = function (contentID, callback) {
+RemoteStorage.prototype.unindexEnvelope = function (contentID, callback) {
   if (!connection.elastic) return callback(null);
 
   connection.elastic.delete({
@@ -391,7 +391,7 @@ RemoteStorage.prototype.unindexContent = function (contentID, callback) {
   });
 };
 
-RemoteStorage.prototype.bulkUnindexContent = function (contentIDs, callback) {
+RemoteStorage.prototype.bulkUnindexEnvelopes = function (contentIDs, callback) {
   if (!connection.elastic) return callback(null);
 
   const actions = contentIDs.map((id) => {

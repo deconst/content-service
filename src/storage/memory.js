@@ -95,12 +95,12 @@ MemoryStorage.prototype.findKeys = function (apikey, callback) {
   }
 };
 
-MemoryStorage.prototype._storeContent = function (contentID, content, callback) {
+MemoryStorage.prototype._storeEnvelope = function (contentID, content, callback) {
   this.envelopes[contentID] = content;
   callback();
 };
 
-MemoryStorage.prototype._getContent = function (contentID, callback) {
+MemoryStorage.prototype._getEnvelope = function (contentID, callback) {
   var envelope = this.envelopes[contentID];
 
   if (envelope === undefined) {
@@ -115,35 +115,33 @@ MemoryStorage.prototype._getContent = function (contentID, callback) {
   callback(null, envelope);
 };
 
-MemoryStorage.prototype.deleteContent = function (contentID, callback) {
+MemoryStorage.prototype.deleteEnvelope = function (contentID, callback) {
   delete this.envelopes[contentID];
 
   callback();
 };
 
-MemoryStorage.prototype.bulkDeleteContent = function (contentIDs, callback) {
+MemoryStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
   async.each(contentIDs, (id, cb) => this.deleteContent(id, cb), callback);
 };
 
-MemoryStorage.prototype.listContent = function (prefix, eachCallback, endCallback) {
+MemoryStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
   var ids = Object.keys(this.envelopes);
 
   if (prefix) {
     ids = ids.filter((id) => id.startsWith(prefix));
   }
 
-  ids.forEach((id) => {
-    eachCallback(null, this.envelopes[id]);
-  });
+  ids.forEach((id) => eachCallback(null, this.envelopes[id].envelope));
 
-  endCallback(null, null);
+  endCallback(null);
 };
 
 MemoryStorage.prototype.createNewIndex = function (indexName, callback) {
   callback();
 };
 
-MemoryStorage.prototype._indexContent = function (contentID, envelope, indexName, callback) {
+MemoryStorage.prototype._indexEnvelope = function (contentID, envelope, indexName, callback) {
   this.indexedEnvelopes.push({
     _id: contentID,
     _source: envelope
@@ -156,7 +154,7 @@ MemoryStorage.prototype.makeIndexActive = function (indexName, callback) {
   callback();
 };
 
-MemoryStorage.prototype.queryContent = function (query, categories, pageNumber, perPage, callback) {
+MemoryStorage.prototype.queryEnvelopes = function (query, categories, pageNumber, perPage, callback) {
   var rx = new RegExp(query, 'i');
 
   var hits = this.indexedEnvelopes.filter(function (entry) {
@@ -188,7 +186,7 @@ MemoryStorage.prototype.queryContent = function (query, categories, pageNumber, 
   });
 };
 
-MemoryStorage.prototype.unindexContent = function (contentID, callback) {
+MemoryStorage.prototype.unindexEnvelope = function (contentID, callback) {
   this.indexedEnvelopes = this.indexedEnvelopes.filter(function (each) {
     return each._id !== contentID;
   });
@@ -196,7 +194,7 @@ MemoryStorage.prototype.unindexContent = function (contentID, callback) {
   callback(null);
 };
 
-MemoryStorage.prototype.bulkUnindexContent = function (contentIDs, callback) {
+MemoryStorage.prototype.bulkUnindexEnvelopes = function (contentIDs, callback) {
   async.each(contentIDs, (id, cb) => this.unindexContent(id, cb), callback);
 };
 

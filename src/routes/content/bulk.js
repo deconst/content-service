@@ -160,7 +160,7 @@ exports.handler = function (req, res, next) {
       totalReqDuration: Date.now() - reqStart
     });
 
-    res.send(204);
+    res.send(200, { accepted: envelopeCount, failed: failureCount, deleted: deletionCount });
     next();
   };
 

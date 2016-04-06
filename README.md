@@ -144,6 +144,71 @@ Access previously stored content by its URL-encoded *content ID*.
 
 An HTTP status of 404 will be returned if the content ID isn't recognized.
 
+### `POST /bulkcontent`
+
+**(Authorization required: any user)**
+
+Bulk-upload content from a `.tar.gz` file.
+
+*Request*
+
+The POST body must be a `.tar.gz` file in the following format:
+
+```
+metadata/config.json  # Optional: config file
+metadata/keep.json    # Optional: additional content IDs to keep
+https%3A%2F%2Fgithub.com%2Fsomeorg%2Fsomerepo.json  # metadata envelopes with URL-encoded filenames
+https%3A%2F%2Fgithub.com%2Fsomeorg%2Fsomerepo%2Fpageone.json
+https%3A%2F%2Fgithub.com%2Fsomeorg%2Fsomerepo%2Fpagetwo.json
+```
+
+The `config.json` file, if present, should contain:
+
+```json
+{
+  "contentIDBase": "https://github.com/someorg/somerepo"
+}
+```
+
+All envelopes that share the named content ID base which are not included in the tarball or mentioned in `keep.json` will be removed as part of this operation.
+
+The `keep.json` file, if present, should contain:
+
+```json
+{
+  "keep": [
+    "https://github.com/someorg/somerepo/oldpage1",
+    "https://github.com/someorg/somerepo/oldpage2"
+  ]
+}
+```
+
+*Response: Successful*
+
+An HTTP status of 200 is returned once all envelopes are accepted successfully. The response body reports counts of the actions taken:
+
+```json
+{
+  "accepted": 24,
+  "failed": 0,
+  "deleted": 12
+}
+```
+
+*Response: Unsuccessful*
+
+An HTTP status of 500 is returned if there are problems accepting one or more envelopes. The response body reports how many envelopes from the bundle failed:
+
+```json
+{
+  "accepted": 21,
+  "failed": 3,
+  "deleted": 12
+}
+```
+
+Note that the successful envelopes *were* accepted and are live.
+
 ### `POST /assets[?named=true]`
 
 **(Authorization required: any user)**

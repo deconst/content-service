@@ -1,49 +1,59 @@
 'use strict';
 
-var async = require('async');
-var connection = require('./connection');
-var config = require('../config');
+const async = require('async');
+const connection = require('./connection');
+const config = require('../config');
+const logger = require('../logging').getLogger();
 
 /**
  * @description Storage driver that persists:
  *
- * * Metadata envelopes in a private Cloud Files container.
  * * Assets in a CDN-enabled Cloud Files container.
- * * API keys in MongoDB.
+ * * Metadata envelopes and API keys in MongoDB.
  *
  * This is used in deployed clusters.
  */
 function RemoteStorage () {}
 
+exports.RemoteStorage = RemoteStorage;
+
 /**
  * @description Initialize connections to external systems.
  */
 RemoteStorage.prototype.setup = function (callback) {
-  connection.setup((err) => {
-    if (err) return callback(err);
+  const mongoIndices = (cb) => {
+    mongoCollection('envelopes').createIndex({ contentID: 1 }, { unique: true }, cb);
+  };
 
-    if (!connection.elastic) return callback(null);
+  const elasticIndices = (cb) => {
+    if (!connection.elastic) return cb(null);
 
     // Attempt to create the latch index. If we can, we're responsible for setting up the initial
     // index and alias. Otherwise, another content service is on it.
     connection.elastic.indices.create({ index: 'latch', ignore: 400 }, (err, response, status) => {
-      if (err) return callback(err);
+      if (err) return cb(err);
 
       if (status === 400) {
         // The latch index already existed, so another service is creating the search indices.
         // Note that there's a race condition that occurs when a service that *isn't* creating
         // the search indices attempts to store content between the creation of the latch index
         // and the makeIndexActive() call below in the service that is.
-        return callback(null);
+        return cb(null);
       }
 
       let indexName = `envelopes_${Date.now()}`;
       this.createNewIndex(indexName, (err) => {
-        if (err) return callback(err);
+        if (err) return cb(err);
 
-        this.makeIndexActive(indexName, callback);
+        this.makeIndexActive(indexName, cb);
       });
     });
+  };
+
+  connection.setup((err) => {
+    if (err) return callback(err);
+
+    async.parallel([mongoIndices, elasticIndices], callback);
   });
 };
 
@@ -65,7 +75,7 @@ RemoteStorage.prototype.assetURLPrefix = function () {
  * @description Upload an asset to the Cloud Files asset container.
  */
 RemoteStorage.prototype.storeAsset = function (asset, callback) {
-  var up = connection.client.upload({
+  var up = connection.cloud.upload({
     container: config.assetContainer(),
     remote: asset.filename,
     contentType: asset.type,
@@ -76,14 +86,12 @@ RemoteStorage.prototype.storeAsset = function (asset, callback) {
 
   up.on('error', callback);
 
-  up.on('success', function () {
+  up.on('success', () => {
     asset.publicURL = this.assetURLPrefix() + encodeURIComponent(asset.filename);
     callback(null, asset);
-  }.bind(this));
-
-  asset.chunks.forEach(function (chunk) {
-    up.write(chunk);
   });
+
+  asset.chunks.forEach((chunk) => up.write(chunk));
 
   up.end();
 };
@@ -103,9 +111,7 @@ RemoteStorage.prototype.nameAsset = function (asset, callback) {
   }, {
     upsert: true
   },
-    function (err) {
-      callback(err, asset);
-    }
+    (err) => callback(err, asset)
   );
 };
 
@@ -122,25 +128,21 @@ RemoteStorage.prototype.findNamedAssets = function (callback) {
  *  parity with memory storage.
  */
 RemoteStorage.prototype.getAsset = function (filename, callback) {
-  var source = connection.client.download({
+  const source = connection.cloud.download({
     container: config.assetContainer(),
     remote: filename
   });
-  var chunks = [];
+  const chunks = [];
 
-  source.on('error', function (err) {
-    callback(err);
-  });
+  source.on('error', callback);
 
-  source.on('data', function (chunk) {
-    chunks.push(chunk);
-  });
+  source.on('data', (chunk) => chunks.push(chunk));
 
-  source.on('complete', function (resp) {
-    var complete = Buffer.concat(chunks);
+  source.on('complete', (resp) => {
+    const complete = Buffer.concat(chunks);
 
     if (resp.statusCode > 400) {
-      var err = new Error('Cloud Files error');
+      const err = new Error('Cloud Files error');
 
       err.statusCode = resp.statusCode;
       err.responseBody = complete;
@@ -178,97 +180,148 @@ RemoteStorage.prototype.findKeys = function (apikey, callback) {
   }).toArray(callback);
 };
 
-RemoteStorage.prototype._storeContent = function (contentID, content, callback) {
-  var dest = connection.client.upload({
-    container: config.contentContainer(),
-    remote: encodeURIComponent(contentID)
-  });
-
-  dest.on('err', callback);
-
-  dest.on('success', function () {
-    callback();
-  });
-
-  dest.end(content);
-};
-
-RemoteStorage.prototype._getContent = function (contentID, callback) {
-  var source = connection.client.download({
-    container: config.contentContainer(),
-    remote: encodeURIComponent(contentID)
-  });
-  var chunks = [];
-
-  source.on('error', function (err) {
-    callback(err);
-  });
-
-  source.on('data', function (chunk) {
-    chunks.push(chunk);
-  });
-
-  source.on('complete', function (resp) {
-    var complete = Buffer.concat(chunks);
-
-    if (resp.statusCode > 400) {
-      var err = new Error('Cloud Files error');
-
-      err.statusCode = resp.statusCode;
-      err.responseBody = complete;
-
-      return callback(err);
-    }
-
-    callback(null, complete);
-  });
-};
-
-RemoteStorage.prototype.deleteContent = function (contentID, callback) {
-  connection.client.removeFile(config.contentContainer(), encodeURIComponent(contentID), function (err) {
-    if (err && err.statusCode === 404) {
-      // It's already deleted, so this is fine. Everything is fine.
-      return callback(null);
-    }
-
-    callback(err);
-  });
-};
-
-RemoteStorage.prototype.listContent = function (callback) {
-  var perPage = 10000;
-
-  var nextPage = function (marker) {
-    var options = { limit: perPage };
-    if (marker !== null) {
-      options.marker = marker;
-    }
-
-    connection.client.getFiles(config.contentContainer(), options, function (err, files) {
-      if (err) return callback(err);
-
-      var fileNames = files.map(function (e) { return decodeURIComponent(e.name); });
-
-      var next = function () {
-        // The last page was empty. We're done and we've already sent our done sentinel.
-        if (fileNames.length === 0) return;
-
-        if (fileNames.length < perPage) {
-          // Enumeration is complete. Invoke the callback a final time with an empty result set
-          // to signal completion.
-          callback(null, [], function () {});
-          return;
-        }
-
-        // We (may) still have files to go. Onward to the next page.
-        nextPage(fileNames[fileNames.length - 1]);
-      };
-
-      callback(null, fileNames, next);
-    });
+RemoteStorage.prototype._storeEnvelope = function (contentID, envelope, callback) {
+  const filter = { contentID };
+  const options = { upsert: true };
+  const doc = {
+    contentID,
+    lastUpdate: Date.now(),
+    envelope
   };
 
-  nextPage(null);
+  mongoCollection('envelopes').findOneAndReplace(filter, doc, options, callback);
+};
+
+RemoteStorage.prototype._getEnvelope = function (contentID, callback) {
+  let results = {};
+  let failures = {};
+  let responded = false;
+
+  const success = (envelope, source) => {
+    if (responded) return;
+
+    results[source] = envelope;
+
+    // Prefer the result from MongoDB.
+    if (source === 'mongodb') {
+      responded = true;
+      return callback(null, envelope);
+    }
+
+    // If MongoDB has already failed, prefer Cloud Files.
+    if (failures.mongodb) {
+      responded = true;
+
+      // TODO Crank this up to warn once we've deployed this and run some builds to catch
+      // straggling content.
+      logger.debug('Returning content from Cloud Files.', { contentID });
+
+      return callback(null, envelope);
+    }
+  };
+
+  const failure = (err, source) => {
+    if (responded) return;
+
+    failures[source] = err;
+
+    // If MongoDB fails but Cloud Files has already succeeded, return the saved result.
+    if (source === 'mongodb' && results.cloudfiles) {
+      responded = true;
+
+      // TODO Crank this up to warn once we've deployed this and run some builds to catch
+      // straggling content.
+      logger.debug('Returning content from Cloud Files.', { contentID });
+
+      return callback(null, results.cloudfiles);
+    }
+
+    // If Cloud Files fails but MongoDB has already succeeded, return the saved result.
+    if (source === 'cloudfiles' && results.mongodb) {
+      responded = true;
+      return callback(null, results.mongodb);
+    }
+
+    // If both have failed, return the Mongo error.
+    if (failures.mongodb && failures.cloudfiles) {
+      responded = true;
+      return callback(failures.mongodb);
+    }
+  };
+
+  // MongoDB fetch
+  mongoCollection('envelopes').find({ contentID }).limit(1).next((err, envelope) => {
+    if (err) return failure(err, 'mongodb');
+
+    if (envelope === null) {
+      let err = new Error('Envelope not found');
+      err.statusCode = 404;
+      return failure(err, 'mongodb');
+    }
+
+    return success(envelope, 'mongodb');
+  });
+
+  // Cloud Files fetch
+  const source = connection.cloud.download({
+    container: config.contentContainer(),
+    remote: encodeURIComponent(contentID)
+  });
+  const chunks = [];
+
+  source.on('error', (err) => failure(err, 'cloudfiles'));
+
+  source.on('data', (chunk) => chunks.push(chunk));
+
+  source.on('complete', (resp) => {
+    const complete = Buffer.concat(chunks);
+
+    if (resp.statusCode > 400) {
+      // Content not found in Cloud Files.
+      let message = resp.statusCode === 404 ? 'Envelope not found' : 'Cloud files error';
+
+      let err = new Error(message);
+      err.statusCode = resp.statusCode;
+      err.responseBody = complete;
+      return failure(err, 'cloudfiles');
+    }
+
+    let envelope = null;
+    try {
+      envelope = JSON.parse(complete);
+    } catch (err) {
+      return failure(err, 'cloudfiles');
+    }
+
+    success({ contentID, envelope }, 'cloudfiles');
+  });
+};
+
+RemoteStorage.prototype.deleteEnvelope = function (contentID, callback) {
+  mongoCollection('envelopes').deleteOne({ contentID }, callback);
+};
+
+RemoteStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
+  const ops = contentIDs.map((contentID) => {
+    return { deleteOne: { filter: { contentID } } };
+  });
+
+  const options = { ordered: false };
+
+  mongoCollection('envelopes').bulkWrite(ops, options, callback);
+};
+
+RemoteStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
+  let filter = {};
+
+  if (prefix) {
+    filter = { contentID: { $regex: `^${prefix}` } };
+  }
+
+  const iter = (doc) => eachCallback(null, doc);
+  const end = (err) => endCallback(err);
+
+  mongoCollection('envelopes').find(filter).forEach(iter, end);
 };
 
 RemoteStorage.prototype.createNewIndex = function (indexName, callback) {
@@ -296,7 +349,7 @@ RemoteStorage.prototype.createNewIndex = function (indexName, callback) {
   });
 };
 
-RemoteStorage.prototype._indexContent = function (contentID, envelope, indexName, callback) {
+RemoteStorage.prototype._indexEnvelope = function (contentID, envelope, indexName, callback) {
   if (!connection.elastic) return callback(null);
 
   connection.elastic.index({
@@ -336,7 +389,7 @@ RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
   });
 };
 
-RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, perPage, callback) {
+RemoteStorage.prototype.queryEnvelopes = function (query, categories, pageNumber, perPage, callback) {
   if (!connection.elastic) {
     return callback(null, {
       hits: {
@@ -346,7 +399,7 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
     });
   }
 
-  var q = {};
+  const q = {};
 
   if (!categories) {
     q.match = { _all: query };
@@ -374,14 +427,14 @@ RemoteStorage.prototype.queryContent = function (query, categories, pageNumber, 
   }, callback);
 };
 
-RemoteStorage.prototype.unindexContent = function (contentID, callback) {
+RemoteStorage.prototype.unindexEnvelope = function (contentID, callback) {
   if (!connection.elastic) return callback(null);
 
   connection.elastic.delete({
     index: 'envelopes_current',
     type: 'envelope',
     id: contentID
-  }, function (err) {
+  }, (err) => {
     if (err && err.status === '404') {
       // It's already gone. Disregard.
       return callback(null);
@@ -389,6 +442,16 @@ RemoteStorage.prototype.unindexContent = function (contentID, callback) {
 
     callback(err);
   });
+};
+
+RemoteStorage.prototype.bulkUnindexEnvelopes = function (contentIDs, callback) {
+  if (!connection.elastic) return callback(null);
+
+  const actions = contentIDs.map((id) => {
+    return { delete: { _index: 'envelopes_current', _type: 'envelope', _id: id } };
+  });
+
+  connection.elastic.bulk({ body: actions }, callback);
 };
 
 RemoteStorage.prototype.storeSHA = function (sha, callback) {
@@ -405,10 +468,8 @@ RemoteStorage.prototype.storeSHA = function (sha, callback) {
 };
 
 RemoteStorage.prototype.getSHA = function (callback) {
-  mongoCollection('sha').findOne({key: 'controlRepository'}, function (err, doc) {
-    if (err) {
-      return callback(err);
-    }
+  mongoCollection('sha').findOne({key: 'controlRepository'}, (err, doc) => {
+    if (err) return callback(err);
 
     if (doc === null) {
       return callback(null, null);
@@ -419,9 +480,5 @@ RemoteStorage.prototype.getSHA = function (callback) {
 };
 
 function mongoCollection (name) {
-  return connection.db.collection(config.mongodbPrefix() + name);
+  return connection.mongo.collection(config.mongodbPrefix() + name);
 }
-
-module.exports = {
-  RemoteStorage: RemoteStorage
-};

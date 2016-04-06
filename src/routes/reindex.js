@@ -51,52 +51,33 @@ function reindex () {
   };
 
   let reindexAllContent = function (callback) {
-    storage.listContent(function (err, contentIDs, next) {
-      if (err) return handleError(err, 'Unable to list content', true);
+    storage.listEnvelopes(null, (err, doc) => {
+      state.totalEnvelopes++;
 
-      if (contentIDs.length === 0) {
-        // We've listed all of the content. Declare victory in the logs.
-        log.info('All content re-indexed.', state);
-
-        return callback();
+      if (err) {
+        state.failedEnvelopes++;
+        return handleError(err, 'Unable to list content', true);
       }
 
-      let reindexContentID = function (contentID, cb) {
-        storage.getContent(contentID, function (err, envelope) {
-          if (err) {
-            handleError(err, 'Unable to fetch envelope with ID [' + contentID + ']', false);
+      log.debug('Reindexing envelope', { event: 'reindex', contentID: doc.contentID });
 
-            state.failedEnvelopes++;
-            state.totalEnvelopes++;
-            return cb();
-          }
+      storage.indexEnvelope(doc.contentID, doc.envelope, indexName, (err) => {
+        if (err) {
+          handleError(err, `Unable to index envelope with ID [${doc.contentID}]`, false);
+          state.failedEnvelopes++;
+          return;
+        }
 
-          log.debug('Successful envelope fetch', {
-            event: 'reindex',
-            contentID: contentID
-          });
+        log.debug('Successful envelope index', { event: 'reindex', contentID: doc.contentID });
 
-          storage.indexContent(contentID, envelope, indexName, function (err) {
-            if (err) {
-              handleError(err, 'Unable to index envelope with ID [' + contentID + ']', false);
-              state.failedEnvelopes++;
-              state.totalEnvelopes++;
-              return cb();
-            }
+        state.successfulEnvelopes++;
+      });
+    }, (err) => {
+      // All envelopes listed.
+      if (err) return handleError(err, 'Unable to list envelopes', true);
 
-            log.debug('Successful envelope index', {
-              event: 'reindex',
-              contentID: contentID
-            });
-
-            state.successfulEnvelopes++;
-            state.totalEnvelopes++;
-            cb();
-          });
-        });
-      };
-
-      async.mapLimit(contentIDs, 20, reindexContentID, next);
+      log.info('All content re-indexed.', state);
+      callback();
     });
   };
 

@@ -31,7 +31,7 @@ exports.query = function (req, res, next) {
 
   logger.debug('Beginning search', logPayload);
 
-  storage.queryContent(q, categories, pageNumber, perPage, function (err, results) {
+  storage.queryEnvelopes(q, categories, pageNumber, perPage, function (err, results) {
     logPayload.duration = Date.now() - startTs;
 
     if (err) {

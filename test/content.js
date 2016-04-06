@@ -1,3 +1,4 @@
+'use strict';
 /* global describe it beforeEach */
 
 /*
@@ -6,17 +7,21 @@
 
 require('./helpers/before');
 
-var chai = require('chai');
-var dirtyChai = require('dirty-chai');
+const chai = require('chai');
+const dirtyChai = require('dirty-chai');
 
 chai.use(dirtyChai);
-var expect = chai.expect;
+const expect = chai.expect;
 
-var request = require('supertest');
-var storage = require('../src/storage');
-var authHelper = require('./helpers/auth');
-var resetHelper = require('./helpers/reset');
-var server = require('../src/server');
+const async = require('async');
+const targz = require('tar.gz');
+const getRawBody = require('raw-body');
+const path = require('path');
+const request = require('supertest');
+const storage = require('../src/storage');
+const authHelper = require('./helpers/auth');
+const resetHelper = require('./helpers/reset');
+const server = require('../src/server');
 
 describe('/content', function () {
   beforeEach(resetHelper);
@@ -33,7 +38,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.getContent('foo&bar/', function (err, uploaded) {
+          storage.getEnvelope('foo&bar/', function (err, uploaded) {
             expect(err).to.be.null();
             expect(uploaded).to.deep.equal({ body: 'something' });
 
@@ -53,7 +58,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('ccc', null, 1, 10, function (err, results) {
+          storage.queryEnvelopes('ccc', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(1);
 
@@ -77,7 +82,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('nope', null, 1, 10, function (err, results) {
+          storage.queryEnvelopes('nope', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(0);
 
@@ -97,7 +102,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('ccc', null, 1, 10, function (err, results) {
+          storage.queryEnvelopes('ccc', null, 1, 10, function (err, results) {
             expect(err).to.be.null();
             expect(results.hits.total).to.equal(0);
 
@@ -119,7 +124,7 @@ describe('/content', function () {
 
   describe('#retrieve', function () {
     it('retrieves existing content from Cloud Files', function (done) {
-      storage.storeContent('what&huh', { body: 'expected' }, function (err) {
+      storage.storeEnvelope('what&huh', { body: 'expected' }, function (err) {
         expect(err).not.to.exist();
 
         request(server.create())
@@ -137,10 +142,10 @@ describe('/content', function () {
 
   describe('#delete', function () {
     beforeEach(function (done) {
-      storage.storeContent('er&okay', { body: 'expected' }, done);
+      storage.storeEnvelope('er&okay', { body: 'expected' }, done);
     });
     beforeEach(function (done) {
-      storage.indexContent('er&okay', { body: 'expected' }, done);
+      storage.indexEnvelope('er&okay', { body: 'expected' }, done);
     });
 
     it('requires authentication', function (done) {
@@ -158,7 +163,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.getContent('er&okay', function (err, uploaded) {
+          storage.getEnvelope('er&okay', function (err, uploaded) {
             expect(err).not.to.be.null();
             expect(err.statusCode).to.equal(404);
 
@@ -175,7 +180,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryContent('expected', null, 1, 10, function (err, found) {
+          storage.queryEnvelopes('expected', null, 1, 10, function (err, found) {
             expect(err).to.be.null();
             expect(found.hits.total).to.equal(0);
             expect(found.hits.hits.length).to.equal(0);
@@ -184,5 +189,98 @@ describe('/content', function () {
           });
         });
     });
+  });
+});
+
+describe('/bulkcontent', function () {
+  beforeEach(resetHelper);
+
+  const withFixtureTarball = function (fixtureName, andThen) {
+    return (cb) => {
+      let tarball = targz().createReadStream(path.join(__dirname, 'fixtures', fixtureName));
+      getRawBody(tarball, (err, tarball) => {
+        if (err) return cb(err);
+
+        andThen(tarball, cb);
+      });
+    };
+  };
+
+  const storeEnvelope = function (contentID, envelope) {
+    return (cb) => {
+      storage.storeEnvelope(contentID, envelope, cb);
+    };
+  };
+
+  const expectStoredEnvelope = function (contentID, envelope) {
+    return (cb) => {
+      storage.getEnvelope(contentID, (err, c) => {
+        if (err) return cb(err);
+        expect(c).to.deep.equal(envelope);
+        cb();
+      });
+    };
+  };
+
+  const expectNoEnvelope = function (contentID) {
+    return (cb) => {
+      storage.getEnvelope(contentID, (err) => {
+        expect(err).not.to.be.null();
+        expect(err.statusCode).to.equal(404);
+
+        cb(null);
+      });
+    };
+  };
+
+  it('uploads all envelopes from a tarball', function (done) {
+    async.series([
+      withFixtureTarball('envelopes', (tarball, cb) => {
+        let r = request(server.create())
+          .post('/bulkcontent')
+          .set('Authorization', authHelper.AUTH_USER)
+          .set('Content-Type', 'application/tar+gzip');
+
+        r.write(tarball);
+
+        r.expect(200)
+          .expect({ accepted: 2, failed: 0, deleted: 0 })
+          .end(cb);
+      }),
+      expectStoredEnvelope('https://github.com/some/repository/one', {
+        title: 'One',
+        body: 'Document one'
+      }),
+      expectStoredEnvelope('https://github.com/some/repository/two', {
+        title: 'Two',
+        body: 'Document two'
+      })
+    ], done);
+  });
+
+  it('deletes all other envelopes that share a content ID base', function (done) {
+    async.series([
+      storeEnvelope('https://github.com/some/repository/cruft', {
+        title: 'Cruft',
+        body: 'This should be deleted'
+      }),
+      withFixtureTarball('envelopes', (tarball, cb) => {
+        let r = request(server.create())
+          .post('/bulkcontent')
+          .set('Authorization', authHelper.AUTH_USER)
+          .set('Content-Type', 'application/tar+gzip');
+
+        r.write(tarball);
+
+        r.expect(200)
+          .expect({ accepted: 2, failed: 0, deleted: 1 })
+          .end(cb);
+      }),
+      expectStoredEnvelope('https://github.com/some/repository/one', {
+        title: 'One',
+        body: 'Document one'
+      }),
+      expectNoEnvelope('https://github.com/some/repository/cruft')
+    ], done);
   });
 });

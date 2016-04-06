@@ -25,7 +25,7 @@ describe('upstream', () => {
   }));
 
   describe('with content', () => {
-    beforeEach((done) => storage.storeContent('local', { body: 'local' }, done));
+    beforeEach((done) => storage.storeEnvelope('local', { body: 'local' }, done));
 
     it('returns local content the same', (done) => {
       request(server.create())

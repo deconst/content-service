@@ -4,14 +4,16 @@ const storage = require('../../storage');
 const logger = require('../../logging').getLogger();
 
 exports.handler = function (req, res, next) {
+  const assetFilename = req.params.id;
+
   logger.debug({
     action: 'assetretrieve',
     message: 'Asset requested directly.'
   });
 
-  var reqStart = Date.now();
+  const reqStart = Date.now();
 
-  storage.getAsset(req.params.id, function (err, asset) {
+  storage.getAsset(assetFilename, (err, asset) => {
     if (err) {
       logger.error({
         action: 'assetretrieve',

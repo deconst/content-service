@@ -10,7 +10,7 @@ const logger = require('../../logging').getLogger();
 exports.handler = function (req, res, next) {
   logger.debug('Asset list requested.');
 
-  enumerateNamed(function (err, assets) {
+  enumerateNamed((err, assets) => {
     if (err) {
       logger.error({
         action: 'assetlist',
@@ -59,15 +59,13 @@ exports.handler = function (req, res, next) {
  * @description Enumerate all named assets.
  */
 const enumerateNamed = exports.enumerateNamed = function (callback) {
-  storage.findNamedAssets(function (err, assetVars) {
-    if (err) {
-      return callback(err);
-    }
+  storage.findNamedAssets((err, assetVars) => {
+    if (err) return callback(err);
 
-    var assets = {};
+    const assets = {};
 
-    for (var i = 0; i < assetVars.length; i++) {
-      var assetVar = assetVars[i];
+    for (let i = 0; i < assetVars.length; i++) {
+      const assetVar = assetVars[i];
       assets[assetVar.key] = assetVar.publicURL;
     }
 

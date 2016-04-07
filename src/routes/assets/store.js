@@ -8,9 +8,12 @@ const logger = require('../../logging').getLogger();
 const storage = require('../../storage');
 
 exports.handler = function (req, res, next) {
-  var originalAssetNames = [];
-  var assetData = Object.getOwnPropertyNames(req.files).map(function (key) {
-    var asset = req.files[key];
+  const reqStart = Date.now();
+  const isNamed = req.query.named;
+
+  const originalAssetNames = [];
+  const assetData = Object.getOwnPropertyNames(req.files).map((key) => {
+    const asset = req.files[key];
     asset.key = key;
     originalAssetNames.push(key);
     return asset;
@@ -24,9 +27,7 @@ exports.handler = function (req, res, next) {
     message: withAssetList('Asset upload request received', originalAssetNames)
   });
 
-  var reqStart = Date.now();
-
-  async.map(assetData, makeAssetHandler(req.query.named), function (err, results) {
+  async.map(assetData, makeAssetHandler(isNamed), (err, results) => {
     if (err) {
       var statusCode = err.statusCode || 500;
 
@@ -47,10 +48,8 @@ exports.handler = function (req, res, next) {
       return next(err);
     }
 
-    var summary = {};
-    results.forEach(function (result) {
-      summary[result.original] = result.publicURL;
-    });
+    const summary = {};
+    results.forEach((result) => summary[result.original] = result.publicURL);
     logger.info({
       action: 'assetstore',
       statusCode: 200,
@@ -68,14 +67,14 @@ exports.handler = function (req, res, next) {
  * @description Create and return a function that processes a single asset.
  */
 const makeAssetHandler = function (shouldName) {
-  return function (asset, callback) {
+  return (asset, callback) => {
     logger.debug({
       action: 'assetstore',
       originalAssetName: asset.name,
       message: 'Asset upload request received.'
     });
 
-    var steps = [
+    const steps = [
       async.apply(fingerprintAsset, asset),
       publishAsset
     ];
@@ -93,22 +92,22 @@ const makeAssetHandler = function (shouldName) {
  *   the fingerprinted asset name.
  */
 const fingerprintAsset = function (asset, callback) {
-  var sha256sum = crypto.createHash('sha256');
-  var assetFile = fs.createReadStream(asset.path);
-  var chunks = [];
+  const sha256sum = crypto.createHash('sha256');
+  const assetFile = fs.createReadStream(asset.path);
+  const chunks = [];
 
-  assetFile.on('data', function (chunk) {
+  assetFile.on('data', (chunk) => {
     sha256sum.update(chunk);
     chunks.push(chunk);
   });
 
   assetFile.on('error', callback);
 
-  assetFile.on('end', function () {
-    var digest = sha256sum.digest('hex');
-    var ext = path.extname(asset.name);
-    var basename = path.basename(asset.name, ext);
-    var fingerprinted = basename + '-' + digest + ext;
+  assetFile.on('end', () => {
+    const digest = sha256sum.digest('hex');
+    const ext = path.extname(asset.name);
+    const basename = path.basename(asset.name, ext);
+    const fingerprinted = `${basename}-${digest}${ext}`;
 
     logger.debug({
       action: 'assetstore',
@@ -132,10 +131,8 @@ const fingerprintAsset = function (asset, callback) {
  * @description Upload an asset's contents to the asset container.
  */
 const publishAsset = function (asset, callback) {
-  storage.storeAsset(asset, function (err, asset) {
-    if (err) {
-      return callback(err);
-    }
+  storage.storeAsset(asset, (err, asset) => {
+    if (err) return callback(err);
 
     logger.debug({
       action: 'assetstore',
@@ -154,10 +151,8 @@ const publishAsset = function (asset, callback) {
  *   layouts.
  */
 const nameAsset = function (asset, callback) {
-  storage.nameAsset(asset, function (err, asset) {
-    if (err) {
-      return callback(err);
-    }
+  storage.nameAsset(asset, (err, asset) => {
+    if (err) return callback(err);
 
     logger.debug({
       action: 'assetstore',
@@ -174,13 +169,12 @@ const nameAsset = function (asset, callback) {
  * @description Append a list of asset names to a message before it's logged.
  */
 const withAssetList = function (message, originalAssetNames) {
-  var subset = originalAssetNames.slice(0, 3);
+  const subset = originalAssetNames.slice(0, 3);
 
   if (originalAssetNames.length > 3) {
     subset.push('..');
   }
 
-  var joined = subset.join(', ');
-
-  return message + ': ' + joined + '.';
+  const joined = subset.join(', ');
+  return `${message}: ${joined}.`;
 };

@@ -16,6 +16,7 @@ exports.handler = function (req, res, next) {
 
   let assetCount = 0;
   const publicURLs = {};
+  const reqStart = Date.now();
 
   const reportError = (err, entryPath, description) => {
     logger.warn(`Bulk asset upload problem: ${description}`, {
@@ -82,7 +83,8 @@ exports.handler = function (req, res, next) {
     logger.info('Asset bulk upload completed.', {
       action: 'bulkassetstore',
       apikey: req.apikeyName,
-      assetCount
+      assetCount,
+      totalReqDuration: Date.now() - reqStart
     });
 
     res.send(200, publicURLs);

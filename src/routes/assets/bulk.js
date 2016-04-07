@@ -14,6 +14,9 @@ exports.handler = function (req, res, next) {
   const extract = tar.extract();
   const pack = tar.pack();
 
+  let assetCount = 0;
+  const publicURLs = {};
+
   const reportError = (err, entryPath, description) => {
     logger.warn(`Bulk asset upload problem: ${description}`, {
       action: 'bulkassetstore',
@@ -31,8 +34,6 @@ exports.handler = function (req, res, next) {
     const sha256sum = crypto.createHash('sha256');
     const chunks = [];
 
-    logger.debug('Received asset at path', { entryPath });
-
     stream.on('data', (chunk) => {
       sha256sum.update(chunk);
       chunks.push(chunk);
@@ -49,8 +50,11 @@ exports.handler = function (req, res, next) {
       const bname = path.basename(entryPath, ext);
       const name = `${bname}-${sha256sum.digest('hex')}${ext}`;
 
+      assetCount++;
+      publicURLs[entryPath] = storage.assetURLPrefix() + encodeURIComponent(name);
+
       pack.entry({ name }, body);
-      logger.debug('Repacked asset', { entryPath, name });
+      logger.debug('Repacked asset', { entryPath, name, assetCount });
       next();
     });
   });
@@ -71,10 +75,17 @@ exports.handler = function (req, res, next) {
 
   storage.bulkStoreAssets(pack.pipe(zlib.createGzip()), (err) => {
     if (err) {
+      reportError(err);
       return next(err);
     }
 
-    res.send(200);
+    logger.info('Asset bulk upload completed.', {
+      action: 'bulkassetstore',
+      apikey: req.apikeyName,
+      assetCount
+    });
+
+    res.send(200, publicURLs);
     next();
   });
 

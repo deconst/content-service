@@ -18,14 +18,9 @@ exports.loadRoutes = function (server) {
   server.del('/content/:id', auth.requireKey, content.remove);
   server.post('/bulkcontent', auth.requireKey, content.bulk);
 
-  server.post('/assets',
-    auth.requireKey,
-    restify.bodyParser(),
-    restify.queryParser(),
-    assets.accept);
-
   server.get('/assets', assets.list);
   server.get('/assets/:id', assets.retrieve);
+  server.post('/assets', auth.requireKey, restify.bodyParser(), restify.queryParser(), assets.store);
 
   server.get('/search', restify.queryParser(), search.query);
 

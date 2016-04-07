@@ -29,6 +29,7 @@
     "mocha": "^2.2.4",
     "nock": "^7.2.2",
     "semistandard": "^7.0.3",
+    "streamifier": "^0.1.1",
     "supertest": "^0.15.0"
   }
 }

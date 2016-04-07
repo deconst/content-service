@@ -14,6 +14,7 @@ chai.use(dirtyChai);
 const async = require('async');
 const nock = require('nock');
 const request = require('supertest');
+const streamifier = require('streamifier');
 const storage = require('../src/storage');
 const server = require('../src/server');
 const resetHelper = require('./helpers/reset');
@@ -94,27 +95,16 @@ describe('upstream', () => {
     beforeEach((done) => {
       // Note to self: this is extremely awkward.
       let assets = [
-        {
-          key: 'only-local',
-          original: 'only-local.jpg',
-          filename: 'only-local-123123.jpg',
-          chunks: [],
-          type: 'image/jpg'
-        },
-        {
-          key: 'both',
-          original: 'both.jpg',
-          filename: 'both-456456.jpg',
-          chunks: [],
-          type: 'image/jpg'
-        }
+        { name: 'only-local', filename: 'only-local-123123.jpg', type: 'image/jpg' },
+        { name: 'both', filename: 'both-456456.jpg', type: 'image/jpg' }
       ];
 
       let storeEach = (asset, cb) => {
-        storage.storeAsset(asset, (err) => {
+        const empty = streamifier.createReadStream(new Buffer(0));
+        storage.storeAsset(empty, asset.filename, asset.type, (err, publicURL) => {
           if (err) return cb(err);
 
-          storage.nameAsset(asset, cb);
+          storage.nameAsset(asset.name, publicURL, cb);
         });
       };
 

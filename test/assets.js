@@ -54,9 +54,7 @@ describe('/assets', function () {
 
     request(app)
       .post('/assets')
-      .query({
-        named: 'true'
-      })
+      .query({ named: 'true' })
       .set('Authorization', authHelper.AUTH_USER)
       .attach('first', 'test/fixtures/asset-file.txt')
       .end(function (err, res) {
@@ -66,7 +64,7 @@ describe('/assets', function () {
           .get('/assets')
           .expect(200)
           .expect('Content-Type', /json/)
-          .expect('{"first":"' + finalName + '"}', done);
+          .expect({ first: finalName }, done);
       });
   });
 

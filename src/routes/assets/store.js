@@ -160,7 +160,7 @@ const makeAssetPublisher = function (asset) {
  */
 const makeAssetNamer = function (asset) {
   return (callback) => {
-    storage.nameAsset(asset, (err, asset) => {
+    storage.nameAsset(asset.name, asset.publicURL, (err, asset) => {
       if (err) return callback(err);
 
       logger.debug('Asset named successfully.', {

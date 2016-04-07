@@ -19,7 +19,7 @@
     "raw-body": "2.1.6",
     "request": "^2.69.0",
     "restify": "4.0.0",
-    "tar.gz": "1.0.3",
+    "tar-stream": "1.5.1",
     "urljoin": "^0.1.5",
     "winston": "0.9.0"
   },
@@ -29,7 +29,8 @@
     "mocha": "^2.2.4",
     "nock": "^7.2.2",
     "semistandard": "^7.0.3",
-    "streamifier": "^0.1.1",
-    "supertest": "^0.15.0"
+    "streamifier": "0.1.1",
+    "supertest": "^0.15.0",
+    "tar-fs": "1.12.0"
   }
 }

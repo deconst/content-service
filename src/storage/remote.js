@@ -105,7 +105,8 @@ RemoteStorage.prototype.bulkStoreAssets = function (stream, callback) {
     stream,
     format: 'tar.gz',
     headers: {
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': ''
     }
   }, callback);
 };

@@ -11,33 +11,39 @@ exports.handler = function (req, res, next) {
   const reqStart = Date.now();
   const isNamed = req.query.named;
 
-  const originalAssetNames = [];
-  const assetData = Object.getOwnPropertyNames(req.files).map((key) => {
-    const asset = req.files[key];
-    asset.key = key;
-    originalAssetNames.push(key);
-    return asset;
+  const names = [];
+  const assets = [];
+
+  Object.getOwnPropertyNames(req.files).forEach((name) => {
+    const upload = req.files[name];
+
+    assets.push({
+      name,
+      filename: upload.name,
+      type: upload.type,
+      size: upload.size,
+      getReadStream: () => fs.createReadStream(upload.path)
+    });
+    names.push(name);
   });
 
-  logger.debug({
+  logger.debug(withAssetList('Asset upload request received', names), {
     action: 'assetstore',
     apikeyName: req.apikeyName,
-    assetCount: assetData.length,
-    originalAssetNames: originalAssetNames,
-    message: withAssetList('Asset upload request received', originalAssetNames)
+    assetCount: assets.length,
+    assetNames: names
   });
 
-  async.map(assetData, makeAssetHandler(isNamed), (err, results) => {
+  async.map(assets, makeAssetHandler(isNamed), (err, results) => {
     if (err) {
-      var statusCode = err.statusCode || 500;
+      const statusCode = err.statusCode || 500;
 
-      logger.error({
+      logger.error(withAssetList('Unable to upload one or more assets', names), {
         action: 'assetstore',
         statusCode: statusCode,
         apikeyName: req.apikeyName,
         error: err.message,
-        stack: err.stack,
-        message: withAssetList('Unable to upload one or more assets', originalAssetNames)
+        stack: err.stack
       });
 
       res.send(statusCode, {
@@ -49,16 +55,17 @@ exports.handler = function (req, res, next) {
     }
 
     const summary = {};
-    results.forEach((result) => summary[result.original] = result.publicURL);
-    logger.info({
+    results.forEach((result) => summary[result.filename] = result.publicURL);
+
+    res.send(summary);
+
+    logger.info(withAssetList('All assets have been uploaded successfully', names), {
       action: 'assetstore',
       statusCode: 200,
       apikeyName: req.apikeyName,
-      totalReqDuration: Date.now() - reqStart,
-      message: withAssetList('All assets have been uploaded successfully', originalAssetNames)
+      totalReqDuration: Date.now() - reqStart
     });
 
-    res.send(summary);
     next();
   });
 };
@@ -68,22 +75,24 @@ exports.handler = function (req, res, next) {
  */
 const makeAssetHandler = function (shouldName) {
   return (asset, callback) => {
-    logger.debug({
+    logger.debug('Uploading asset', {
       action: 'assetstore',
-      originalAssetName: asset.name,
-      message: 'Asset upload request received.'
+      assetName: asset.name
     });
 
     const steps = [
-      async.apply(fingerprintAsset, asset),
-      publishAsset
+      makeAssetFingerprinter(asset),
+      makeAssetPublisher(asset)
     ];
 
     if (shouldName) {
-      steps.push(nameAsset);
+      steps.push(makeAssetNamer(asset));
     }
 
-    async.waterfall(steps, callback);
+    async.series(steps, (err) => {
+      if (err) return callback(err);
+      callback(null, asset);
+    });
   };
 };
 
@@ -91,58 +100,57 @@ const makeAssetHandler = function (shouldName) {
  * @description Calculate a checksum of an uploaded file's contents to generate
  *   the fingerprinted asset name.
  */
-const fingerprintAsset = function (asset, callback) {
-  const sha256sum = crypto.createHash('sha256');
-  const assetFile = fs.createReadStream(asset.path);
-  const chunks = [];
+const makeAssetFingerprinter = function (asset) {
+  return (callback) => {
+    const stream = asset.getReadStream();
+    const sha256sum = crypto.createHash('sha256');
 
-  assetFile.on('data', (chunk) => {
-    sha256sum.update(chunk);
-    chunks.push(chunk);
-  });
+    stream.on('data', (chunk) => sha256sum.update(chunk));
 
-  assetFile.on('error', callback);
+    stream.on('error', callback);
 
-  assetFile.on('end', () => {
-    const digest = sha256sum.digest('hex');
-    const ext = path.extname(asset.name);
-    const basename = path.basename(asset.name, ext);
-    const fingerprinted = `${basename}-${digest}${ext}`;
+    stream.on('end', () => {
+      const digest = sha256sum.digest('hex');
+      const ext = path.extname(asset.filename);
+      const basename = path.basename(asset.filename, ext);
+      const fingerprinted = `${basename}-${digest}${ext}`;
 
-    logger.debug({
-      action: 'assetstore',
-      originalAssetName: asset.name,
-      assetFilename: fingerprinted,
-      assetContentType: asset.type,
-      message: 'Asset fingerprinted successfully.'
+      asset.fingerprinted = fingerprinted;
+
+      logger.debug('Asset fingerprinted.', {
+        action: 'assetstore',
+        assetName: asset.name,
+        assetFilename: fingerprinted,
+        assetContentType: asset.type
+      });
+
+      callback(null);
     });
-
-    callback(null, {
-      key: asset.key,
-      original: asset.name,
-      chunks: chunks,
-      filename: fingerprinted,
-      type: asset.type
-    });
-  });
+  };
 };
 
 /**
  * @description Upload an asset's contents to the asset container.
  */
-const publishAsset = function (asset, callback) {
-  storage.storeAsset(asset, (err, asset) => {
-    if (err) return callback(err);
+const makeAssetPublisher = function (asset) {
+  return (callback) => {
+    const stream = asset.getReadStream();
 
-    logger.debug({
-      action: 'assetstore',
-      assetFilename: asset.filename,
-      assetContentType: asset.type,
-      message: 'Asset uploaded successfully.'
+    storage.storeAsset(stream, asset.fingerprinted, asset.type, (err, publicURL) => {
+      if (err) return callback(err);
+
+      asset.publicURL = publicURL;
+
+      logger.debug('Asset uploaded.', {
+        action: 'assetstore',
+        assetFilename: asset.fingerprinted,
+        assetPublicURL: asset.publicURL,
+        assetContentType: asset.type
+      });
+
+      callback(null);
     });
-
-    callback(null, asset);
-  });
+  };
 };
 
 /**
@@ -150,28 +158,28 @@ const publishAsset = function (asset, callback) {
  *   asset will be included in all outgoing metadata envelopes, for use by
  *   layouts.
  */
-const nameAsset = function (asset, callback) {
-  storage.nameAsset(asset, (err, asset) => {
-    if (err) return callback(err);
+const makeAssetNamer = function (asset) {
+  return (callback) => {
+    storage.nameAsset(asset, (err, asset) => {
+      if (err) return callback(err);
 
-    logger.debug({
-      action: 'assetstore',
-      originalAssetFilename: asset.original,
-      assetName: asset.key,
-      message: 'Asset named successfully.'
+      logger.debug('Asset named successfully.', {
+        action: 'assetstore',
+        assetName: asset.name
+      });
+
+      callback(null);
     });
-
-    callback(null, asset);
-  });
+  };
 };
 
 /**
  * @description Append a list of asset names to a message before it's logged.
  */
-const withAssetList = function (message, originalAssetNames) {
-  const subset = originalAssetNames.slice(0, 3);
+const withAssetList = function (message, names) {
+  const subset = names.slice(0, 3);
 
-  if (originalAssetNames.length > 3) {
+  if (names.length > 3) {
     subset.push('..');
   }
 

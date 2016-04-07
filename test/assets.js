@@ -127,9 +127,7 @@ describe('/bulkasset', function () {
 
         r.write(tarball);
 
-        r.expect(200)
-          .expect({ accepted: 2, failed: 0, deleted: 0 })
-          .end(cb);
+        r.expect(200).end(cb);
       }),
       expectStoredAsset('style-260fccfc8f2a9f455bc7593b6aa9f97b9c59115450c52ea6d44b3833a1e9e158.css'),
       expectStoredAsset('script-083f461dc2da33e85c40fccf85439168a9ec06d0ed45e2a107382d7d236d5b61.js'),

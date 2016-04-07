@@ -1,8 +1,10 @@
 'use strict';
 
+const zlib = require('zlib');
 const _ = require('lodash');
 const async = require('async');
 const getRawBody = require('raw-body');
+const tar = require('tar-stream');
 
 /**
  * @description Storage driver that uses entirely in-memory data structures.
@@ -42,6 +44,28 @@ MemoryStorage.prototype.storeAsset = function (stream, filename, contentType, ca
 
     callback(null, publicURL);
   });
+};
+
+MemoryStorage.prototype.bulkStoreAssets = function (stream, callback) {
+  const publicURLs = {};
+
+  const extract = tar.extract();
+
+  extract.on('entry', (header, stream, next) => {
+    if (header.type !== 'file') return next();
+
+    this.storeAsset(stream, header.name, '', (err, publicURL) => {
+      if (err) return;
+
+      publicURLs[header.name] = publicURL;
+    });
+
+    next();
+  });
+
+  extract.on('finish', () => callback(null, publicURLs));
+
+  stream.pipe(zlib.createGunzip()).pipe(extract);
 };
 
 MemoryStorage.prototype.nameAsset = function (name, publicURL, callback) {

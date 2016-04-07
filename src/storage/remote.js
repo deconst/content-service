@@ -97,6 +97,20 @@ RemoteStorage.prototype.storeAsset = function (stream, filename, contentType, ca
 };
 
 /**
+ * @description Upload many assets to Cloud Files in one request.
+ */
+RemoteStorage.prototype.bulkStoreAssets = function (stream, callback) {
+  connection.cloud.extract({
+    container: config.assetContainer(),
+    stream,
+    format: 'tar.gz',
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
+  }, callback);
+};
+
+/**
  * @description Store this asset in the MongoDB named asset collection, overwriting one with the
  * same name if present.
  */

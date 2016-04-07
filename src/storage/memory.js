@@ -58,9 +58,8 @@ MemoryStorage.prototype.bulkStoreAssets = function (stream, callback) {
       if (err) return;
 
       publicURLs[header.name] = publicURL;
+      next();
     });
-
-    next();
   });
 
   extract.on('finish', () => callback(null, publicURLs));

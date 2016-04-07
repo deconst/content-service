@@ -63,13 +63,13 @@ exports.handler = function (req, res, next) {
     };
 
     if (fatal) {
-      logger.error(`Fatal bulk upload problem: ${description}`, logPayload);
+      logger.error(`Fatal bulk envelope upload problem: ${description}`, logPayload);
 
       err.statusCode = 400;
 
       next(err);
     } else {
-      logger.warn(`Bulk upload problem: ${description}`, logPayload);
+      logger.warn(`Bulk envelope upload problem: ${description}`, logPayload);
     }
   };
 
@@ -203,7 +203,9 @@ exports.handler = function (req, res, next) {
   });
 
   extract.on('error', (err) => {
-    logger.info('Corrupted tarball uploaded', {
+    logger.info('Corrupted envelope tarball uploaded', {
+      action: 'bulkcontentstore',
+      apikey: req.apikeyName,
       err: err.message,
       stack: err.stack
     });

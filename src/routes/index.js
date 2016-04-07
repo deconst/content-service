@@ -21,6 +21,7 @@ exports.loadRoutes = function (server) {
   server.get('/assets', assets.list);
   server.get('/assets/:id', assets.retrieve);
   server.post('/assets', auth.requireKey, restify.bodyParser(), restify.queryParser(), assets.store);
+  server.post('/bulkasset', auth.requireKey, restify.queryParser(), assets.bulk);
 
   server.get('/search', restify.queryParser(), search.query);
 

@@ -130,7 +130,7 @@ describe('/bulkasset', function () {
         r.expect(200).end(cb);
       }),
       expectStoredAsset('style-260fccfc8f2a9f455bc7593b6aa9f97b9c59115450c52ea6d44b3833a1e9e158.css'),
-      expectStoredAsset('script-083f461dc2da33e85c40fccf85439168a9ec06d0ed45e2a107382d7d236d5b61.js'),
+      expectStoredAsset('script-650a4020d200ba58e1cb4d32af8e84bc0ae3c10f610305e955db14841b191ab3.js'),
       expectStoredAsset('dc-logo-0ec14d405ea0304b826fd8dc9de17638ed78cecec65b73d2b5847687da3c8e1f.png')
     ], done);
   });

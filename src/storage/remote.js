@@ -74,11 +74,11 @@ RemoteStorage.prototype.assetURLPrefix = function () {
 /**
  * @description Upload an asset to the Cloud Files asset container.
  */
-RemoteStorage.prototype.storeAsset = function (asset, callback) {
-  var up = connection.cloud.upload({
+RemoteStorage.prototype.storeAsset = function (stream, filename, contentType, callback) {
+  const up = connection.cloud.upload({
     container: config.assetContainer(),
-    remote: asset.filename,
-    contentType: asset.type,
+    remote: filename,
+    contentType: contentType,
     headers: {
       'Access-Control-Allow-Origin': '*'
     }
@@ -87,32 +87,40 @@ RemoteStorage.prototype.storeAsset = function (asset, callback) {
   up.on('error', callback);
 
   up.on('success', () => {
-    asset.publicURL = this.assetURLPrefix() + encodeURIComponent(asset.filename);
-    callback(null, asset);
+    const publicURL = this.assetURLPrefix() + encodeURIComponent(filename);
+    callback(null, publicURL);
   });
 
-  asset.chunks.forEach((chunk) => up.write(chunk));
+  stream.pipe(up);
 
   up.end();
+};
+
+/**
+ * @description Upload many assets to Cloud Files in one request.
+ */
+RemoteStorage.prototype.bulkStoreAssets = function (stream, callback) {
+  connection.cloud.extract({
+    container: config.assetContainer(),
+    stream,
+    format: 'tar.gz',
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': ''
+    }
+  }, callback);
 };
 
 /**
  * @description Store this asset in the MongoDB named asset collection, overwriting one with the
  * same name if present.
  */
-RemoteStorage.prototype.nameAsset = function (asset, callback) {
-  mongoCollection('layoutAssets').updateOne({
-    key: asset.key
-  }, {
-    $set: {
-      key: asset.key,
-      publicURL: asset.publicURL
-    }
-  }, {
-    upsert: true
-  },
-    (err) => callback(err, asset)
-  );
+RemoteStorage.prototype.nameAsset = function (name, publicURL, callback) {
+  const filter = { key: name };
+  const op = { $set: { key: name, publicURL } };
+  const options = { upsert: true };
+
+  mongoCollection('layoutAssets').findOneAndUpdate(filter, op, options, callback);
 };
 
 /**

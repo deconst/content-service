@@ -2,7 +2,8 @@
 
 const async = require('async');
 const path = require('path');
-const targz = require('tar.gz');
+const zlib = require('zlib');
+const tar = require('tar-stream');
 const logger = require('../../logging').getLogger();
 const storage = require('../../storage');
 const storeEnvelope = require('./store').storeEnvelope;
@@ -62,24 +63,24 @@ exports.handler = function (req, res, next) {
     };
 
     if (fatal) {
-      logger.error(`Fatal bulk upload problem: ${description}`, logPayload);
+      logger.error(`Fatal bulk envelope upload problem: ${description}`, logPayload);
 
       err.statusCode = 400;
 
       next(err);
     } else {
-      logger.warn(`Bulk upload problem: ${description}`, logPayload);
+      logger.warn(`Bulk envelope upload problem: ${description}`, logPayload);
     }
   };
 
   // Handle a metadata/config.json entry.
-  const handleConfigEntry = (entry) => {
-    jsonFromStream(entry, (err, config) => {
-      if (err) return reportError(err, entry.path, 'parsing config.json');
+  const handleConfigEntry = (entryPath, stream) => {
+    jsonFromStream(stream, (err, config) => {
+      if (err) return reportError(err, entryPath, 'parsing config.json');
 
       if (!config.contentIDBase) {
         let e = new Error('Missing required key: contentIDBase');
-        return reportError(e, entry.path, 'parsing config.json');
+        return reportError(e, entryPath, 'parsing config.json');
       }
 
       contentIDBase = config.contentIDBase;
@@ -87,13 +88,13 @@ exports.handler = function (req, res, next) {
   };
 
   // Handle a metadata/keep.json entry.
-  const handleKeepEntry = (entry) => {
-    jsonFromStream(entry, (err, keep) => {
-      if (err) return reportError(err, entry.path, 'parsing keep.json');
+  const handleKeepEntry = (entryPath, stream) => {
+    jsonFromStream(stream, (err, keep) => {
+      if (err) return reportError(err, entryPath, 'parsing keep.json');
 
       if (!keep.keep) {
         let e = new Error('Missing required key: keep');
-        return reportError(e, entry.path, 'parsing keep.json');
+        return reportError(e, entryPath, 'parsing keep.json');
       }
 
       keep.keep.forEach((contentID) => {
@@ -102,15 +103,15 @@ exports.handler = function (req, res, next) {
     });
   };
 
-  const handleEnvelopeEntry = (entry) => {
-    let encodedContentID = path.basename(entry.path, '.json');
+  const handleEnvelopeEntry = (entryPath, stream) => {
+    let encodedContentID = path.basename(entryPath, '.json');
     let contentID = decodeURIComponent(encodedContentID);
     toKeep[contentID] = true;
 
-    jsonFromStream(entry, (err, envelope) => {
+    jsonFromStream(stream, (err, envelope) => {
       if (err) {
         failureCount++;
-        return reportError(err, entry.path, 'parsing metadata envelope');
+        return reportError(err, entryPath, 'parsing metadata envelope');
       }
 
       // TODO validate envelope contents against a schema
@@ -167,43 +168,44 @@ exports.handler = function (req, res, next) {
     next();
   };
 
-  const parse = targz().createParseStream();
+  const extract = tar.extract();
 
-  parse.on('entry', (entry) => {
-    if (entry.type !== 'File') return;
+  extract.on('entry', (header, stream, next) => {
+    if (header.type !== 'file') return next();
+    const entryPath = header.name;
 
-    let dirs = path.dirname(entry.path).split(path.sep);
-    let dname = dirs[dirs.length - 1];
-    let bname = path.basename(entry.path);
+    const dirs = path.dirname(entryPath).split(path.sep);
+    const dname = dirs[dirs.length - 1];
+    const bname = path.basename(entryPath);
 
-    logger.debug('Received entry for path', { path: entry.path });
+    logger.debug('Received entry for path', { entryPath });
 
     if (dname === 'metadata') {
       // metadata/ entries
       switch (bname) {
         case 'config.json':
-          handleConfigEntry(entry);
+          handleConfigEntry(entryPath, stream);
           break;
         case 'keep.json':
-          handleKeepEntry(entry);
+          handleKeepEntry(entryPath, stream);
           break;
         default:
-          logger.warn('Unrecognized metadata entry', {
-            entryPath: entry.path
-          });
+          logger.warn('Unrecognized metadata entry', { entryPath });
           break;
       }
     } else if (bname.endsWith('.json')) {
-      handleEnvelopeEntry(entry);
+      handleEnvelopeEntry(entryPath, stream);
     } else {
-      logger.warn('Unrecognized entry', {
-        entryPath: entry.path
-      });
+      logger.warn('Unrecognized entry', { entryPath });
     }
+
+    next();
   });
 
-  parse.on('error', (err) => {
-    logger.info('Corrupted tarball uploaded', {
+  extract.on('error', (err) => {
+    logger.info('Corrupted envelope tarball uploaded', {
+      action: 'bulkcontentstore',
+      apikey: req.apikeyName,
       err: err.message,
       stack: err.stack
     });
@@ -213,12 +215,10 @@ exports.handler = function (req, res, next) {
     next();
   });
 
-  parse.on('end', () => {
+  extract.on('finish', () => {
     const finishRequest = () => {
       removeDeletedContent((err) => {
-        if (err) {
-          reportError(err, null, 'deleted content removal', true);
-        }
+        if (err) reportError(err, null, 'deleted content removal', true);
 
         reportCompletion();
       });
@@ -231,7 +231,7 @@ exports.handler = function (req, res, next) {
     }
   });
 
-  req.pipe(parse);
+  req.pipe(zlib.createGunzip()).pipe(extract);
 };
 
 const jsonFromStream = function (stream, callback) {

@@ -1,7 +1,10 @@
 'use strict';
 
+const zlib = require('zlib');
 const _ = require('lodash');
 const async = require('async');
+const getRawBody = require('raw-body');
+const tar = require('tar-stream');
 
 /**
  * @description Storage driver that uses entirely in-memory data structures.
@@ -32,26 +35,42 @@ MemoryStorage.prototype.assetURLPrefix = function () {
   return '/__local_asset__/';
 };
 
-MemoryStorage.prototype.storeAsset = function (asset, callback) {
-  var assetBody = Buffer.concat(asset.chunks);
+MemoryStorage.prototype.storeAsset = function (stream, filename, contentType, callback) {
+  getRawBody(stream, (err, body) => {
+    if (err) return callback(err);
 
-  this.assets[asset.filename] = {
-    contentType: asset.type,
-    body: assetBody
-  };
+    this.assets[filename] = { contentType, body };
+    const publicURL = this.assetURLPrefix() + encodeURIComponent(filename);
 
-  asset.publicURL = this.assetURLPrefix() + encodeURIComponent(asset.filename);
-
-  callback(null, asset);
+    callback(null, publicURL);
+  });
 };
 
-MemoryStorage.prototype.nameAsset = function (asset, callback) {
-  this.namedAssets[asset.key] = {
-    key: asset.key,
-    publicURL: asset.publicURL
-  };
+MemoryStorage.prototype.bulkStoreAssets = function (stream, callback) {
+  const publicURLs = {};
 
-  callback(null, asset);
+  const extract = tar.extract();
+
+  extract.on('entry', (header, stream, next) => {
+    if (header.type !== 'file') return next();
+
+    this.storeAsset(stream, header.name, '', (err, publicURL) => {
+      if (err) return;
+
+      publicURLs[header.name] = publicURL;
+      next();
+    });
+  });
+
+  extract.on('finish', () => callback(null, publicURLs));
+
+  stream.pipe(zlib.createGunzip()).pipe(extract);
+};
+
+MemoryStorage.prototype.nameAsset = function (name, publicURL, callback) {
+  this.namedAssets[name] = { key: name, publicURL };
+
+  callback(null);
 };
 
 MemoryStorage.prototype.findNamedAssets = function (callback) {

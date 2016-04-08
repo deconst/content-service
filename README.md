@@ -133,7 +133,7 @@ Access previously stored content by its URL-encoded *content ID*.
 ```json
 {
   "envelope": {
-    body: "<h1>The content... </h1>"
+    "body": "<h1>The content... </h1>"
   }
 }
 ```
@@ -242,6 +242,43 @@ Enumerate named assets from the content service.
   "file2_css_url": "https://assets.horse/url/for/file2-d2da57e04b0818f7e3dd18da3b73c9b54a73cbe5.css"
 }
 ```
+
+### `GET /assets/:filename`
+
+Fetch an asset directly by filename. Most useful when you're using `STORAGE=memory`; otherwise you should use the CDN URLs.
+
+*Successful Response*
+
+Return an HTTP status of 200, the correct content-type, and the asset body.
+
+*Unsuccessful Response*
+
+A response of 400 is returned if no asset with that filename exists.
+
+### `POST /bulkassets`
+
+**(Authorization required: any user)**
+
+Bulk-upload assets from a `.tar.gz` file.
+
+*Request*
+
+The POST body must be a `.tar.gz` file with a content-type of `application/tar+gzip`.
+
+*Successful Response*
+
+Returns an HTTP status of 200 and a map containing the tarball's path to each asset and its corresponding public CDN URL:
+
+```json
+{
+  "assets/0.png": "https://9b1a5535446999eb0355-a76b79aca86ab4305d3e9ef5c9a01022.ssl.cf5.rackcdn.com/0-ed56e65d28de88bbbfafc33e7c959b764e5c8aa35ad9874966dfda9d46b8b28e.png",
+  "assets/100.png": "https://9b1a5535446999eb0355-a76b79aca86ab4305d3e9ef5c9a01022.ssl.cf5.rackcdn.com/100-6ae71f29cf579f37139540c32a42fe4078b24d95c5453acaf3be2b6909e175e4.png"
+}
+```
+
+*Unsuccessful Response*
+
+If the uploaded file is not a valid tarball, an HTTP status of 400 will be returned. If there are problems performing the batch upload an HTTP status of 500 will be returned.
 
 ### `POST /keys?named=:name`
 

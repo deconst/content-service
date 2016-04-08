@@ -13,6 +13,7 @@ var delegates = exports.delegates = [
   'clear',
   'assetURLPrefix',
   'storeAsset',
+  'bulkStoreAssets',
   'nameAsset',
   'findNamedAssets',
   'getAsset',

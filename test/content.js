@@ -13,10 +13,11 @@ const dirtyChai = require('dirty-chai');
 chai.use(dirtyChai);
 const expect = chai.expect;
 
-const async = require('async');
-const targz = require('tar.gz');
-const getRawBody = require('raw-body');
 const path = require('path');
+const zlib = require('zlib');
+const async = require('async');
+const tarfs = require('tar-fs');
+const getRawBody = require('raw-body');
 const request = require('supertest');
 const storage = require('../src/storage');
 const authHelper = require('./helpers/auth');
@@ -197,7 +198,7 @@ describe('/bulkcontent', function () {
 
   const withFixtureTarball = function (fixtureName, andThen) {
     return (cb) => {
-      let tarball = targz().createReadStream(path.join(__dirname, 'fixtures', fixtureName));
+      let tarball = tarfs.pack(path.join(__dirname, 'fixtures', fixtureName)).pipe(zlib.createGzip());
       getRawBody(tarball, (err, tarball) => {
         if (err) return cb(err);
 

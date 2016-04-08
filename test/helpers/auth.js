@@ -2,11 +2,11 @@
 
 exports.APIKEY_ADMIN = process.env.ADMIN_APIKEY || '12345';
 
-exports.AUTH_ADMIN = 'deconst apikey="' + exports.APIKEY_ADMIN + '"';
+exports.AUTH_ADMIN = 'deconst ' + exports.APIKEY_ADMIN;
 
 exports.APIKEY_USER = '54321';
 
-exports.AUTH_USER = 'deconst apikey="' + exports.APIKEY_USER + '"';
+exports.AUTH_USER = 'deconst ' + exports.APIKEY_USER;
 
 /**
  * @description Test helper to ensure that a route fails if no API key is given.

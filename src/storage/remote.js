@@ -92,8 +92,6 @@ RemoteStorage.prototype.storeAsset = function (stream, filename, contentType, ca
   });
 
   stream.pipe(up);
-
-  up.end();
 };
 
 /**

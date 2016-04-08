@@ -4,7 +4,6 @@ const async = require('async');
 const path = require('path');
 const zlib = require('zlib');
 const tar = require('tar-stream');
-const logger = require('../../logging').getLogger();
 const storage = require('../../storage');
 const storeEnvelope = require('./store').storeEnvelope;
 const removeEnvelopes = require('./remove').removeEnvelopes;
@@ -13,8 +12,6 @@ const removeEnvelopes = require('./remove').removeEnvelopes;
  * @description Store new content into the content store from an uploaded tarball.
  */
 exports.handler = function (req, res, next) {
-  const reqStart = Date.now();
-
   let contentIDBase = null;
   let envelopeCount = 0;
   let failureCount = 0;
@@ -22,7 +19,7 @@ exports.handler = function (req, res, next) {
   let toKeep = {};
 
   const envelopeWorker = (task, cb) => {
-    logger.debug('Beginning envelope storage', {
+    req.logger.debug('Beginning envelope storage', {
       contentID: task.contentID
     });
 
@@ -37,7 +34,7 @@ exports.handler = function (req, res, next) {
 
       envelopeCount++;
 
-      logger.debug('Envelope stored successfully', {
+      req.logger.debug('Envelope stored successfully', {
         contentID: task.contentID,
         envelopeCount,
         failureCount,
@@ -52,24 +49,17 @@ exports.handler = function (req, res, next) {
 
   // Log an error and optionally report it to the user.
   const reportError = (err, entryPath, description, fatal) => {
-    const logPayload = {
-      action: 'bulkcontentstore',
-      apikeyName: req.apikeyName,
-      entryPath,
-      err: err.message,
-      stack: err.stack,
-      statusCode: 400,
-      totalReqDuration: Date.now() - reqStart
+    const options = {
+      payload: { entryPath },
+      level: fatal ? 'error' : 'warn'
     };
+    const message = (fatal ? 'Fatal b' : 'B') + `ulk envelope upload problem: ${description}`;
+
+    req.logger.reportError(message, err, options);
 
     if (fatal) {
-      logger.error(`Fatal bulk envelope upload problem: ${description}`, logPayload);
-
       err.statusCode = 400;
-
       next(err);
-    } else {
-      logger.warn(`Bulk envelope upload problem: ${description}`, logPayload);
     }
   };
 
@@ -122,7 +112,7 @@ exports.handler = function (req, res, next) {
 
   const removeDeletedContent = (cb) => {
     if (!contentIDBase) {
-      logger.debug('Skipping content deletion.');
+      req.logger.debug('No content ID base: Skipping content deletion.');
       return cb(null);
     }
 
@@ -139,32 +129,29 @@ exports.handler = function (req, res, next) {
       let toDelete = existingContentIDs.filter((id) => !toKeep[id]);
       deletionCount = toDelete.length;
 
-      logger.debug('Deleting removed envelopes.', { deletionCount });
+      req.logger.debug('Deleting removed envelopes.', { deletionCount });
 
       removeEnvelopes(toDelete, (err, results) => {
         if (err) return cb(err);
 
-        logger.debug('Envelopes deleted.');
-
+        req.logger.debug('Envelopes deleted.', { deletionCount });
         cb();
       });
     });
   };
 
   const reportCompletion = () => {
-    logger.info('Bulk content upload completed.', {
-      action: 'bulkcontentstore',
-      apikeyName: req.apikeyName,
+    let payload = { accepted: envelopeCount, failed: failureCount, deleted: deletionCount };
+    let statusCode = failureCount === 0 ? 200 : 500;
+
+    req.logger.reportSuccess('Bulk content upload completed.', {
       acceptedCount: envelopeCount,
       failedCount: failureCount,
       deletedCount: deletionCount,
-      totalReqDuration: Date.now() - reqStart
+      statusCode
     });
 
-    let payload = { accepted: envelopeCount, failed: failureCount, deleted: deletionCount };
-    let status = failureCount === 0 ? 200 : 500;
-
-    res.send(status, payload);
+    res.send(statusCode, payload);
     next();
   };
 
@@ -178,7 +165,7 @@ exports.handler = function (req, res, next) {
     const dname = dirs[dirs.length - 1];
     const bname = path.basename(entryPath);
 
-    logger.debug('Received entry for path', { entryPath });
+    req.logger.debug('Received entry for path', { entryPath });
 
     if (dname === 'metadata') {
       // metadata/ entries
@@ -190,28 +177,21 @@ exports.handler = function (req, res, next) {
           handleKeepEntry(entryPath, stream);
           break;
         default:
-          logger.warn('Unrecognized metadata entry', { entryPath });
+          req.logger.warn('Unrecognized metadata entry', { entryPath });
           break;
       }
     } else if (bname.endsWith('.json')) {
       handleEnvelopeEntry(entryPath, stream);
     } else {
-      logger.warn('Unrecognized entry', { entryPath });
+      req.logger.warn('Unrecognized entry', { entryPath });
     }
 
     next();
   });
 
   extract.on('error', (err) => {
-    logger.info('Corrupted envelope tarball uploaded', {
-      action: 'bulkcontentstore',
-      apikey: req.apikeyName,
-      err: err.message,
-      stack: err.stack
-    });
-
+    req.logger.reportError('Corrupted envelope tarball uploaded', err, { statusCode: 400 });
     res.send(400, err);
-
     next();
   });
 

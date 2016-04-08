@@ -5,22 +5,15 @@ const request = require('request');
 const urljoin = require('urljoin');
 const storage = require('../../storage');
 const config = require('../../config');
-const logger = require('../../logging').getLogger();
 
 /**
  * @description Retrieve content from the store by content ID. If PROXY_UPSTREAM is set, make a
  * request to the configured upstream content service's API.
  */
 exports.handler = function (req, res, next) {
-  let reqStart = Date.now();
   let contentID = req.params.id;
 
-  logger.debug({
-    action: 'contentretrieve',
-    startTs: reqStart,
-    contentID: contentID,
-    message: 'Content ID request received.'
-  });
+  req.logger.debug('Content ID request received.', { contentID });
 
   let doc = { envelope: {} };
 
@@ -44,24 +37,20 @@ exports.handler = function (req, res, next) {
     let upstreamContentID = config.stagingMode() ? removeRevisionID(contentID) : contentID;
     let url = urljoin(config.proxyUpstream(), 'content', encodeURIComponent(upstreamContentID));
 
-    logger.debug({
-      action: 'contentretrieve',
+    req.logger.debug('Making upstream content request.', {
       contentID,
       upstreamContentID,
-      upstreamURL: url,
-      message: 'Making upstream content request.'
+      upstreamURL: url
     });
 
     request({ url, json: true }, (err, response, body) => {
       if (err) return callback(err);
 
       if (response.statusCode === 404) {
-        logger.debug({
-          action: 'contentretrieve',
+        req.logger.debug('Content not found in upstream.', {
           contentID,
           upstreamContentID,
-          upstreamURL: url,
-          message: 'Content not found in upstream.'
+          upstreamURL: url
         });
 
         let err = new Error('Content not found');
@@ -72,13 +61,11 @@ exports.handler = function (req, res, next) {
       }
 
       if (response.statusCode !== 200) {
-        logger.error({
-          action: 'contentretrieve',
+        req.logger.error('Upstream content request error', {
           contentID,
           upstreamContentID,
           upstreamURL: url,
-          statusCode: response.statusCode,
-          message: 'Upstream content request error'
+          statusCode: response.statusCode
         });
 
         let err = new Error('Upstream proxy error');
@@ -88,12 +75,10 @@ exports.handler = function (req, res, next) {
         return callback(err);
       }
 
-      logger.debug({
-        action: 'contentretrieve',
+      req.logger.debug('Upstream content request successful.', {
         contentID,
         upstreamContentID,
-        upstreamURL: url,
-        message: 'Upstream content request successful.'
+        upstreamURL: url
       });
 
       doc = body;
@@ -109,28 +94,12 @@ exports.handler = function (req, res, next) {
         delete err.stack;
       }
 
-      logger.error({
-        action: 'contentretrieve',
-        statusCode: err.statusCode || 500,
-        contentID: req.params.id,
-        error: err.message,
-        stack: err.stack,
-        message: message
-      });
-
+      req.logger.reportError(message, err, { payload: { contentID } });
       return next(err);
     }
 
     res.json(doc);
-
-    logger.info({
-      action: 'contentretrieve',
-      statusCode: 200,
-      contentID,
-      totalReqDuration: Date.now() - reqStart,
-      message: 'Content request successful.'
-    });
-
+    req.logger.reportSuccess('Content request successful.', { contentID });
     next();
   });
 };

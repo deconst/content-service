@@ -5,7 +5,6 @@ const path = require('path');
 const zlib = require('zlib');
 const tar = require('tar-stream');
 const storage = require('../../storage');
-const logger = require('../../logging').getLogger();
 
 /**
  * @description Publish new assets from an uploaded tarball.
@@ -16,15 +15,10 @@ exports.handler = function (req, res, next) {
 
   let assetCount = 0;
   const publicURLs = {};
-  const reqStart = Date.now();
 
   const reportError = (err, entryPath, description) => {
-    logger.warn(`Bulk asset upload problem: ${description}`, {
-      action: 'bulkassetstore',
-      apikeyName: req.apikeyName,
-      entryPath,
-      err: err.message,
-      stack: err.stack,
+    req.logger.reportError(`Bulk asset upload problem: ${description}`, err, {
+      payload: { entryPath },
       statusCode: 400
     });
   };
@@ -55,19 +49,13 @@ exports.handler = function (req, res, next) {
       publicURLs[entryPath] = storage.assetURLPrefix() + encodeURIComponent(name);
 
       pack.entry({ name }, body);
-      logger.debug('Repacked asset', { entryPath, name, assetCount });
+      req.logger.debug('Repacked asset', { entryPath, name, assetCount });
       next();
     });
   });
 
   extract.on('error', (err) => {
-    logger.info('Corrupted asset tarball uploaded', {
-      action: 'bulkassetstore',
-      apikey: req.apikeyName,
-      err: err.message,
-      stack: err.stack
-    });
-
+    req.logger.reportError('Corrupted asset tarball uploaded', err, { statusCode: 400 });
     res.send(400, err);
     next();
   });
@@ -80,13 +68,7 @@ exports.handler = function (req, res, next) {
       return next(err);
     }
 
-    logger.info('Asset bulk upload completed.', {
-      action: 'bulkassetstore',
-      apikey: req.apikeyName,
-      assetCount,
-      totalReqDuration: Date.now() - reqStart
-    });
-
+    req.logger.reportSuccess('Asset bulk upload completed.', { assetCount });
     res.send(200, publicURLs);
     next();
   });

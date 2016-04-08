@@ -60,17 +60,22 @@ function RequestLogger (req) {
   this.req = req;
 }
 
-RequestLogger.prototype.reportError = function (message, err, omitStack) {
-  const payload = {
-    error: err.message,
-    statusCode: err.statusCode || 500
-  };
+RequestLogger.prototype.reportError = function (message, err, options) {
+  if (!options) options = {};
+  if (!options.level) options.level = 'error';
+  if (!options.payload) options.payload = {};
+  if (!options.statusCode) options.statusCode = 500;
 
-  if (!omitStack && err.stack) {
-    payload.stack = err.stack;
+  if (err) {
+    options.payload.error = err.message;
+    options.payload.statusCode = err.statusCode || options.statusCode;
+
+    if (!options.omitStack && err.stack) {
+      options.payload.stack = err.stack;
+    }
   }
 
-  this.error(message, payload);
+  this[options.level](message, options.payload);
 };
 
 RequestLogger.prototype.reportSuccess = function (message, payload) {

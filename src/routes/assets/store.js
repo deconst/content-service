@@ -4,11 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const async = require('async');
-const logger = require('../../logging').getLogger();
 const storage = require('../../storage');
 
 exports.handler = function (req, res, next) {
-  const reqStart = Date.now();
   const isNamed = req.query.named;
 
   const names = [];
@@ -27,9 +25,7 @@ exports.handler = function (req, res, next) {
     names.push(name);
   });
 
-  logger.debug(withAssetList('Asset upload request received', names), {
-    action: 'assetstore',
-    apikeyName: req.apikeyName,
+  req.logger.debug(withAssetList('Asset upload request received', names), {
     assetCount: assets.length,
     assetNames: names
   });
@@ -38,19 +34,8 @@ exports.handler = function (req, res, next) {
     if (err) {
       const statusCode = err.statusCode || 500;
 
-      logger.error(withAssetList('Unable to upload one or more assets', names), {
-        action: 'assetstore',
-        statusCode: statusCode,
-        apikeyName: req.apikeyName,
-        error: err.message,
-        stack: err.stack
-      });
-
-      res.send(statusCode, {
-        apikeyName: req.apikeyName,
-        error: 'Unable to upload one or more assets.'
-      });
-
+      req.logger.reportError('Unable to upload one or more assets', { statusCode });
+      res.send(statusCode, { error: 'Unable to upload one or more assets.' });
       return next(err);
     }
 
@@ -59,13 +44,7 @@ exports.handler = function (req, res, next) {
 
     res.send(summary);
 
-    logger.info(withAssetList('All assets have been uploaded successfully', names), {
-      action: 'assetstore',
-      statusCode: 200,
-      apikeyName: req.apikeyName,
-      totalReqDuration: Date.now() - reqStart
-    });
-
+    req.logger.reportSuccess(withAssetList('All assets have been uploaded successfully', names);
     next();
   });
 };
@@ -73,20 +52,17 @@ exports.handler = function (req, res, next) {
 /**
  * @description Create and return a function that processes a single asset.
  */
-const makeAssetHandler = function (shouldName) {
+const makeAssetHandler = function (logger, shouldName) {
   return (asset, callback) => {
-    logger.debug('Uploading asset', {
-      action: 'assetstore',
-      assetName: asset.name
-    });
+    logger.debug('Uploading asset', { assetName: asset.name });
 
     const steps = [
-      makeAssetFingerprinter(asset),
-      makeAssetPublisher(asset)
+      makeAssetFingerprinter(logger, asset),
+      makeAssetPublisher(logger, asset)
     ];
 
     if (shouldName) {
-      steps.push(makeAssetNamer(asset));
+      steps.push(makeAssetNamer(logger, asset));
     }
 
     async.series(steps, (err) => {
@@ -100,7 +76,7 @@ const makeAssetHandler = function (shouldName) {
  * @description Calculate a checksum of an uploaded file's contents to generate
  *   the fingerprinted asset name.
  */
-const makeAssetFingerprinter = function (asset) {
+const makeAssetFingerprinter = function (logger, asset) {
   return (callback) => {
     const stream = asset.getReadStream();
     const sha256sum = crypto.createHash('sha256');
@@ -118,12 +94,10 @@ const makeAssetFingerprinter = function (asset) {
       asset.fingerprinted = fingerprinted;
 
       logger.debug('Asset fingerprinted.', {
-        action: 'assetstore',
         assetName: asset.name,
         assetFilename: fingerprinted,
         assetContentType: asset.type
       });
-
       callback(null);
     });
   };
@@ -132,7 +106,7 @@ const makeAssetFingerprinter = function (asset) {
 /**
  * @description Upload an asset's contents to the asset container.
  */
-const makeAssetPublisher = function (asset) {
+const makeAssetPublisher = function (logger, asset) {
   return (callback) => {
     const stream = asset.getReadStream();
 
@@ -142,12 +116,10 @@ const makeAssetPublisher = function (asset) {
       asset.publicURL = publicURL;
 
       logger.debug('Asset uploaded.', {
-        action: 'assetstore',
         assetFilename: asset.fingerprinted,
         assetPublicURL: asset.publicURL,
         assetContentType: asset.type
       });
-
       callback(null);
     });
   };
@@ -158,16 +130,12 @@ const makeAssetPublisher = function (asset) {
  *   asset will be included in all outgoing metadata envelopes, for use by
  *   layouts.
  */
-const makeAssetNamer = function (asset) {
+const makeAssetNamer = function (logger, asset) {
   return (callback) => {
     storage.nameAsset(asset.name, asset.publicURL, (err, asset) => {
       if (err) return callback(err);
 
-      logger.debug('Asset named successfully.', {
-        action: 'assetstore',
-        assetName: asset.name
-      });
-
+      logger.debug('Asset named successfully.', { assetName: asset.name });
       callback(null);
     });
   };

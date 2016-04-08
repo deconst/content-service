@@ -1,34 +1,38 @@
+'use strict';
+
 /*
  * Initialize the Restify server.
  */
 
-var restify = require('restify');
-var config = require('./config');
-var routes = require('./routes');
-var log = require('./logging').getLogger();
+const restify = require('restify');
+const config = require('./config');
+const routes = require('./routes');
+const logging = require('./logging');
 
 exports.create = function () {
-  var server = restify.createServer();
+  const server = restify.createServer();
 
   server.pre(restify.pre.sanitizePath());
 
   server.name = config.info.name;
 
   server.use(function (req, res, next) {
-    log.verbose(req.method + ' ' + req.url);
+    req.logger = logging.getRequestLogger(req);
+
+    req.logger.verbose(req.method + ' ' + req.url);
     next();
   });
 
   server.use(restify.fullResponse());
 
   server.on('uncaughtException', function (req, res, route, err) {
-    log.error({
+    req.logger.error('Uncaught exception', {
       statusCode: err.statusCode || 500,
       requestURL: req.url,
       stack: err.stack,
-      error: err.message,
-      message: 'Uncaught exception'
+      error: err.message
     });
+
     res.send(err);
   });
 

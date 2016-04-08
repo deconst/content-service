@@ -2,44 +2,22 @@
 
 const async = require('async');
 const storage = require('../../storage');
-const logger = require('../../logging').getLogger();
 
 exports.handler = function (req, res, next) {
   var contentID = req.params.id;
-  logger.debug('Content deletion request received.', {
-    action: 'content delete',
-    apikeyName: req.apikeyName,
-    contentID: contentID
-  });
-
-  var reqStart = Date.now();
+  req.logger.debug('Content deletion request received.', { contentID });
 
   removeEnvelopes([contentID], function (err) {
     if (err) {
       err.statusCode = err.statusCode || err.status || 500;
 
-      logger.error('Unable to delete content.', {
-        event: 'content delete',
-        statusCode: err.statusCode,
-        errMessage: err.message,
-        apikeyName: req.apikeyName,
-        contentID: contentID,
-        totalReqDuration: Date.now() - reqStart
-      });
-
+      req.logger.reportError('Unable to delete content.', err, { payload: { contentID } });
       return next(err);
     }
 
     res.send(204);
 
-    logger.info('Content deletion successful.', {
-      event: 'content delete',
-      statusCode: 204,
-      apikeyName: req.apikeyName,
-      contentID: contentID,
-      totalReqDuration: Date.now() - reqStart
-    });
-
+    req.logger.reportSuccess('Content deletion successful.', { contentID });
     next();
   });
 };
@@ -49,7 +27,7 @@ const removeEnvelopes = exports.removeEnvelopes = function (contentIDs, callback
     return process.nextTick(callback);
   }
 
-  var kvDelete = function (cb) {
+  var kvDelete = (cb) => {
     if (contentIDs.length === 1) {
       storage.deleteEnvelope(contentIDs[0], cb);
     } else {
@@ -57,7 +35,7 @@ const removeEnvelopes = exports.removeEnvelopes = function (contentIDs, callback
     }
   };
 
-  var ftsDelete = function (cb) {
+  var ftsDelete = (cb) => {
     if (contentIDs.length === 1) {
       storage.unindexEnvelope(contentIDs[0], cb);
     } else {

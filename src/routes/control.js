@@ -7,7 +7,6 @@ const urljoin = require('urljoin');
 
 const config = require('../config');
 const storage = require('../storage');
-const logger = require('../logging').getLogger();
 
 exports.store = function (req, res, next) {
   if (req.params.sha === undefined) {
@@ -23,9 +22,7 @@ exports.store = function (req, res, next) {
 
     res.send(204);
 
-    logger.info('Stored control repository SHA', {
-      sha: req.params.sha
-    });
+    req.logger.reportSuccess('Stored control repository SHA', { sha: req.params.sha });
     next();
   });
 };
@@ -37,7 +34,10 @@ exports.retrieve = function (req, res, next) {
   }
 
   storage.getSHA((err, sha) => {
-    next.ifError(err);
+    if (err) {
+      req.logger.reportError('Unable to retrieve control repository SHA', err);
+      next(err);
+    }
 
     res.json(200, {sha: sha});
     next();

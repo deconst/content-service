@@ -4,7 +4,6 @@
 
 var async = require('async');
 var storage = require('../storage');
-var log = require('../logging').getLogger();
 
 /**
  * @description Callback to fire when reindexing is complete.
@@ -16,12 +15,11 @@ exports.completedCallback = function () {};
  *  envelope against the storage. Log progress and record it in a state variable. When complete,
  *  invoke the completedCallback with the accumulated state.
  */
-function reindex () {
+function reindex (logger) {
   let indexName = `envelopes_${Date.now()}`;
 
   let state = {
-    event: 'reindex',
-    indexName: indexName,
+    indexName,
     startedTs: Date.now(),
     elapsedMs: null,
     successfulEnvelopes: 0,
@@ -29,13 +27,12 @@ function reindex () {
     totalEnvelopes: 0
   };
 
-  log.info('Reindex requested', state);
+  logger.info('Reindex requested', state);
 
   let handleError = function (err, message, fatal) {
-    state.errMessage = err.message;
-    state.stack = err.stack;
-
-    log.error(message, state);
+    logger.reportError(message, err, {
+      level: fatal ? 'error' : 'warn'
+    });
 
     if (fatal) {
       exports.completedCallback(err, state);
@@ -59,7 +56,7 @@ function reindex () {
         return handleError(err, 'Unable to list content', true);
       }
 
-      log.debug('Reindexing envelope', { event: 'reindex', contentID: doc.contentID });
+      logger.debug('Reindexing envelope', { contentID: doc.contentID });
 
       storage.indexEnvelope(doc.contentID, doc.envelope, indexName, (err) => {
         if (err) {
@@ -68,15 +65,14 @@ function reindex () {
           return;
         }
 
-        log.debug('Successful envelope index', { event: 'reindex', contentID: doc.contentID });
-
+        logger.debug('Successful envelope index', { contentID: doc.contentID });
         state.successfulEnvelopes++;
       });
     }, (err) => {
       // All envelopes listed.
       if (err) return handleError(err, 'Unable to list envelopes', true);
 
-      log.info('All content re-indexed.', state);
+      logger.info('All content re-indexed.', state);
       callback();
     });
   };
@@ -105,7 +101,7 @@ function reindex () {
  * @description Trigger an asynchronous reindexing of all content.
  */
 exports.begin = function (req, res, next) {
-  reindex();
+  reindex(req.logger);
 
   res.send(202);
   next();

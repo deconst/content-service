@@ -1,7 +1,8 @@
+'use strict';
+
 // Accept full-text search queries
 
 var restify = require('restify');
-var logger = require('../logging').getLogger();
 var storage = require('../storage');
 
 exports.query = function (req, res, next) {
@@ -14,41 +15,33 @@ exports.query = function (req, res, next) {
     categories = [categories];
   }
 
-  var startTs = Date.now();
   var logPayload = {
-    event: 'search',
     query: q,
-    perPage: perPage,
-    pageNumber: pageNumber,
-    categories: categories
+    perPage,
+    pageNumber,
+    categories
   };
 
   if (q === null || q === undefined) {
-    logger.info('Missing required query parameter', logPayload);
+    req.logger.info('Missing required query parameter', logPayload);
     res.send(new restify.MissingParameterError('q parameter is required'));
     return;
   }
 
-  logger.debug('Beginning search', logPayload);
+  req.logger.debug('Beginning search', logPayload);
 
   storage.queryEnvelopes(q, categories, pageNumber, perPage, function (err, results) {
-    logPayload.duration = Date.now() - startTs;
-
     if (err) {
-      logPayload.errMessage = err.message;
-      logPayload.stack = err.stack;
-
-      logger.error('Error performing search', logPayload);
+      req.logger.reportError('Error performing search', err, { payload: logPayload });
       res.send(new restify.InternalServerError('Error performing search'));
       return;
     }
 
     logPayload.totalResultCount = results.hits.total;
     logPayload.pageResultCount = results.hits.hits.length;
-    logger.info('Successfully completed search', logPayload);
 
-    var doc = results.hits.hits.map(function (each) {
-      var transformed = {
+    const doc = results.hits.hits.map(function (each) {
+      const transformed = {
         contentID: each._id,
         title: each._source.title
       };
@@ -66,6 +59,7 @@ exports.query = function (req, res, next) {
       total: results.hits.total,
       results: doc
     });
+    req.logger.info('Successfully completed search', logPayload);
     next();
   });
 };

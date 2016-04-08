@@ -1,26 +1,16 @@
 'use strict';
 
 const storage = require('../../storage');
-const logger = require('../../logging').getLogger();
 
 exports.handler = function (req, res, next) {
   const assetFilename = req.params.id;
 
-  logger.debug({
-    action: 'assetretrieve',
-    message: 'Asset requested directly.'
-  });
-
-  const reqStart = Date.now();
+  req.logger.debug('Asset requested directly.', { assetFilename });
 
   storage.getAsset(assetFilename, (err, asset) => {
     if (err) {
-      logger.error({
-        action: 'assetretrieve',
-        statusCode: err.statusCode || 500,
-        message: 'Unable to retrieve asset',
-        error: err.message,
-        stack: err.stack
+      req.logger.reportError('Unable to retrieve asset.', err, {
+        payload: { assetFilename }
       });
       return next(err);
     }
@@ -31,15 +21,10 @@ exports.handler = function (req, res, next) {
     res.write(asset.body);
     res.end();
 
-    logger.info({
-      action: 'assetretrieve',
-      statusCode: 200,
-      assetFilename: req.params.id,
-      assetContentType: asset.contentType,
-      totalReqDuration: Date.now() - reqStart,
-      message: 'Asset request successful.'
+    req.logger.reportSuccess('Asset request successful.', {
+      assetFilename,
+      assetContentType: asset.contentType
     });
-
     next();
   });
 };

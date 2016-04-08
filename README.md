@@ -243,6 +243,18 @@ Enumerate named assets from the content service.
 }
 ```
 
+### `GET /assets/:filename`
+
+Fetch an asset directly by filename. Most useful when you're using `STORAGE=memory`; otherwise you should use the CDN URLs.
+
+*Successful Response*
+
+Return an HTTP status of 200, the correct content-type, and the asset body.
+
+*Unsuccessful Response*
+
+A response of 400 is returned if no asset with that filename exists.
+
 ### `POST /keys?named=:name`
 
 **(Authorization required: admin only)**

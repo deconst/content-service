@@ -20,8 +20,6 @@ storage.setup(function (err) {
 
   var app = server.create();
 
-  app.server.setTimeout(600000);
-
   process.on('SIGTERM', function () {
     log.info('Shutting down.');
     app.close();

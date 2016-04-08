@@ -30,7 +30,7 @@ exports.handler = function (req, res, next) {
     assetNames: names
   });
 
-  async.map(assets, makeAssetHandler(isNamed), (err, results) => {
+  async.map(assets, makeAssetHandler(req.logger, isNamed), (err, results) => {
     if (err) {
       const statusCode = err.statusCode || 500;
 
@@ -44,7 +44,7 @@ exports.handler = function (req, res, next) {
 
     res.send(summary);
 
-    req.logger.reportSuccess(withAssetList('All assets have been uploaded successfully', names);
+    req.logger.reportSuccess(withAssetList('All assets have been uploaded successfully', names));
     next();
   });
 };

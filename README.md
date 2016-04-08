@@ -61,11 +61,17 @@ Both Cloud Files containers will be created and configured on application launch
 ### Authorization
 
 Endpoints that require authorization *must* be accompanied by a valid API key. Set the API key in
-an `Authorization` header.
+an `Authorization` header with a scheme of "deconst".
 
 ```
 PUT /content/https%3A%2F%2Fgithub.com%2Fsomeuser%2Fsomerepo%2Fsomeid
-Authorization: deconst apikey="12345"
+Authorization: deconst 12345
+```
+
+Or:
+
+```bash
+curl -H 'Authorization: deconst 12345' # ...
 ```
 
 Valid API keys include:

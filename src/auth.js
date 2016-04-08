@@ -1,18 +1,20 @@
+'use strict';
+
 // Authentication middleware.
 
-var async = require('async');
-var restify = require('restify');
-var config = require('./config');
-var storage = require('./storage');
-var log = require('./logging').getLogger();
+const async = require('async');
+const restify = require('restify');
+const config = require('./config');
+const storage = require('./storage');
+const logger = require('./logging').getLogger();
 
-var credentialRx = /apikey\s*=\s*"?([^"]+)"?/;
+const credentialRx = /apikey\s*=\s*"?([^"]+)"?/;
 
 /**
  * @description Extract an API key from a request's parsed Authorization header. Emit an error if
  *  no such header is present, or if it's not formed correctly.
  */
-var parseAuth = function (auth, callback) {
+const parseAuth = function (auth, callback) {
   if (!auth || !Object.keys(auth).length) {
     return callback(new restify.UnauthorizedError('An API key is required for this endpoint.'));
   }
@@ -21,20 +23,24 @@ var parseAuth = function (auth, callback) {
     return callback(new restify.InvalidHeaderError('Your Authorization header specifies an incorrect scheme.'));
   }
 
-  var match = credentialRx.exec(auth.credentials);
+  // TODO Remove this match once the submitter is shipped and the logs have fizzled
+  const match = credentialRx.exec(auth.credentials);
 
   if (!match) {
-    return callback(new restify.InvalidHeaderError("Your Authorization header does not include an 'apikey' value."));
-  }
+    return callback(null, auth.credentials);
+  } else {
+    // TODO elevate this to "warn" once the submitter is shipped
+    logger.debug('Authorization header containing apikey="" pattern encountered');
 
-  callback(null, match[1]);
+    return callback(null, match[1]);
+  }
 };
 
 /**
  * @description Access the name associated with an API key. Emit an error if the key is not
  *   recognized, or if adminOnly is true but the key is not an admin key.
  */
-var locateKeyname = function (adminOnly, key, callback) {
+const locateKeyname = function (adminOnly, key, callback) {
   // Always accept the admin's API key.
   if (key === config.adminAPIKey()) {
     return callback(null, {
@@ -56,7 +62,7 @@ var locateKeyname = function (adminOnly, key, callback) {
     }
 
     if (keys.length !== 1) {
-      log.error('Expected one API key document, but got ' + keys.length + '.', keys);
+      logger.error('Expected one API key document, but got ' + keys.length + '.', keys);
     }
 
     callback(null, {
@@ -71,7 +77,7 @@ var locateKeyname = function (adminOnly, key, callback) {
  *   validate an API key from an incoming request. If the API key is valid, its name will be
  *   attached to the request object. Otherwise, an appropriate error will be generated.
  */
-var createAPIKeyHandler = function (adminOnly) {
+const createAPIKeyHandler = function (adminOnly) {
   return function (req, res, next) {
     async.waterfall([
       async.apply(parseAuth, req.authorization),
@@ -79,7 +85,7 @@ var createAPIKeyHandler = function (adminOnly) {
     ], function (err, result) {
       next.ifError(err);
 
-      log.debug('Request authenticated as [' + result.name + ']');
+      logger.debug('Request authenticated as [' + result.name + ']');
       req.apikey = result.key;
       req.apikeyName = result.name;
       next();

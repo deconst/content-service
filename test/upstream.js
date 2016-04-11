@@ -26,11 +26,12 @@ describe('upstream', () => {
   }));
 
   describe('with content', () => {
-    beforeEach((done) => storage.storeEnvelope('local', { body: 'local' }, done));
+    beforeEach((done) => storage.storeEnvelope('https://github.com/local/local', { body: 'local' }, done));
+    beforeEach((done) => storage.storeEnvelope('https://github.com/local/badsha256', { body: 'badsha256' }, done));
 
     it('returns local content the same', (done) => {
       request(server.create())
-        .get('/content/local')
+        .get('/content/https%3A%2F%2Fgithub.com%2Flocal%2Flocal')
         .set('Accept', 'application/json')
         .expect(200)
         .expect('Content-Type', 'application/json')
@@ -39,10 +40,10 @@ describe('upstream', () => {
 
     it('queries the upstream content service when content is not found locally', (done) => {
       nock('https://upstream')
-        .get('/content/remote').reply(200, { envelope: { body: 'remote' } });
+        .get('/content/https%3A%2F%2Fgithub.com%2Fremote%2Fremote').reply(200, { envelope: { body: 'remote' } });
 
       request(server.create())
-        .get('/content/remote')
+        .get('/content/https%3A%2F%2Fgithub.com%2Fremote%2Fremote')
         .set('Accept', 'application/json')
         .expect(200)
         .expect('Content-Type', 'application/json')
@@ -51,22 +52,47 @@ describe('upstream', () => {
 
     it('propagates lookup failures from the upstream content service', (done) => {
       nock('https://upstream')
-        .get('/content/remote').reply(404);
+        .get('/content/https%3A%2F%2Fgithub.com%2Fremote%2Fremote').reply(404);
 
       request(server.create())
-        .get('/content/remote')
+        .get('/content/https%3A%2F%2Fgithub.com%2Fremote%2Fremote')
         .set('Accept', 'application/json')
         .expect(404, done);
     });
 
     it('reports non-404 failures from upstream as 502s', (done) => {
       nock('https://upstream')
-        .get('/content/remote').reply(500, { message: 'wtf' });
+        .get('/content/https%3A%2F%2Fgithub.com%2Fremote%2Fremote').reply(500, { message: 'wtf' });
 
       request(server.create())
-        .get('/content/remote')
+        .get('/content/https%3A%2F%2Fgithub.com%2Fremote%2Fremote')
         .set('Accept', 'application/json')
         .expect(502, done);
+    });
+
+    it('merges /checkcontent results from upstream', (done) => {
+      nock('https://upstream/')
+        .get('/checkcontent')
+        .reply(200, {
+          'https://github.com/remote/remote': true,
+          'https://github.com/remote/missing': false
+        });
+
+      request(server.create())
+        .get('/checkcontent')
+        .send({
+          'https://github.com/local/local': 'db850696925a0ff86c244680f64d0e53728a2dcda6dfc9aaa5492be3fd43e50f',
+          'https://github.com/local/badsha256': 'e3a84f27f812f7a404b9428dd171483e95f2e21fa8c0fa98cae4ba1f7e8b8176',
+          'https://github.com/remote/remote': 'b1b6e4c544880769b42bdbf7f6338cba3db78cf734424af20e5c4d30251a984c',
+          'https://github.com/remote/missing': '0ff459af6d050d72d642eeb3a1ea5a8a93fd518993ac56711bd86a7e49b95191'
+        })
+        .expect(200)
+        .expect({
+          'https://github.com/local/local': true,
+          'https://github.com/local/badsha256': false,
+          'https://github.com/remote/remote': true,
+          'https://github.com/remote/missing': false
+        }, done);
     });
 
     describe('in staging mode', () => {

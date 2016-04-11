@@ -148,6 +148,24 @@ MemoryStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
   async.each(contentIDs, (id, cb) => this.deleteEnvelope(id, cb), callback);
 };
 
+MemoryStorage.prototype.envelopesExist = function (contentIDMap, callback) {
+  const results = {};
+
+  for (let contentID in contentIDMap) {
+    if (contentIDMap.hasOwnProperty(contentID)) {
+      const envelope = this.envelopes[contentID];
+
+      if (!envelope) {
+        results[contentID] = false;
+      } else {
+        results[contentID] = envelope.fingerprint === contentIDMap[contentID];
+      }
+    }
+  }
+
+  process.nextTick(() => callback(null, results));
+};
+
 MemoryStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
   var ids = Object.keys(this.envelopes);
 

@@ -332,6 +332,20 @@ RemoteStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
   mongoCollection('envelopes').bulkWrite(ops, options, callback);
 };
 
+RemoteStorage.prototype.envelopesExist = function (contentIDMap, callback) {
+  const query = { contentID: { $in: Object.keys(contentIDMap) } };
+  const projection = { contentID: 1, fingerprint: 1 };
+
+  const results = Object.keys(contentIDMap).reduce((object, contentID) => {
+    object[contentID] = false;
+    return object;
+  }, {});
+
+  mongoCollection('envelopes').find(query).project(projection).forEach((envelope) => {
+    results[envelope.contentID] = envelope.fingerprint === contentIDMap[envelope.contentID];
+  }, (err) => callback(err, results));
+};
+
 RemoteStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
   let filter = {};
 

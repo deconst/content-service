@@ -18,6 +18,7 @@ const async = require('async');
 const request = require('supertest');
 const tarfs = require('tar-fs');
 const getRawBody = require('raw-body');
+const streamifier = require('streamifier');
 const resetHelper = require('./helpers/reset');
 const authHelper = require('./helpers/auth');
 const storage = require('../src/storage');
@@ -133,5 +134,24 @@ describe('/bulkasset', function () {
       expectStoredAsset('script-650a4020d200ba58e1cb4d32af8e84bc0ae3c10f610305e955db14841b191ab3.js'),
       expectStoredAsset('dc-logo-0ec14d405ea0304b826fd8dc9de17638ed78cecec65b73d2b5847687da3c8e1f.png')
     ], done);
+  });
+});
+
+describe('/assetcheck', function () {
+  beforeEach(resetHelper);
+
+  beforeEach(function (done) {
+    const stream = streamifier.createReadStream('fake asset');
+    storage.storeAsset(stream, 'fake-asset-1234.txt', 'text/plain', done);
+  });
+
+  it("returns the publicURL for each asset that exists and null for those that don't", function (done) {
+    const finalName = storage.assetURLPrefix() + 'fake-asset-1234.txt';
+
+    request(server.create())
+      .get('/assetcheck')
+      .send({ 'path/fake-asset.txt': '1234', 'other/missing-asset.jpg': '4321' })
+      .expect(200)
+      .expect({ assets: { 'path/fake-asset.txt': finalName, 'other/missing-asset.jpg': null } }, done);
   });
 });

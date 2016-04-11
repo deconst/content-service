@@ -72,7 +72,10 @@ describe('upstream', () => {
 
     it('merges /checkcontent results from upstream', (done) => {
       nock('https://upstream/')
-        .get('/checkcontent')
+        .get('/checkcontent', {
+          'https://github.com/remote/remote': 'b1b6e4c544880769b42bdbf7f6338cba3db78cf734424af20e5c4d30251a984c',
+          'https://github.com/remote/missing': '0ff459af6d050d72d642eeb3a1ea5a8a93fd518993ac56711bd86a7e49b95191'
+        })
         .reply(200, {
           'https://github.com/remote/remote': true,
           'https://github.com/remote/missing': false

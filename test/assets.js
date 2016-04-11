@@ -137,7 +137,7 @@ describe('/bulkasset', function () {
   });
 });
 
-describe('/assetcheck', function () {
+describe('/checkassets', function () {
   beforeEach(resetHelper);
 
   beforeEach(function (done) {
@@ -149,9 +149,9 @@ describe('/assetcheck', function () {
     const finalName = storage.assetURLPrefix() + 'fake-asset-1234.txt';
 
     request(server.create())
-      .get('/assetcheck')
+      .get('/checkassets')
       .send({ 'path/fake-asset.txt': '1234', 'other/missing-asset.jpg': '4321' })
       .expect(200)
-      .expect({ assets: { 'path/fake-asset.txt': finalName, 'other/missing-asset.jpg': null } }, done);
+      .expect({ 'path/fake-asset.txt': finalName, 'other/missing-asset.jpg': null }, done);
   });
 });

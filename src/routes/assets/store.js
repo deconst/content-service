@@ -86,12 +86,7 @@ const makeAssetFingerprinter = function (logger, asset) {
     stream.on('error', callback);
 
     stream.on('end', () => {
-      const digest = sha256sum.digest('hex');
-      const ext = path.extname(asset.filename);
-      const basename = path.basename(asset.filename, ext);
-      const fingerprinted = `${basename}-${digest}${ext}`;
-
-      asset.fingerprinted = fingerprinted;
+      asset.fingerprinted = fingerprinted(asset.filename, sha256sum.digest('hex'));
 
       logger.debug('Asset fingerprinted.', {
         assetName: asset.name,
@@ -139,6 +134,15 @@ const makeAssetNamer = function (logger, asset) {
       callback(null);
     });
   };
+};
+
+/**
+ * @description Consistenty assemble an asset filename from a local path and a fingerprint.
+ */
+const fingerprinted = exports.fingerprinted = function (pathname, fingerprint) {
+  const ext = path.extname(pathname);
+  const basename = path.basename(pathname, ext);
+  return `${basename}-${fingerprint}${ext}`;
 };
 
 /**

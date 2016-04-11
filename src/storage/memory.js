@@ -156,9 +156,15 @@ MemoryStorage.prototype.envelopesExist = function (contentIDMap, callback) {
       const envelope = this.envelopes[contentID];
 
       if (!envelope) {
-        results[contentID] = false;
+        results[contentID] = {
+          present: false,
+          matches: false
+        };
       } else {
-        results[contentID] = envelope.fingerprint === contentIDMap[contentID];
+        results[contentID] = {
+          present: true,
+          matches: envelope.fingerprint === contentIDMap[contentID]
+        };
       }
     }
   }

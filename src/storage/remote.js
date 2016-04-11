@@ -332,17 +332,24 @@ RemoteStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
   mongoCollection('envelopes').bulkWrite(ops, options, callback);
 };
 
+/**
+ * @description Query for the existence and fingerprint matches of a set of content IDs. The result
+ * object will have the structure:
+ *
+ * { contentID: { present: Boolean, matches: Boolean }}
+ */
 RemoteStorage.prototype.envelopesExist = function (contentIDMap, callback) {
   const query = { contentID: { $in: Object.keys(contentIDMap) } };
   const projection = { contentID: 1, fingerprint: 1 };
 
   const results = Object.keys(contentIDMap).reduce((object, contentID) => {
-    object[contentID] = false;
+    object[contentID] = { present: false, matches: false };
     return object;
   }, {});
 
   mongoCollection('envelopes').find(query).project(projection).forEach((envelope) => {
-    results[envelope.contentID] = envelope.fingerprint === contentIDMap[envelope.contentID];
+    results[envelope.contentID].present = true;
+    results[envelope.contentID].matches = envelope.fingerprint === contentIDMap[envelope.contentID];
   }, (err) => callback(err, results));
 };
 

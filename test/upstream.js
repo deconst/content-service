@@ -117,6 +117,44 @@ describe('upstream', () => {
           .expect('Content-Type', 'application/json')
           .expect({ envelope: { body: 'remote' } }, done);
       });
+
+      it('merges /checkcontent results from upstream with first path segments removed', (done) => {
+        nock('https://upstream/')
+          .get('/checkcontent', {
+            'https://github.com/remote/remote': 'b1b6e4c544880769b42bdbf7f6338cba3db78cf734424af20e5c4d30251a984c',
+            'https://github.com/remote/missing': '0ff459af6d050d72d642eeb3a1ea5a8a93fd518993ac56711bd86a7e49b95191'
+          })
+          .reply(200, {
+            'https://github.com/remote/remote': true,
+            'https://github.com/remote/missing': false
+          });
+
+        request(server.create())
+          .get('/checkcontent')
+          .send({
+            'https://github.com/build-123456/remote/remote': 'b1b6e4c544880769b42bdbf7f6338cba3db78cf734424af20e5c4d30251a984c',
+            'https://github.com/build-123456/remote/missing': '0ff459af6d050d72d642eeb3a1ea5a8a93fd518993ac56711bd86a7e49b95191'
+          })
+          .expect(200)
+          .expect({
+            'https://github.com/build-123456/remote/remote': true,
+            'https://github.com/build-123456/remote/missing': false
+          }, done);
+      });
+
+      it('returns a /checkcontent error if the upstream query is ambiguous', (done) => {
+        request(server.create())
+          .get('/checkcontent')
+          .send({
+            'https://github.com/build-123456/remote/remote': 'b1b6e4c544880769b42bdbf7f6338cba3db78cf734424af20e5c4d30251a984c',
+            'https://github.com/build-654321/remote/remote': '0ff459af6d050d72d642eeb3a1ea5a8a93fd518993ac56711bd86a7e49b95191'
+          })
+          .expect(400)
+          .expect({
+            code: 'BadRequestError',
+            message: 'Multiple content IDs mapped to single upstream content ID'
+          }, done);
+      });
     });
   });
 

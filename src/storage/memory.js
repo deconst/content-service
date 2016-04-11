@@ -77,6 +77,10 @@ MemoryStorage.prototype.findNamedAssets = function (callback) {
   callback(null, _.values(this.namedAssets));
 };
 
+MemoryStorage.prototype.assetExists = function (filename, callback) {
+  process.nextTick(() => callback(null, this.assets[filename] !== undefined));
+};
+
 MemoryStorage.prototype.getAsset = function (filename, callback) {
   var asset = this.assets[filename];
 

@@ -16,6 +16,7 @@ var delegates = exports.delegates = [
   'bulkStoreAssets',
   'nameAsset',
   'findNamedAssets',
+  'assetExists',
   'getAsset',
   'storeKey',
   'deleteKey',

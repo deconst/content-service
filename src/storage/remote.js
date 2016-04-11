@@ -1,6 +1,7 @@
 'use strict';
 
 const async = require('async');
+const request = require('request');
 const connection = require('./connection');
 const config = require('../config');
 const logger = require('../logging').getLogger();
@@ -126,6 +127,25 @@ RemoteStorage.prototype.nameAsset = function (name, publicURL, callback) {
  */
 RemoteStorage.prototype.findNamedAssets = function (callback) {
   mongoCollection('layoutAssets').find().toArray(callback);
+};
+
+/**
+ * @description Yield true if an asset exists or false if it does not.
+ */
+RemoteStorage.prototype.assetExists = function (filename, callback) {
+  const u = this.assetURLPrefix() + filename;
+
+  request({ url: u, method: 'HEAD' }, (err, response, body) => {
+    if (err) return callback(err);
+
+    if (response.statusCode === 404) return callback(null, false);
+    if (response.statusCode === 200) return callback(null, true);
+
+    const e = new Error('Unexpected status code from Cloud Files');
+    e.statusCode = response.statusCode;
+    e.body = body;
+    callback(e, false);
+  });
 };
 
 /**

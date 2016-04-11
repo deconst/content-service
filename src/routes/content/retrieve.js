@@ -105,7 +105,7 @@ exports.handler = function (req, res, next) {
 };
 
 // Remove the revision ID from the first path segment of the contentID.
-const removeRevisionID = function (contentID) {
+const removeRevisionID = exports.removeRevisionID = function (contentID) {
   let asURL = url.parse(contentID);
 
   let pathSegments = asURL.pathname.split('/');

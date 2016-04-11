@@ -7,6 +7,7 @@ const request = require('request');
 const urljoin = require('urljoin');
 const config = require('../../config');
 const storage = require('../../storage');
+const removeRevisionID = require('./retrieve').removeRevisionID;
 
 exports.handler = function (req, res, next) {
   const contentIDMap = req.body;
@@ -36,12 +37,32 @@ exports.handler = function (req, res, next) {
       const url = urljoin(config.proxyUpstream(), 'checkcontent');
 
       // Query upstream for all envelopes that are not present locally. Exclude any that were
-      // present but had different fingerprints.
+      // present but had different fingerprints. Remove the initial path segment when in staging
+      // mode, but track the mapping of modified content IDs to original ones.
       const query = {};
+      const queryMapping = {};
       for (let contentID in existence) {
         if (existence.hasOwnProperty(contentID)) {
           if (!existence[contentID].present) {
-            query[contentID] = contentIDMap[contentID];
+            if (config.stagingMode()) {
+              const upstreamID = removeRevisionID(contentID);
+
+              // Remember which original contentID this upstreamID maps to. If multiple content IDs
+              // map to the same upstream ID, return an error.
+              if (upstreamID in queryMapping) {
+                req.logger.warn('Duplicate upstream content ID in upstream content fingerprint query', {
+                  contentID,
+                  upstreamID,
+                  statusCode: 400
+                });
+                return next(new restify.errors.BadRequestError('Multiple content IDs mapped to single upstream content ID'));
+              }
+              queryMapping[upstreamID] = contentID;
+
+              query[upstreamID] = contentIDMap[contentID];
+            } else {
+              query[contentID] = contentIDMap[contentID];
+            }
           }
         }
       }
@@ -62,10 +83,16 @@ exports.handler = function (req, res, next) {
           return next(new restify.errors.BadGatewayError('Unable to query upstream for content fingerprints'));
         }
 
-        // Merge in upstream results.
+        // Merge in upstream results. When in staging mode, use queryMapping to report results
+        // in terms of the original query values.
         for (let contentID in body) {
           if (body.hasOwnProperty(contentID) && body[contentID]) {
-            results[contentID] = true;
+            if (config.stagingMode()) {
+              const originalID = queryMapping[contentID];
+              results[originalID] = true;
+            } else {
+              results[contentID] = true;
+            }
           }
         }
 

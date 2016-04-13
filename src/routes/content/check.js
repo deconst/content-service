@@ -30,10 +30,10 @@ exports.handler = function (req, res, next) {
     };
 
     if (config.proxyUpstream()) {
-      const query = { existence, fingerprints: {} };
+      const query = {};
       _.forOwn(fingerprints, (fingerprint, contentID) => {
         if (!existence[contentID].present) {
-          query.fingerprints[contentID] = fingerprint;
+          query[contentID] = fingerprint;
         }
       });
 
@@ -55,45 +55,32 @@ exports.handler = function (req, res, next) {
  * If multiple content IDs from the query map to the same upstream content ID, a separate,
  * recursive upstream query will be performed with the conflicting content IDs. Its results will
  * merged in with this call's before the callback is invoked.
- *
- * Structure of the "query" parameter:
- *
- * {
- *  existence: { <contentID>: { present: <Boolean>, matches: <Boolean> } },
- *  fingerprints: { <contentID>: <fingerprint> }
- * }
  */
 const checkUpstream = function (logger, query, callback) {
   const url = urljoin(config.proxyUpstream(), 'checkcontent');
 
-  const payload = {};
+  let payload = {};
   const mapping = {};
-  const subquery = {
-    existence: query.existence,
-    fingerprints: {}
-  };
+  const subquery = {};
 
-  for (let contentID in query.fingerprints) {
-    if (query.fingerprints.hasOwnProperty(contentID)) {
-      if (!query.existence[contentID].present) {
-        if (config.stagingMode()) {
-          const upstreamID = removeRevisionID(contentID);
+  // Use the query to construct the upstream query payload, the content ID mapping (if needed), and
+  // the subquery (if needed).
+  if (!config.stagingMode()) {
+    payload = query;
+  } else {
+    _.forOwn(query, (fingerprint, contentID) => {
+      const upstreamID = removeRevisionID(contentID);
 
-          // Remember the original contentID this upstreamID maps to. If multiple content IDs
-          // map to the same upstream ID, skip subsequent ones and instead begin constructing a
-          // subquery.
-          if (upstreamID in mapping) {
-            subquery.fingerprints[contentID] = query.fingerprints[contentID];
-          } else {
-            mapping[upstreamID] = contentID;
-            payload[upstreamID] = query.fingerprints[contentID];
-          }
-        } else {
-          // When not in staging mode, no contentID translation is necessary.
-          payload[contentID] = query.fingerprints[contentID];
-        }
+      // Remember the original contentID this upstreamID maps to. If multiple content IDs
+      // map to the same upstream ID, skip all but the first ones and instead begin constructing a
+      // subquery with the conflicting ones.
+      if (upstreamID in mapping) {
+        subquery[contentID] = fingerprint;
+      } else {
+        mapping[upstreamID] = contentID;
+        payload[upstreamID] = fingerprint;
       }
-    }
+    });
   }
 
   logger.debug('Making an upstream content fingerprint query', {
@@ -123,7 +110,7 @@ const checkUpstream = function (logger, query, callback) {
     }
 
     // Perform additional queries for ambiguous contentIDs if required.
-    if (Object.keys(subquery.fingerprints).length > 0) {
+    if (Object.keys(subquery).length > 0) {
       checkUpstream(logger, subquery, (err, subresults) => {
         if (err) return callback(err);
 

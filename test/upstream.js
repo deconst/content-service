@@ -177,7 +177,8 @@ describe('upstream', () => {
       // Note to self: this is still kind of awkward.
       let assets = [
         { name: 'only-local', filename: 'only-local-123123.jpg', type: 'image/jpg' },
-        { name: 'both', filename: 'both-456456.jpg', type: 'image/jpg' }
+        { name: 'both-right', filename: 'both-right-789789.jpg', type: 'image/jpg' },
+        { name: 'both-wrong', filename: 'both-wrong-111111.jpg', type: 'image/jpg' }
       ];
 
       let storeEach = (asset, cb) => {
@@ -196,7 +197,8 @@ describe('upstream', () => {
       nock('https://upstream')
         .get('/assets').reply(200, {
           'only-upstream': 'https://assets.horse/up/only-upstream-123123.jpg',
-          'both': 'https://assets.horse/up/both-321321.jpg'
+          'both-right': 'https://assets.horse/up/both-789789.jpg',
+          'both-wrong': 'https://assets.horse/up/both-wrong-111111.jpg'
         });
 
       request(server.create())
@@ -207,7 +209,8 @@ describe('upstream', () => {
         .expect({
           'only-upstream': 'https://assets.horse/up/only-upstream-123123.jpg',
           'only-local': storage.assetURLPrefix() + 'only-local-123123.jpg',
-          'both': storage.assetURLPrefix() + 'both-456456.jpg'
+          'both-right': storage.assetURLPrefix() + 'both-right-789789.jpg',
+          'both-wrong': storage.assetURLPrefix() + 'both-wrong-111111.jpg'
         }, done);
     });
 

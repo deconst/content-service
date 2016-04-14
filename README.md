@@ -215,6 +215,41 @@ An HTTP status of 500 is returned if there are problems accepting one or more en
 
 Note that the successful envelopes *were* accepted and are live.
 
+### `GET /checkcontent`
+
+Perform a bulk query to determine which envelopes need to be updated and which are unchanged.
+
+*Request*
+
+Attach a body to the GET request containing a JSON object mapping content IDs to SHA-256 checksums. Generate each checksums from a compact (whitespace-less) JSON representation with sorted object keys.
+
+```json
+{
+  "https://github.com/org/repo": "b1b6e4c544880769b42bdbf7f6338cba3db78cf734424af20e5c4d30251a984c",
+  "https://github.com/org/repo/somepath": "0ff459af6d050d72d642eeb3a1ea5a8a93fd518993ac56711bd86a7e49b95191"
+}
+```
+
+*Response (successful)*
+
+The response will have a 200 status and a response body containing the queried content IDs and a boolean value of:
+
+* `true` if the envelope with that ID is already present and its checksum matches, or
+* `false` if the envelope is either missing entirely or its checksum differs.
+
+The envelope that's queried for a fingerprint match is the envelope that would be rendered for a `GET /content/:id` request against this endpoint. In staging mode, this means that an envelope that's present in the local store with a different checksum will return `false` even if the upstream content service has that envelope with a matching checksum.
+
+```json
+{
+  "https://github.com/org/repo": true,
+  "https://github.com/org/repo/somepath": false
+}
+```
+
+*Response (unsuccessful)*
+
+A status of 500 indicates that an internal storage error occurred. A status of 502 indicates that the content store is configured to proxy to an upstream service, but it couldn't be reached.
+
 ### `POST /assets[?named=true]`
 
 **(Authorization required: any user)**
@@ -285,6 +320,41 @@ Returns an HTTP status of 200 and a map containing the tarball's path to each as
 *Unsuccessful Response*
 
 If the uploaded file is not a valid tarball, an HTTP status of 400 will be returned. If there are problems performing the batch upload an HTTP status of 500 will be returned.
+
+### `GET /checkassets`
+
+Perform a bulk query to determine which assets need to be uploaded and which are already present.
+
+*Request*
+
+Attach a body to the GET request containing a JSON object mapping asset filenames to SHA-256 checksums.
+
+```json
+{
+  "header.jpg": "08facdf9cdab2065dd76d0c50c20d93141c1e2be8a1224782458b0f41ad04eee",
+  "local/path/style.min.css": "5746528f57f4c571bcbcdd7334b4396277877488bff0207603d7fb829fa7f854"
+}
+```
+
+*Response (successful)*
+
+The response will have a 200 status and a response body mapping the queried paths to:
+
+* The known asset's public CDN URL if an asset with that filename and checksum is already present, or
+* `null` if no such asset exists.
+
+In staging mode, the upstream content store will be queried for any assets that are not present locally.
+
+```json
+{
+  "header.jpg": "https://my.awesome.cdn/public/header-08facdf9cdab2065dd76d0c50c20d93141c1e2be8a1224782458b0f41ad04eee.jpg",
+  "local/path/style.min.css": null
+}
+```
+
+*Response (unsuccessful)*
+
+A status of 500 indicates that an internal storage error occurred. A status of 502 indicates that the content store is configured to proxy to an upstream service, but it couldn't be reached.
 
 ### `POST /keys?named=:name`
 

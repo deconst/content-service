@@ -1,12 +1,16 @@
+'use strict';
+
 /**
  * Interfaces between the API and the underlying storage engines.
  */
 
-var cheerio = require('cheerio');
-var config = require('../config');
-var memory = require('./memory');
-var remote = require('./remote');
-var logger = require('../logging').getLogger();
+const crypto = require('crypto');
+const cheerio = require('cheerio');
+const stringify = require('json-stable-stringify');
+const config = require('../config');
+const memory = require('./memory');
+const remote = require('./remote');
+const logger = require('../logging').getLogger();
 
 // Methods to delegate to the activated storage driver.
 var delegates = exports.delegates = [
@@ -16,6 +20,7 @@ var delegates = exports.delegates = [
   'bulkStoreAssets',
   'nameAsset',
   'findNamedAssets',
+  'assetExists',
   'getAsset',
   'storeKey',
   'deleteKey',
@@ -24,6 +29,7 @@ var delegates = exports.delegates = [
   '_getEnvelope',
   'deleteEnvelope',
   'bulkDeleteEnvelopes',
+  'envelopesExist',
   'listEnvelopes',
   'createNewIndex',
   '_indexEnvelope',
@@ -86,9 +92,14 @@ exports.setup = function (callback) {
 // Facade functions to perform common input preprocessing.
 
 exports.storeEnvelope = function (contentID, envelope, callback) {
+  const sha256sum = crypto.createHash('sha256');
+  sha256sum.update(stringify(envelope));
+  const fingerprint = sha256sum.digest('hex');
+
   const doc = {
     contentID,
     envelope,
+    fingerprint,
     lastUpdated: Date.now()
   };
 

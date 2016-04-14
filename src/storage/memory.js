@@ -77,6 +77,10 @@ MemoryStorage.prototype.findNamedAssets = function (callback) {
   callback(null, _.values(this.namedAssets));
 };
 
+MemoryStorage.prototype.assetExists = function (filename, callback) {
+  process.nextTick(() => callback(null, this.assets[filename] !== undefined));
+};
+
 MemoryStorage.prototype.getAsset = function (filename, callback) {
   var asset = this.assets[filename];
 
@@ -142,6 +146,30 @@ MemoryStorage.prototype.deleteEnvelope = function (contentID, callback) {
 
 MemoryStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
   async.each(contentIDs, (id, cb) => this.deleteEnvelope(id, cb), callback);
+};
+
+MemoryStorage.prototype.envelopesExist = function (contentIDMap, callback) {
+  const results = {};
+
+  for (let contentID in contentIDMap) {
+    if (contentIDMap.hasOwnProperty(contentID)) {
+      const envelope = this.envelopes[contentID];
+
+      if (!envelope) {
+        results[contentID] = {
+          present: false,
+          matches: false
+        };
+      } else {
+        results[contentID] = {
+          present: true,
+          matches: envelope.fingerprint === contentIDMap[contentID]
+        };
+      }
+    }
+  }
+
+  process.nextTick(() => callback(null, results));
 };
 
 MemoryStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {

@@ -285,3 +285,36 @@ describe('/bulkcontent', function () {
     ], done);
   });
 });
+
+describe('/checkcontent', function () {
+  beforeEach(resetHelper);
+
+  beforeEach(function (done) {
+    storage.storeEnvelope('https://github.com/some/repo/path', {
+      title: 'one',
+      body: 'one one one'
+    }, done);
+  });
+  beforeEach(function (done) {
+    storage.storeEnvelope('https://github.com/some/repo/other', {
+      title: 'two',
+      body: 'two two two'
+    }, done);
+  });
+
+  it('reports true for each envelope that is present with a matching fingerprint', function (done) {
+    request(server.create())
+      .get('/checkcontent')
+      .send({
+        'https://github.com/some/repo/path': 'f5ac32c93010b9d0a9f7ca98aab0c3daa80580f06e79d238065619948f435a7f',
+        'https://github.com/some/repo/other': '2aeb0c4381a573b85f44dc70ecef8c3b9f04c448c787223be43b15ed7146d440',
+        'https://github.com/some/repo/missing': '4df6be44e605e1123b3b98c27094b1515f518b8df3db7c77615f9c85e553a43a'
+      })
+      .expect(200)
+      .expect({
+        'https://github.com/some/repo/path': true,
+        'https://github.com/some/repo/other': false,
+        'https://github.com/some/repo/missing': false
+      }, done);
+  });
+});

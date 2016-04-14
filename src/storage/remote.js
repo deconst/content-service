@@ -1,6 +1,7 @@
 'use strict';
 
 const async = require('async');
+const request = require('request');
 const connection = require('./connection');
 const config = require('../config');
 const logger = require('../logging').getLogger();
@@ -126,6 +127,25 @@ RemoteStorage.prototype.nameAsset = function (name, publicURL, callback) {
  */
 RemoteStorage.prototype.findNamedAssets = function (callback) {
   mongoCollection('layoutAssets').find().toArray(callback);
+};
+
+/**
+ * @description Yield true if an asset exists or false if it does not.
+ */
+RemoteStorage.prototype.assetExists = function (filename, callback) {
+  const u = this.assetURLPrefix() + filename;
+
+  request({ url: u, method: 'HEAD' }, (err, response, body) => {
+    if (err) return callback(err);
+
+    if (response.statusCode === 404) return callback(null, false);
+    if (response.statusCode === 200) return callback(null, true);
+
+    const e = new Error('Unexpected status code from Cloud Files');
+    e.statusCode = response.statusCode;
+    e.body = body;
+    callback(e, false);
+  });
 };
 
 /**
@@ -310,6 +330,27 @@ RemoteStorage.prototype.bulkDeleteEnvelopes = function (contentIDs, callback) {
   const options = { ordered: false };
 
   mongoCollection('envelopes').bulkWrite(ops, options, callback);
+};
+
+/**
+ * @description Query for the existence and fingerprint matches of a set of content IDs. The result
+ * object will have the structure:
+ *
+ * { contentID: { present: Boolean, matches: Boolean }}
+ */
+RemoteStorage.prototype.envelopesExist = function (contentIDMap, callback) {
+  const query = { contentID: { $in: Object.keys(contentIDMap) } };
+  const projection = { contentID: 1, fingerprint: 1 };
+
+  const results = Object.keys(contentIDMap).reduce((object, contentID) => {
+    object[contentID] = { present: false, matches: false };
+    return object;
+  }, {});
+
+  mongoCollection('envelopes').find(query).project(projection).forEach((envelope) => {
+    results[envelope.contentID].present = true;
+    results[envelope.contentID].matches = envelope.fingerprint === contentIDMap[envelope.contentID];
+  }, (err) => callback(err, results));
 };
 
 RemoteStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {

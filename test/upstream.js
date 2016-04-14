@@ -174,7 +174,7 @@ describe('upstream', () => {
 
   describe('with assets', () => {
     beforeEach((done) => {
-      // Note to self: this is extremely awkward.
+      // Note to self: this is still kind of awkward.
       let assets = [
         { name: 'only-local', filename: 'only-local-123123.jpg', type: 'image/jpg' },
         { name: 'both', filename: 'both-456456.jpg', type: 'image/jpg' }
@@ -206,8 +206,35 @@ describe('upstream', () => {
         .expect('Content-Type', 'application/json')
         .expect({
           'only-upstream': 'https://assets.horse/up/only-upstream-123123.jpg',
-          'only-local': '/__local_asset__/only-local-123123.jpg',
-          'both': '/__local_asset__/both-456456.jpg'
+          'only-local': storage.assetURLPrefix() + 'only-local-123123.jpg',
+          'both': storage.assetURLPrefix() + 'both-456456.jpg'
+        }, done);
+    });
+
+    it('queries upstream for assets missing from local /checkassets calls', (done) => {
+      nock('https://upstream')
+        .get('/checkassets', {
+          'otherpath/only-upstream.jpg': '456456',
+          'both-wrong.jpg': '000000'
+        }).reply(200, {
+          'otherpath/only-upstream.jpg': 'https://assets.horse/up/only-upstream-456456.jpg',
+          'both-wrong.jpg': null
+        });
+
+      request(server.create())
+        .get('/checkassets')
+        .send({
+          'somepath/only-local.jpg': '123123',
+          'otherpath/only-upstream.jpg': '456456',
+          'more/paths/both-right.jpg': '789789',
+          'both-wrong.jpg': '000000'
+        })
+        .expect(200)
+        .expect({
+          'somepath/only-local.jpg': storage.assetURLPrefix() + 'only-local-123123.jpg',
+          'otherpath/only-upstream.jpg': 'https://assets.horse/up/only-upstream-456456.jpg',
+          'more/paths/both-right.jpg': storage.assetURLPrefix() + 'both-right-789789.jpg',
+          'both-wrong.jpg': null
         }, done);
     });
   });

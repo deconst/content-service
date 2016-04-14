@@ -37,10 +37,14 @@ exports.handler = function (req, res, next) {
         }
       });
 
-      checkUpstream(req.logger, query, (err, upresults) => {
-        if (err) return next(err);
-        complete(_.assign(localResults, upresults));
-      });
+      if (Object.keys(query).length > 0) {
+        checkUpstream(req.logger, query, (err, upResults) => {
+          if (err) return next(err);
+          complete(_.assign(localResults, upResults));
+        });
+      } else {
+        complete(localResults);
+      }
     } else {
       complete(localResults);
     }

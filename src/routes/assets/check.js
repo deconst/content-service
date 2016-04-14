@@ -67,11 +67,15 @@ exports.handler = function (req, res, next) {
         if (publicURL === null) subquery[pathname] = query[pathname];
       });
 
-      checkUpstream(req.logger, subquery, (err, subresults) => {
-        if (err) return finish(err);
+      if (Object.keys(subquery).length > 0) {
+        checkUpstream(req.logger, subquery, (err, subresults) => {
+          if (err) return finish(err);
 
-        finish(null, _.assign(localResults, subresults));
-      });
+          finish(null, _.assign(localResults, subresults));
+        });
+      } else {
+        finish(null, localResults);
+      }
     } else {
       finish(null, localResults);
     }

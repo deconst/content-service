@@ -321,6 +321,41 @@ Returns an HTTP status of 200 and a map containing the tarball's path to each as
 
 If the uploaded file is not a valid tarball, an HTTP status of 400 will be returned. If there are problems performing the batch upload an HTTP status of 500 will be returned.
 
+### `GET /checkassets`
+
+Perform a bulk query to determine which assets need to be uploaded and which are already present.
+
+*Request*
+
+Attach a body to the GET request containing a JSON object mapping asset filenames to SHA-256 checksums.
+
+```json
+{
+  "header.jpg": "08facdf9cdab2065dd76d0c50c20d93141c1e2be8a1224782458b0f41ad04eee",
+  "local/path/style.min.css": "5746528f57f4c571bcbcdd7334b4396277877488bff0207603d7fb829fa7f854"
+}
+```
+
+*Response (successful)*
+
+The response will have a 200 status and a response body mapping the queried paths to:
+
+* The known asset's public CDN URL if an asset with that filename and checksum is already present, or
+* `null` if no such asset exists.
+
+In staging mode, the upstream content store will be queried for any assets that are not present locally.
+
+```json
+{
+  "header.jpg": "https://my.awesome.cdn/public/header-08facdf9cdab2065dd76d0c50c20d93141c1e2be8a1224782458b0f41ad04eee.jpg",
+  "local/path/style.min.css": null
+}
+```
+
+*Response (unsuccessful)*
+
+A status of 500 indicates that an internal storage error occurred. A status of 502 indicates that the content store is configured to proxy to an upstream service, but it couldn't be reached.
+
 ### `POST /keys?named=:name`
 
 **(Authorization required: admin only)**

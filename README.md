@@ -215,6 +215,41 @@ An HTTP status of 500 is returned if there are problems accepting one or more en
 
 Note that the successful envelopes *were* accepted and are live.
 
+### `GET /checkcontent`
+
+Perform a bulk query to determine which envelopes need to be updated and which are unchanged.
+
+*Request*
+
+Attach a body to the GET request containing a JSON object mapping content IDs to SHA-256 checksums. Generate each checksums from a compact (whitespace-less) JSON representation with sorted object keys.
+
+```json
+{
+  "https://github.com/org/repo": "b1b6e4c544880769b42bdbf7f6338cba3db78cf734424af20e5c4d30251a984c",
+  "https://github.com/org/repo/somepath": "0ff459af6d050d72d642eeb3a1ea5a8a93fd518993ac56711bd86a7e49b95191"
+}
+```
+
+*Response (successful)*
+
+The response will have a 200 status and a response body containing the queried content IDs and a boolean value of:
+
+* `true` if the envelope with that ID is already present and its checksum matches, or
+* `false` if the envelope is either missing entirely or its checksum differs.
+
+The envelope that's queried for a fingerprint match is the envelope that would be rendered for a `GET /content/:id` request against this endpoint. In staging mode, this means that an envelope that's present in the local store with a different checksum will return `false` even if the upstream content service has that envelope with a matching checksum.
+
+```json
+{
+  "https://github.com/org/repo": true,
+  "https://github.com/org/repo/somepath": false
+}
+```
+
+*Response (unsuccessful)*
+
+A status of 500 indicates that an internal storage error occurred. A status of 502 indicates that the content store is configured to proxy to an upstream service, but it couldn't be reached.
+
 ### `POST /assets[?named=true]`
 
 **(Authorization required: any user)**

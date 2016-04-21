@@ -296,7 +296,7 @@ Return an HTTP status of 200, the correct content-type, and the asset body.
 
 A response of 400 is returned if no asset with that filename exists.
 
-### `POST /bulkassets`
+### `POST /bulkasset`
 
 **(Authorization required: any user)**
 

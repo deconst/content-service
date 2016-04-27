@@ -93,7 +93,8 @@ exports.setup = function (callback) {
 
 exports.storeEnvelope = function (contentID, envelope, callback) {
   const sha256sum = crypto.createHash('sha256');
-  sha256sum.update(stringify(envelope));
+  const serialized = new Buffer(stringify(envelope), 'utf-8');
+  sha256sum.update(serialized);
   const fingerprint = sha256sum.digest('hex');
 
   const doc = {

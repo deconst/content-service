@@ -16,6 +16,7 @@ const logger = require('../logging').getLogger();
 var delegates = exports.delegates = [
   'clear',
   'assetURLPrefix',
+  'assetPublicURL',
   'storeAsset',
   'bulkStoreAssets',
   'nameAsset',

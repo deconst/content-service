@@ -46,7 +46,7 @@ exports.handler = function (req, res, next) {
       const name = `${bname}-${sha256sum.digest('hex')}${ext}`;
 
       assetCount++;
-      publicURLs[entryPath] = storage.assetURLPrefix() + encodeURIComponent(name);
+      publicURLs[entryPath] = storage.assetPublicURL(name);
 
       pack.entry({ name }, body);
       req.logger.debug('Repacked asset', { entryPath, name, assetCount });

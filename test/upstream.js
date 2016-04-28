@@ -208,9 +208,9 @@ describe('upstream', () => {
         .expect('Content-Type', 'application/json')
         .expect({
           'only-upstream': 'https://assets.horse/up/only-upstream-123123.jpg',
-          'only-local': storage.assetURLPrefix() + 'only-local-123123.jpg',
-          'both-right': storage.assetURLPrefix() + 'both-right-789789.jpg',
-          'both-wrong': storage.assetURLPrefix() + 'both-wrong-111111.jpg'
+          'only-local': storage.assetPublicURL('only-local-123123.jpg'),
+          'both-right': storage.assetPublicURL('both-right-789789.jpg'),
+          'both-wrong': storage.assetPublicURL('both-wrong-111111.jpg')
         }, done);
     });
 
@@ -234,9 +234,9 @@ describe('upstream', () => {
         })
         .expect(200)
         .expect({
-          'somepath/only-local.jpg': storage.assetURLPrefix() + 'only-local-123123.jpg',
+          'somepath/only-local.jpg': storage.assetPublicURL('only-local-123123.jpg'),
           'otherpath/only-upstream.jpg': 'https://assets.horse/up/only-upstream-456456.jpg',
-          'more/paths/both-right.jpg': storage.assetURLPrefix() + 'both-right-789789.jpg',
+          'more/paths/both-right.jpg': storage.assetPublicURL('both-right-789789.jpg'),
           'both-wrong.jpg': null
         }, done);
     });

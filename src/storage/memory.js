@@ -35,12 +35,16 @@ MemoryStorage.prototype.assetURLPrefix = function () {
   return '/__local_asset__/';
 };
 
+MemoryStorage.prototype.assetPublicURL = function (filename) {
+  return this.assetURLPrefix() + encodeURIComponent(filename);
+};
+
 MemoryStorage.prototype.storeAsset = function (stream, filename, contentType, callback) {
   getRawBody(stream, (err, body) => {
     if (err) return callback(err);
 
     this.assets[filename] = { contentType, body };
-    const publicURL = this.assetURLPrefix() + encodeURIComponent(filename);
+    const publicURL = this.assetPublicURL(filename);
 
     callback(null, publicURL);
   });

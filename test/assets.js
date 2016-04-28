@@ -161,7 +161,7 @@ describe('/checkassets', function () {
       .expect({ 'path/fake-asset.txt': finalName, 'other/missing-asset.jpg': null }, done);
   });
 
-  it('verifies the correct filename for assets that with URL-encoded names', function (done) {
+  it('verifies the correct filename for assets that have URL-encoded names', function (done) {
     const finalName = storage.assetPublicURL('This%20file%20is%20url-encoded-9999.txt');
 
     expect(finalName).to.match(/\/This%2520file%2520is%2520url-encoded-9999\.txt$/);

@@ -73,6 +73,13 @@ RemoteStorage.prototype.assetURLPrefix = function () {
 };
 
 /**
+ * @description Return the public CDN URL of a (possibly hypothetical) asset filename.
+ */
+RemoteStorage.prototype.assetPublicURL = function (filename) {
+  return this.assetURLPrefix() + encodeURIComponent(filename);
+};
+
+/**
  * @description Upload an asset to the Cloud Files asset container.
  */
 RemoteStorage.prototype.storeAsset = function (stream, filename, contentType, callback) {
@@ -88,7 +95,7 @@ RemoteStorage.prototype.storeAsset = function (stream, filename, contentType, ca
   up.on('error', callback);
 
   up.on('success', () => {
-    const publicURL = this.assetURLPrefix() + encodeURIComponent(filename);
+    const publicURL = this.assetPublicURL(filename);
     callback(null, publicURL);
   });
 
@@ -133,7 +140,7 @@ RemoteStorage.prototype.findNamedAssets = function (callback) {
  * @description Yield true if an asset exists or false if it does not.
  */
 RemoteStorage.prototype.assetExists = function (filename, callback) {
-  const u = this.assetURLPrefix() + filename;
+  const u = this.assetPublicURL(filename);
 
   request({ url: u, method: 'HEAD' }, (err, response, body) => {
     if (err) return callback(err);

@@ -121,7 +121,7 @@ const makeAssetPublisher = function (logger, asset) {
 };
 
 /**
- * @description Give this asset a name. The final name and CDL URI of this
+ * @description Give this asset a name. The final name and CDN URI of this
  *   asset will be included in all outgoing metadata envelopes, for use by
  *   layouts.
  */

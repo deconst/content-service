@@ -10,6 +10,7 @@ require('./helpers/before');
 const chai = require('chai');
 const dirtyChai = require('dirty-chai');
 chai.use(dirtyChai);
+const expect = chai.expect;
 
 const fs = require('fs');
 const path = require('path');
@@ -32,7 +33,7 @@ describe('/assets', function () {
 
   beforeEach(resetHelper);
   beforeEach(function () {
-    finalName = storage.assetURLPrefix() + fingerprintedFilename;
+    finalName = storage.assetPublicURL(fingerprintedFilename);
   });
 
   it('accepts an asset file and produces a fingerprinted filename', function (done) {
@@ -145,13 +146,30 @@ describe('/checkassets', function () {
     storage.storeAsset(stream, 'fake-asset-1234.txt', 'text/plain', done);
   });
 
+  beforeEach(function (done) {
+    const stream = streamifier.createReadStream('another');
+    storage.storeAsset(stream, 'This%20file%20is%20url-encoded-9999.txt', 'text/plain', done);
+  });
+
   it("returns the publicURL for each asset that exists and null for those that don't", function (done) {
-    const finalName = storage.assetURLPrefix() + 'fake-asset-1234.txt';
+    const finalName = storage.assetPublicURL('fake-asset-1234.txt');
 
     request(server.create())
       .get('/checkassets')
       .send({ 'path/fake-asset.txt': '1234', 'other/missing-asset.jpg': '4321' })
       .expect(200)
       .expect({ 'path/fake-asset.txt': finalName, 'other/missing-asset.jpg': null }, done);
+  });
+
+  it('verifies the correct filename for assets that have URL-encoded names', function (done) {
+    const finalName = storage.assetPublicURL('This%20file%20is%20url-encoded-9999.txt');
+
+    expect(finalName).to.match(/\/This%2520file%2520is%2520url-encoded-9999\.txt$/);
+
+    request(server.create())
+      .get('/checkassets')
+      .send({ 'path/This%20file%20is%20url-encoded.txt': '9999' })
+      .expect(200)
+      .expect({ 'path/This%20file%20is%20url-encoded.txt': finalName }, done);
   });
 });

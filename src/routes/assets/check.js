@@ -38,7 +38,7 @@ exports.handler = function (req, res, next) {
       }
 
       if (exists) {
-        localResults[assetFilename] = storage.assetURLPrefix() + internalName;
+        localResults[assetFilename] = storage.assetURLPrefix() + encodeURIComponent(internalName);
       } else {
         localResults[assetFilename] = null;
       }

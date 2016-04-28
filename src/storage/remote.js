@@ -133,7 +133,7 @@ RemoteStorage.prototype.findNamedAssets = function (callback) {
  * @description Yield true if an asset exists or false if it does not.
  */
 RemoteStorage.prototype.assetExists = function (filename, callback) {
-  const u = this.assetURLPrefix() + filename;
+  const u = this.assetURLPrefix() + encodeURIComponent(filename);
 
   request({ url: u, method: 'HEAD' }, (err, response, body) => {
     if (err) return callback(err);

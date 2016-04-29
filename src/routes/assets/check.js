@@ -2,7 +2,6 @@
 
 // Test for the existance of assets
 
-const _ = require('lodash');
 const async = require('async');
 const request = require('request');
 const restify = require('restify');
@@ -19,11 +18,30 @@ const fingerprinted = require('./store').fingerprinted;
 exports.handler = function (req, res, next) {
   const query = req.body;
   const assetFilenames = Object.keys(query);
-  const localResults = {};
+  let results = {};
 
   req.logger.debug('Checking asset fingerprints', { assetCount: assetFilenames.length });
 
-  const assetCheck = (assetFilename, cb) => {
+  // Query upstream first.
+  const queryUpstream = (cb) => {
+    if (config.proxyUpstream() && assetFilenames.length > 0) {
+      checkUpstream(req.logger, query, (err, r) => {
+        if (err) return cb(err);
+
+        results = r;
+        cb(null);
+      });
+    } else {
+      cb(null);
+    }
+  };
+
+  const localAssetCheck = (assetFilename, cb) => {
+    // Prefer upstream assets, if they were fetched.
+    if (results[assetFilename]) {
+      return cb(null);
+    }
+
     const fingerprint = query[assetFilename];
     const internalName = fingerprinted(assetFilename, fingerprint);
 
@@ -33,52 +51,36 @@ exports.handler = function (req, res, next) {
           payload: { assetFilename, fingerprint }
         });
 
-        localResults[assetFilename] = null;
+        results[assetFilename] = null;
         return cb(null);
       }
 
       if (exists) {
-        localResults[assetFilename] = storage.assetPublicURL(internalName);
+        results[assetFilename] = storage.assetPublicURL(internalName);
       } else {
-        localResults[assetFilename] = null;
+        results[assetFilename] = null;
       }
 
       cb(null);
     });
   };
 
-  async.each(assetFilenames, assetCheck, (err) => {
+  queryUpstream((err) => {
     if (err) {
-      req.logger.reportError('Unable to check asset fingerprints', err);
+      req.logger.reportError('Unable to check upstream asset fingerprints', err);
       return next(err);
     }
 
-    const finish = (err, results) => {
-      if (err) return next(err);
+    async.each(assetFilenames, localAssetCheck, (err) => {
+      if (err) {
+        req.logger.reportError('Unable to check asset fingerprints', err);
+        return next(err);
+      }
 
       req.logger.reportSuccess('Asset fingerprint query', { assetCount: assetFilenames.length });
       res.send(200, results);
       next();
-    };
-
-    if (config.proxyUpstream()) {
-      const subquery = {};
-      _.forOwn(localResults, (publicURL, pathname) => {
-        if (publicURL === null) subquery[pathname] = query[pathname];
-      });
-
-      if (Object.keys(subquery).length > 0) {
-        checkUpstream(req.logger, subquery, (err, subresults) => {
-          if (err) return finish(err);
-
-          finish(null, _.assign(localResults, subresults));
-        });
-      } else {
-        finish(null, localResults);
-      }
-    } else {
-      finish(null, localResults);
-    }
+    });
   });
 };
 

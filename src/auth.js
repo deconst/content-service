@@ -29,8 +29,9 @@ const parseAuth = function (auth, callback) {
   if (!match) {
     return callback(null, auth.credentials);
   } else {
-    // TODO elevate this to "warn" once the submitter is shipped
-    logger.debug('Authorization header containing apikey="" pattern encountered');
+    logger.warn('Authorization header containing apikey="" pattern encountered', {
+      deprecation: 'https://github.com/deconst/content-service/issues/105'
+    });
 
     return callback(null, match[1]);
   }

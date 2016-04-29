@@ -240,9 +240,10 @@ RemoteStorage.prototype._getEnvelope = function (contentID, callback) {
     if (failures.mongodb) {
       responded = true;
 
-      // TODO Crank this up to warn once we've deployed this and run some builds to catch
-      // straggling content.
-      logger.debug('Returning content from Cloud Files.', { contentID });
+      logger.warn('Returning content from Cloud Files.', {
+        contentID,
+        deprecation: 'https://github.com/deconst/content-service/issues/93'
+      });
 
       return callback(null, envelope);
     }

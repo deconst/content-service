@@ -178,7 +178,8 @@ describe('upstream', () => {
       let assets = [
         { name: 'only-local', filename: 'only-local-123123.jpg', type: 'image/jpg' },
         { name: 'both-right', filename: 'both-right-789789.jpg', type: 'image/jpg' },
-        { name: 'both-wrong', filename: 'both-wrong-111111.jpg', type: 'image/jpg' }
+        { name: 'both-wrong', filename: 'both-wrong-111111.jpg', type: 'image/jpg' },
+        { filename: 'different-on-upstream-345345.jpg', type: 'image/jpg' }
       ];
 
       let storeEach = (asset, cb) => {
@@ -186,7 +187,11 @@ describe('upstream', () => {
         storage.storeAsset(empty, asset.filename, asset.type, (err, publicURL) => {
           if (err) return cb(err);
 
-          storage.nameAsset(asset.name, publicURL, cb);
+          if (asset.name) {
+            storage.nameAsset(asset.name, publicURL, cb);
+          } else {
+            cb(null);
+          }
         });
       };
 
@@ -214,13 +219,19 @@ describe('upstream', () => {
         }, done);
     });
 
-    it('queries upstream for assets missing from local /checkassets calls', (done) => {
+    it('prefers upstream assets in /checkassets calls', (done) => {
       nock('https://upstream')
         .get('/checkassets', {
+          'somepath/only-local.jpg': '123123',
+          'different-on-upstream.jpg': '345345',
           'otherpath/only-upstream.jpg': '456456',
+          'more/paths/both-right.jpg': '789789',
           'both-wrong.jpg': '000000'
         }).reply(200, {
+          'somepath/only-local.jpg': null,
+          'different-on-upstream.jpg': null,
           'otherpath/only-upstream.jpg': 'https://assets.horse/up/only-upstream-456456.jpg',
+          'more/paths/both-right.jpg': 'https://assets.horse/up/both-right-789789.jpg',
           'both-wrong.jpg': null
         });
 
@@ -228,6 +239,7 @@ describe('upstream', () => {
         .get('/checkassets')
         .send({
           'somepath/only-local.jpg': '123123',
+          'different-on-upstream.jpg': '345345',
           'otherpath/only-upstream.jpg': '456456',
           'more/paths/both-right.jpg': '789789',
           'both-wrong.jpg': '000000'
@@ -235,8 +247,9 @@ describe('upstream', () => {
         .expect(200)
         .expect({
           'somepath/only-local.jpg': storage.assetPublicURL('only-local-123123.jpg'),
+          'different-on-upstream.jpg': storage.assetPublicURL('different-on-upstream-345345.jpg'),
           'otherpath/only-upstream.jpg': 'https://assets.horse/up/only-upstream-456456.jpg',
-          'more/paths/both-right.jpg': storage.assetPublicURL('both-right-789789.jpg'),
+          'more/paths/both-right.jpg': 'https://assets.horse/up/both-right-789789.jpg',
           'both-wrong.jpg': null
         }, done);
     });

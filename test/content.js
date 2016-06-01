@@ -213,6 +213,22 @@ describe('/content', function () {
           });
         });
     });
+
+    it('deletes all content with a content ID prefix', function (done) {
+      request(server.create())
+        .delete('/content/https%3A%2F%2Fone%2F?prefix=true')
+        .set('Authorization', authHelper.AUTH_USER)
+        .expect(204)
+        .end((err, res) => {
+          if (err) return done(err);
+
+          async.parallel([
+            expectNoEnvelope('https://one/aaa'),
+            expectNoEnvelope('https://one/bbb'),
+            expectStoredEnvelope('https://two/aaa', { body: 'third' })
+          ], done);
+        });
+    });
   });
 });
 

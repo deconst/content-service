@@ -246,7 +246,7 @@ MemoryStorage.prototype.unindexEnvelope = function (contentID, callback) {
 };
 
 MemoryStorage.prototype.bulkUnindexEnvelopes = function (contentIDs, callback) {
-  async.each(contentIDs, (id, cb) => this.unindexEnvelopes(id, cb), callback);
+  async.each(contentIDs, (id, cb) => this.unindexEnvelope(id, cb), callback);
 };
 
 MemoryStorage.prototype.storeSHA = function (sha, callback) {

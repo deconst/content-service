@@ -192,12 +192,7 @@ describe('/content', function () {
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.getEnvelope('https://one/aaa', function (err, uploaded) {
-            expect(err).not.to.be.null();
-            expect(err.statusCode).to.equal(404);
-
-            done();
-          });
+          expectNoEnvelope('https://one/aaa')(done);
         });
     });
 

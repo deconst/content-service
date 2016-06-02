@@ -16,9 +16,7 @@ exports.handler = function (req, res, next) {
 
   async.parallel({
     total: (cb) => storage.countEnvelopes({}, cb),
-    results: (cb) => storage.listEnvelopes(null, (err, each) => {
-      if (err) return handleError('Unable to retrieve envelope', err);
-
+    results: (cb) => storage.listEnvelopes({}, (each) => {
       results.push({
         contentID: each.contentID,
         url: `/content/${encodeURIComponent(each.contentID)}`

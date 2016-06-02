@@ -283,10 +283,8 @@ RemoteStorage.prototype._envelopeCursor = function (options) {
   return mongoCollection('envelopes').find(filter);
 };
 
-RemoteStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
-  const iter = (doc) => eachCallback(null, doc);
-
-  this._envelopeCursor({ prefix }).forEach(iter, endCallback);
+RemoteStorage.prototype.listEnvelopes = function (options, eachCallback, endCallback) {
+  this._envelopeCursor(options).forEach(eachCallback, endCallback);
 };
 
 RemoteStorage.prototype.countEnvelopes = function (options, callback) {

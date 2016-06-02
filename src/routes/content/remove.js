@@ -33,9 +33,7 @@ exports.handler = function (req, res, next) {
     completeRemoval([contentID]);
   } else {
     const contentIDs = [];
-    storage.listEnvelopes(contentID, (err, envelope) => {
-      if (err) return handleError(err, 'Unable to list envelopes.');
-
+    storage.listEnvelopes({ prefix: contentID }, (envelope) => {
       contentIDs.push(envelope.contentID);
     }, (err) => {
       if (err) return handleError(err, 'Unable to list envelopes.');

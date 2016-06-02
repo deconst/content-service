@@ -176,14 +176,14 @@ MemoryStorage.prototype.envelopesExist = function (contentIDMap, callback) {
   process.nextTick(() => callback(null, results));
 };
 
-MemoryStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
+MemoryStorage.prototype.listEnvelopes = function (options, eachCallback, endCallback) {
   var ids = Object.keys(this.envelopes);
 
-  if (prefix) {
-    ids = ids.filter((id) => id.startsWith(prefix));
+  if (options.prefix) {
+    ids = ids.filter((id) => id.startsWith(options.prefix));
   }
 
-  ids.forEach((id) => eachCallback(null, this.envelopes[id]));
+  ids.forEach((id) => eachCallback(this.envelopes[id]));
 
   endCallback(null);
 };

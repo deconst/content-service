@@ -254,16 +254,17 @@ describe('/content', function () {
     });
 
     it('limits results by a prefix', (done) => {
+      const results = [1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((i) => {
+        return {
+          contentID: `https://base/${i}`,
+          url: `/content/https%3A%2F%2Fbase%2F${i}`
+        };
+      });
+
       request(server.create())
         .get('/content/?prefix=https%3A%2F%2Fbase%2F1')
         .expect(200)
-        .expect({
-          total: 2,
-          results: [
-            { contentID: 'https://base/1', url: '/content/https%3A%2F%2Fbase%2F1' },
-            { contentID: 'https://base/10', url: '/content/https%3A%2F%2Fbase%2F10' }
-          ]
-        }, done);
+        .expect({ total: 11, results }, done);
     });
   });
 });

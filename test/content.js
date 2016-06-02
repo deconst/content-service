@@ -266,6 +266,15 @@ describe('/content', function () {
         .expect(200)
         .expect({ total: 11, results }, done);
     });
+
+    it('accepts basic pagination', (done) => {
+      const results = constructResults([14, 15, 16, 17, 18]);
+
+      request(server.create())
+        .get('/content?prefix=https%3A%2F%2Fbase%2F1&pageNumber=2&perPage=5')
+        .expect(200)
+        .expect({ total: 11, results }, done);
+    });
   });
 });
 

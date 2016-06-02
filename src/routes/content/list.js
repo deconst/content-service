@@ -5,10 +5,22 @@ const storage = require('../../storage');
 
 exports.handler = function (req, res, next) {
   const options = {
+    prefix: req.query.prefix,
+    perPage: req.query.perPage || 100,
+    pageNumber: req.query.pageNumber || 1
+  };
+
+  const listOptions = {
+    prefix: options.prefix,
+    skip: (options.pageNumber - 1) * options.perPage,
+    limit: options.perPage
+  };
+
+  const countOptions = {
     prefix: req.query.prefix
   };
 
-  req.logger.debug('Content list requested.', options);
+  req.logger.debug('Content list requested.', { options });
 
   const results = [];
 
@@ -19,8 +31,8 @@ exports.handler = function (req, res, next) {
   };
 
   async.parallel({
-    total: (cb) => storage.countEnvelopes(options, cb),
-    results: (cb) => storage.listEnvelopes(options, (each) => {
+    total: (cb) => storage.countEnvelopes(countOptions, cb),
+    results: (cb) => storage.listEnvelopes(listOptions, (each) => {
       results.push({
         contentID: each.contentID,
         url: `/content/${encodeURIComponent(each.contentID)}`

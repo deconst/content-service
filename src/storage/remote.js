@@ -280,7 +280,12 @@ RemoteStorage.prototype._envelopeCursor = function (options) {
     filter = { contentID: { $regex: `^${options.prefix}` } };
   }
 
-  return mongoCollection('envelopes').find(filter);
+  let cursor = mongoCollection('envelopes').find(filter);
+
+  if (options.skip) cursor = cursor.skip(options.skip);
+  if (options.limit) cursor = cursor.limit(options.limit);
+
+  return cursor;
 };
 
 RemoteStorage.prototype.listEnvelopes = function (options, eachCallback, endCallback) {

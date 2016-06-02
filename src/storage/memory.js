@@ -183,6 +183,14 @@ MemoryStorage.prototype._matchingIDs = function (options) {
     ids = ids.filter((id) => id.startsWith(options.prefix));
   }
 
+  if (options.skip) {
+    ids = ids.slice(options.skip);
+  }
+
+  if (options.limit) {
+    ids = ids.slice(0, options.limit);
+  }
+
   return ids;
 };
 

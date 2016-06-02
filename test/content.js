@@ -238,14 +238,19 @@ describe('/content', function () {
       }, done);
     });
 
-    it('enumerates stored envelopes', (done) => {
-      const results = [];
-      for (let i = 0; i < 20; i++) {
-        results.push({
+    const constructResults = function (numbers) {
+      return numbers.map((i) => {
+        return {
           contentID: `https://base/${i}`,
           url: `/content/https%3A%2F%2Fbase%2F${i}`
-        });
-      }
+        };
+      });
+    };
+
+    it('enumerates stored envelopes', (done) => {
+      const results = constructResults([
+        0, 1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 2, 3, 4, 5, 6, 7, 8, 9
+      ]);
 
       request(server.create())
         .get('/content/')
@@ -254,12 +259,7 @@ describe('/content', function () {
     });
 
     it('limits results by a prefix', (done) => {
-      const results = [1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((i) => {
-        return {
-          contentID: `https://base/${i}`,
-          url: `/content/https%3A%2F%2Fbase%2F${i}`
-        };
-      });
+      const results = constructResults([1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
 
       request(server.create())
         .get('/content/?prefix=https%3A%2F%2Fbase%2F1')

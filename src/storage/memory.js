@@ -177,7 +177,7 @@ MemoryStorage.prototype.envelopesExist = function (contentIDMap, callback) {
 };
 
 MemoryStorage.prototype._matchingIDs = function (options) {
-  let ids = Object.keys(this.envelopes);
+  let ids = Object.keys(this.envelopes).sort();
 
   if (options.prefix) {
     ids = ids.filter((id) => id.startsWith(options.prefix));

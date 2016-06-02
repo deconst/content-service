@@ -4,19 +4,23 @@ const async = require('async');
 const storage = require('../../storage');
 
 exports.handler = function (req, res, next) {
-  req.logger.debug('Content list requested.');
+  const options = {
+    prefix: req.query.prefix
+  };
+
+  req.logger.debug('Content list requested.', options);
 
   const results = [];
 
   const handleError = (message, err) => {
     err.statusCode = err.status = 500;
-    req.logger.reportError(message, err);
+    req.logger.reportError(message, err, { payload: options });
     return next(err);
   };
 
   async.parallel({
-    total: (cb) => storage.countEnvelopes({}, cb),
-    results: (cb) => storage.listEnvelopes({}, (each) => {
+    total: (cb) => storage.countEnvelopes(options, cb),
+    results: (cb) => storage.listEnvelopes(options, (each) => {
       results.push({
         contentID: each.contentID,
         url: `/content/${encodeURIComponent(each.contentID)}`

@@ -176,25 +176,23 @@ MemoryStorage.prototype.envelopesExist = function (contentIDMap, callback) {
   process.nextTick(() => callback(null, results));
 };
 
-MemoryStorage.prototype.listEnvelopes = function (options, eachCallback, endCallback) {
-  var ids = Object.keys(this.envelopes);
-
-  if (options.prefix) {
-    ids = ids.filter((id) => id.startsWith(options.prefix));
-  }
-
-  ids.forEach((id) => eachCallback(this.envelopes[id]));
-
-  endCallback(null);
-};
-
-MemoryStorage.prototype.countEnvelopes = function (options, callback) {
+MemoryStorage.prototype._matchingIDs = function (options) {
   let ids = Object.keys(this.envelopes);
 
   if (options.prefix) {
     ids = ids.filter((id) => id.startsWith(options.prefix));
   }
 
+  return ids;
+};
+
+MemoryStorage.prototype.listEnvelopes = function (options, eachCallback, endCallback) {
+  this._matchingIDs(options).forEach((id) => eachCallback(this.envelopes[id]));
+  process.nextTick(() => endCallback(null));
+};
+
+MemoryStorage.prototype.countEnvelopes = function (options, callback) {
+  const ids = this._matchingIDs(options);
   process.nextTick(() => callback(null, ids.length));
 };
 

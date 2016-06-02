@@ -32,6 +32,10 @@ const configuration = {
   assetContainer: {
     env: 'ASSET_CONTAINER'
   },
+  memoryAssetPrefix: {
+    env: 'MEMORY_ASSET_PREFIX',
+    def: '/__local_asset__/'
+  },
   mongodbURL: {
     env: 'MONGODB_URL'
   },

@@ -36,6 +36,7 @@ describe('config', () => {
     expect(config.mongodbURL()).to.be.undefined();
 
     expect(config.rackspaceServiceNet()).to.be.false();
+    expect(config.memoryAssetPrefix()).to.equal('/__local_asset__/');
     expect(config.elasticsearchHost()).to.be.null();
     expect(config.contentLogLevel()).to.equal('info');
     expect(config.contentLogColor()).to.be.false();
@@ -54,6 +55,7 @@ describe('config', () => {
       ADMIN_APIKEY: '12345',
       CONTENT_CONTAINER: 'the-content-container',
       ASSET_CONTAINER: 'the-asset-container',
+      MEMORY_ASSET_PREFIX: 'http://localhost:9000/',
       MONGODB_URL: 'mongodb-url',
       MONGODB_PREFIX: 'foo-',
       ELASTICSEARCH_HOST: 'https://elasticsearch:9200/',
@@ -70,6 +72,7 @@ describe('config', () => {
     expect(config.adminAPIKey()).to.equal('12345');
     expect(config.contentContainer()).to.equal('the-content-container');
     expect(config.assetContainer()).to.equal('the-asset-container');
+    expect(config.memoryAssetPrefix()).to.equal('http://localhost:9000/');
     expect(config.mongodbURL()).to.equal('mongodb-url');
     expect(config.mongodbPrefix()).to.equal('foo-');
     expect(config.elasticsearchHost()).to.equal('https://elasticsearch:9200/');

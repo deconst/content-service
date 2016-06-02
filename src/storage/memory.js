@@ -5,6 +5,7 @@ const _ = require('lodash');
 const async = require('async');
 const getRawBody = require('raw-body');
 const tar = require('tar-stream');
+const config = require('../config');
 
 /**
  * @description Storage driver that uses entirely in-memory data structures.
@@ -32,7 +33,7 @@ MemoryStorage.prototype.clear = function (callback) {
  * @description Return prefix of the URL that assets are served under.
  */
 MemoryStorage.prototype.assetURLPrefix = function () {
-  return '/__local_asset__/';
+  return config.memoryAssetPrefix();
 };
 
 MemoryStorage.prototype.assetPublicURL = function (filename) {

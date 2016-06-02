@@ -127,7 +127,7 @@ const makeAssetPublisher = function (logger, asset) {
  */
 const makeAssetNamer = function (logger, asset) {
   return (callback) => {
-    storage.nameAsset(asset.name, asset.publicURL, (err, asset) => {
+    storage.nameAsset(asset.name, asset.publicURL, (err) => {
       if (err) return callback(err);
 
       logger.debug('Asset named successfully.', { assetName: asset.name });

@@ -30,6 +30,7 @@ function reconfigure (overrides) {
       ADMIN_APIKEY: process.env.ADMIN_APIKEY || '12345',
       CONTENT_CONTAINER: 'the-content-container',
       ASSET_CONTAINER: 'the-asset-container',
+      MEMORY_ASSET_PREFIX: '/__asset_prefix__/',
       MONGODB_URL: 'mongodb-url',
       CONTENT_LOG_LEVEL: process.env.CONTENT_LOG_LEVEL || 'fatal'
     }, overrides));

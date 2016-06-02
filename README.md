@@ -43,6 +43,10 @@ The content service is configured by passing environment variables to the Docker
  * `MONGODB_PREFIX`: **(default: `""`)** Prefix used to partition MongoDB collection names from other services using the same MongoDB database.
  * `ELASTICSEARCH_HOST`: **(required if STORAGE=remote)** Elasticsearch connection string, including any required authentication information.
 
+### Memory storage
+
+ * `MEMORY_ASSET_PREFIX`: **(default: `"/__local_asset__/"`)** Prefix used to construct URLs for assets present in memory storage.
+
 ### Staging
 
  * `STAGING_MODE`: *(default: `"false"`)* Act as a staging store, to stage many revisions of content simultaneously. When staging mode is active, proxied content IDs will have their first URL path segment, the revision ID, removed when making the upstream request.

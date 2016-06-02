@@ -4,22 +4,45 @@ const async = require('async');
 const storage = require('../../storage');
 
 exports.handler = function (req, res, next) {
-  var contentID = req.params.id;
-  req.logger.debug('Content deletion request received.', { contentID });
+  const contentID = req.params.id;
+  const prefix = req.query.prefix;
+  req.logger.debug('Content deletion request received.', { contentID, prefix });
 
-  removeEnvelopes([contentID], function (err) {
-    if (err) {
-      err.statusCode = err.statusCode || err.status || 500;
+  const handleError = (err, message) => {
+    err.statusCode = err.statusCode || err.status || 500;
 
-      req.logger.reportError('Unable to delete content.', err, { payload: { contentID } });
-      return next(err);
-    }
+    req.logger.reportError(message, err, { payload: { contentID, prefix } });
+    return next(err);
+  };
 
-    res.send(204);
+  const completeRemoval = (contentIDs) => {
+    removeEnvelopes(contentIDs, (err) => {
+      if (err) return handleError(err, 'Unable to delete content.');
 
-    req.logger.reportSuccess('Content deletion successful.', { contentID });
-    next();
-  });
+      res.send(204);
+
+      req.logger.reportSuccess('Content deletion successful.', {
+        count: contentIDs.length,
+        contentIDs
+      });
+      next();
+    });
+  };
+
+  if (!prefix) {
+    completeRemoval([contentID]);
+  } else {
+    const contentIDs = [];
+    storage.listEnvelopes(contentID, (err, envelope) => {
+      if (err) return handleError(err, 'Unable to list envelopes.');
+
+      contentIDs.push(envelope.contentID);
+    }, (err) => {
+      if (err) return handleError(err, 'Unable to list envelopes.');
+
+      completeRemoval(contentIDs);
+    });
+  }
 };
 
 const removeEnvelopes = exports.removeEnvelopes = function (contentIDs, callback) {

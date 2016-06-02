@@ -24,6 +24,37 @@ const authHelper = require('./helpers/auth');
 const resetHelper = require('./helpers/reset');
 const server = require('../src/server');
 
+const storeAndIndexEnvelope = function (contentID, envelope) {
+  return (cb) => {
+    storage.storeEnvelope(contentID, envelope, (err) => {
+      if (err) return cb(err);
+
+      storage.indexEnvelope(contentID, envelope, cb);
+    });
+  };
+};
+
+const expectStoredEnvelope = function (contentID, envelope) {
+  return (cb) => {
+    storage.getEnvelope(contentID, (err, c) => {
+      if (err) return cb(err);
+      expect(c).to.deep.equal(envelope);
+      cb();
+    });
+  };
+};
+
+const expectNoEnvelope = function (contentID) {
+  return (cb) => {
+    storage.getEnvelope(contentID, (err) => {
+      expect(err).not.to.be.null();
+      expect(err.statusCode).to.equal(404);
+
+      cb(null);
+    });
+  };
+};
+
 describe('/content', function () {
   beforeEach(resetHelper);
 
@@ -142,52 +173,60 @@ describe('/content', function () {
   });
 
   describe('#delete', function () {
-    beforeEach(function (done) {
-      storage.storeEnvelope('er&okay', { body: 'expected' }, done);
-    });
-    beforeEach(function (done) {
-      storage.indexEnvelope('er&okay', { body: 'expected' }, done);
-    });
+    beforeEach(storeAndIndexEnvelope('https://one/aaa', { body: 'first' }));
+    beforeEach(storeAndIndexEnvelope('https://one/bbb', { body: 'second' }));
+    beforeEach(storeAndIndexEnvelope('https://two/aaa', { body: 'third' }));
 
     it('requires authentication', function (done) {
       authHelper.ensureAuthIsRequired(
         request(server.create())
-          .delete('/content/wat%26nope'),
+          .delete('/content/https%3A%2F%2Fone%2Faaa'),
         done);
     });
 
     it('deletes content from Cloud Files', function (done) {
       request(server.create())
-        .delete('/content/er%26okay')
+        .delete('/content/https%3A%2F%2Fone%2Faaa')
         .set('Authorization', authHelper.AUTH_USER)
         .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.getEnvelope('er&okay', function (err, uploaded) {
-            expect(err).not.to.be.null();
-            expect(err.statusCode).to.equal(404);
-
-            done();
-          });
+          expectNoEnvelope('https://one/aaa')(done);
         });
     });
 
     it('deletes content from Elasticsearch', function (done) {
       request(server.create())
-        .delete('/content/er%26okay')
+        .delete('/content/https%3A%2F%2Fone%2Faaa')
         .set('Authorization', authHelper.AUTH_USER)
         .expect(204)
         .end(function (err, res) {
           if (err) return done(err);
 
-          storage.queryEnvelopes('expected', null, 1, 10, function (err, found) {
+          storage.queryEnvelopes('first', null, 1, 10, function (err, found) {
             expect(err).to.be.null();
             expect(found.hits.total).to.equal(0);
             expect(found.hits.hits.length).to.equal(0);
 
             done();
           });
+        });
+    });
+
+    it('deletes all content with a content ID prefix', function (done) {
+      request(server.create())
+        .delete('/content/https%3A%2F%2Fone%2F?prefix=true')
+        .set('Authorization', authHelper.AUTH_USER)
+        .expect(204)
+        .end((err, res) => {
+          if (err) return done(err);
+
+          async.parallel([
+            expectNoEnvelope('https://one/aaa'),
+            expectNoEnvelope('https://one/bbb'),
+            expectStoredEnvelope('https://two/aaa', { body: 'third' })
+          ], done);
         });
     });
   });
@@ -203,33 +242,6 @@ describe('/bulkcontent', function () {
         if (err) return cb(err);
 
         andThen(tarball, cb);
-      });
-    };
-  };
-
-  const storeEnvelope = function (contentID, envelope) {
-    return (cb) => {
-      storage.storeEnvelope(contentID, envelope, cb);
-    };
-  };
-
-  const expectStoredEnvelope = function (contentID, envelope) {
-    return (cb) => {
-      storage.getEnvelope(contentID, (err, c) => {
-        if (err) return cb(err);
-        expect(c).to.deep.equal(envelope);
-        cb();
-      });
-    };
-  };
-
-  const expectNoEnvelope = function (contentID) {
-    return (cb) => {
-      storage.getEnvelope(contentID, (err) => {
-        expect(err).not.to.be.null();
-        expect(err.statusCode).to.equal(404);
-
-        cb(null);
       });
     };
   };
@@ -261,7 +273,7 @@ describe('/bulkcontent', function () {
 
   it('deletes all other envelopes that share a content ID base', function (done) {
     async.series([
-      storeEnvelope('https://github.com/some/repository/cruft', {
+      storeAndIndexEnvelope('https://github.com/some/repository/cruft', {
         title: 'Cruft',
         body: 'This should be deleted'
       }),

@@ -116,11 +116,13 @@ The request payload must be a valid Deconst metadata envelope in JSON form.
 
 An HTTP status of 200 and an empty response body will be returned when content is accepted successfully.
 
-### `DELETE /content/:id`
+### `DELETE /content/:id[?prefix=true]`
 
 **(Authorization required: any user)**
 
-Delete content with a specific URL-encoded *content ID*.
+Delete content with a specific URL-encoded *content ID*. If '?prefix=true' is specified, delete *all content* with a content ID with the `:id` parameter as a prefix.
+
+:warning: Use caution when bulk-deleting content from production. Ensure that no other mapped content that you *don't* wish to delete shares a prefix with the `:id` you provide. :warning:
 
 *Response: Successful*
 

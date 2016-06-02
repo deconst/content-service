@@ -13,6 +13,7 @@ var search = require('./search');
 exports.loadRoutes = function (server) {
   server.get('/version', version.report);
 
+  server.get('/content', content.list);
   server.get('/content/:id', content.retrieve);
   server.put('/content/:id', auth.requireKey, restify.bodyParser(), content.store);
   server.del('/content/:id', auth.requireKey, restify.queryParser(), content.remove);

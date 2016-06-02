@@ -32,6 +32,7 @@ var delegates = exports.delegates = [
   'bulkDeleteEnvelopes',
   'envelopesExist',
   'listEnvelopes',
+  'countEnvelopes',
   'createNewIndex',
   '_indexEnvelope',
   'makeIndexActive',

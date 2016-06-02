@@ -188,6 +188,16 @@ MemoryStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallb
   endCallback(null);
 };
 
+MemoryStorage.prototype.countEnvelopes = function (options, callback) {
+  let ids = Object.keys(this.envelopes);
+
+  if (options.prefix) {
+    ids = ids.filter((id) => id.startsWith(options.prefix));
+  }
+
+  process.nextTick(() => callback(null, ids.length));
+};
+
 MemoryStorage.prototype.createNewIndex = function (indexName, callback) {
   callback();
 };

@@ -95,6 +95,28 @@ Report the service name, version, and git commit.
 }
 ```
 
+### `GET /content/:id[?prefix=:id_prefix&pageNumber=:num&perPage=:size]`
+
+List content IDs available within the content service, paginated. If `:id_prefix` is provided, list only content IDs beginning with that prefix.
+
+The default page size is 100 content IDs.
+
+*Response: Successful*
+
+On success, the response includes an HTTP status of 200 and contains a JSON payload containing zero to many matching content IDs.
+
+```json
+{
+  "total": 123,
+  "results": [
+    {
+      "contentID": "<matching content ID>",
+      "url": "<API URL to fetch envelope contents>"
+    }
+  ]
+}
+```
+
 ### `PUT /content/:id`
 
 **(Authorization required: any user)**

@@ -252,6 +252,19 @@ describe('/content', function () {
         .expect(200)
         .expect({ total: 20, results }, done);
     });
+
+    it('limits results by a prefix', (done) => {
+      request(server.create())
+        .get('/content/?prefix=https%3A%2F%2Fbase%2F1')
+        .expect(200)
+        .expect({
+          total: 2,
+          results: [
+            { contentID: 'https://base/1', url: '/content/https%3A%2F%2Fbase%2F1' },
+            { contentID: 'https://base/10', url: '/content/https%3A%2F%2Fbase%2F10' }
+          ]
+        }, done);
+    });
   });
 });
 

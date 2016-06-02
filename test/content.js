@@ -230,6 +230,29 @@ describe('/content', function () {
         });
     });
   });
+
+  describe('#list', () => {
+    beforeEach((done) => {
+      async.times(20, (i, next) => {
+        storeAndIndexEnvelope(`https://base/${i}`, { body: i.toString() })(next);
+      }, done);
+    });
+
+    it('enumerates stored envelopes', (done) => {
+      const results = [];
+      for (let i = 0; i < 20; i++) {
+        results.push({
+          contentID: `https://base/${i}`,
+          url: `/content/https%3A%2F%2Fbase%2F${i}`
+        });
+      }
+
+      request(server.create())
+        .get('/content/')
+        .expect(200)
+        .expect({ total: 20, results }, done);
+    });
+  });
 });
 
 describe('/bulkcontent', function () {

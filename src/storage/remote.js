@@ -273,17 +273,27 @@ RemoteStorage.prototype.envelopesExist = function (contentIDMap, callback) {
   }, (err) => callback(err, results));
 };
 
-RemoteStorage.prototype.listEnvelopes = function (prefix, eachCallback, endCallback) {
+RemoteStorage.prototype._envelopeCursor = function (options) {
   let filter = {};
 
-  if (prefix) {
-    filter = { contentID: { $regex: `^${prefix}` } };
+  if (options.prefix) {
+    filter = { contentID: { $regex: `^${options.prefix}` } };
   }
 
-  const iter = (doc) => eachCallback(null, doc);
-  const end = (err) => endCallback(err);
+  let cursor = mongoCollection('envelopes').find(filter);
 
-  mongoCollection('envelopes').find(filter).forEach(iter, end);
+  if (options.skip) cursor = cursor.skip(options.skip);
+  if (options.limit) cursor = cursor.limit(options.limit);
+
+  return cursor;
+};
+
+RemoteStorage.prototype.listEnvelopes = function (options, eachCallback, endCallback) {
+  this._envelopeCursor(options).forEach(eachCallback, endCallback);
+};
+
+RemoteStorage.prototype.countEnvelopes = function (options, callback) {
+  this._envelopeCursor(options).count(true, callback);
 };
 
 RemoteStorage.prototype.createNewIndex = function (indexName, callback) {

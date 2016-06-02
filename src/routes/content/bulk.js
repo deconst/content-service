@@ -118,9 +118,7 @@ exports.handler = function (req, res, next) {
 
     let existingContentIDs = [];
 
-    storage.listEnvelopes(contentIDBase, (err, doc) => {
-      if (err) return cb(err);
-
+    storage.listEnvelopes({ prefix: contentIDBase }, (doc) => {
       existingContentIDs.push(doc.contentID);
     }, (err) => {
       if (err) return cb(err);

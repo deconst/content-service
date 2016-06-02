@@ -48,14 +48,8 @@ function reindex (logger) {
   };
 
   let reindexAllContent = function (callback) {
-    storage.listEnvelopes(null, (err, doc) => {
+    storage.listEnvelopes({}, (doc) => {
       state.totalEnvelopes++;
-
-      if (err) {
-        state.failedEnvelopes++;
-        return handleError(err, 'Unable to list content', true);
-      }
-
       logger.debug('Reindexing envelope', { contentID: doc.contentID });
 
       storage.indexEnvelope(doc.contentID, doc.envelope, indexName, (err) => {

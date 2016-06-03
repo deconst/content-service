@@ -99,7 +99,7 @@ Report the service name, version, and git commit.
 }
 ```
 
-### `GET /content/:id[?prefix=:id_prefix&pageNumber=:num&perPage=:size]`
+### `GET /content/[?prefix=:id_prefix&pageNumber=:num&perPage=:size]`
 
 List content IDs available within the content service, paginated. If `:id_prefix` is provided, list only content IDs beginning with that prefix.
 

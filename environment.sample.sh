@@ -1,3 +1,6 @@
+# An API key that can be used by administrators or other internal services to issue and revoke API keys.
+export ADMIN_APIKEY=
+
 # Set to "production" to simulate production more closely.
 export NODE_ENV=development
 

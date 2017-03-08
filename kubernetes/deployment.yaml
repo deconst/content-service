@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: deconst
+  name: content
+  labels:
+    name: content
+spec:
+  type: NodePort
+  ports:
+    - port: 9000
+      targetPort: content
+  selector:
+    name: content
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: deconst
+  name: content
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: content
+    spec:
+      containers:
+        - name: content
+          image: quay.io/deconst/content-service
+          ports:
+            - name: content
+              containerPort: 8080
+          env:
+            - name: ADMIN_APIKEY
+              value: \"$ADMIN_APIKEY\"
+            - name: ACTION
+              value: $ACTION
+            - name: INTEGRATION
+              value: $INTEGRATION
+            - name: NODE_ENV
+              value: $NODE_ENV
+            - name: STORAGE
+              value: $STORAGE
+            - name: RACKSPACE_USERNAME
+              value: $RACKSPACE_USERNAME
+            - name: RACKSPACE_APIKEY
+              value: $RACKSPACE_APIKEY
+            - name: RACKSPACE_REGION
+              value: $RACKSPACE_REGION
+            - name: RACKSPACE_SERVICENET
+              value: $RACKSPACE_SERVICENET
+            - name: CONTENT_CONTAINER
+              value: $CONTENT_CONTAINER
+            - name: ASSET_CONTAINER
+              value: $ASSET_CONTAINER
+            - name: MONGODB_PREFIX
+              value: $MONGODB_PREFIX
+            - name: MONGODB_URL
+              value: mongodb://mongo.deconst.svc.cluster.local:27017/content
+            - name: ELASTICSEARCH_HOST
+              value: http://elasticsearch.deconst.svc.cluster.local:9200/
+            - name: CONTENT_LOG_LEVEL
+              value: $CONTENT_LOG_LEVEL
+            - name: CONTENT_LOG_COLOR
+              value: \"$CONTENT_LOG_COLOR\"
+            - name: PROXY_UPSTREAM
+              value: $PROXY_UPSTREAM
+            - name: STAGING_MODE
+              value: \"$STAGING_MODE\"

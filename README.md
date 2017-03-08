@@ -60,6 +60,47 @@ The content service is configured by passing environment variables to the Docker
 
 Both Cloud Files containers will be created and configured on application launch if they do not already exist.
 
+# Deconst Dev Env in Kubernetes with Minikube
+
+These instructions will create the resources necessary to run the deconst content service in a dev env in Kubernetes with Minikube.
+
+1. Run through [Deconst Dev Env in Kubernetes with Minikube](https://github.com/deconst/deploy#deconst-dev-env-in-kubernetes-with-minikube)
+
+1. Customize your environment settings
+
+    For a basic dev env setup, the only value you need to set in `environment.sh` is `ADMIN_APIKEY`.
+
+    ```bash
+    cp environment.sample.sh environment.sh
+    ${EDITOR} environment.sh
+    source environment.sh
+    ```
+
+1. Create resources
+
+    ```bash
+    script/template kubernetes/deployment.yaml | kubectl apply -f -
+    ```
+
+1. Watch and wait for resources
+
+    ```bash
+    watch kubectl get pods --namespace deconst
+    ```
+
+1. Test that the content service is nominally working
+
+    ```bash
+    curl $(minikube service --url --namespace deconst content)/version
+    ```
+
+1. Delete resources
+
+    ```bash
+    kubectl delete deployments --namespace deconst content
+    kubectl delete services --namespace deconst content    
+    ```
+
 ## API
 
 ### Authorization

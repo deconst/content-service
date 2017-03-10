@@ -94,6 +94,8 @@ These instructions will create the resources necessary to run the deconst conten
     curl $(minikube service --url --namespace deconst content)/version
     ```
 
+1. Deploy the [presenter service](https://github.com/deconst/presenter#deconst-dev-env-in-kubernetes-with-minikube)
+
 1. Delete resources
 
     ```bash

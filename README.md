@@ -68,11 +68,27 @@ These instructions will create the resources necessary to run the deconst conten
 
 1. Customize your environment settings
 
-    For a basic dev env setup, the only value you need to set in `environment.sh` is `ADMIN_APIKEY`.
-
     ```bash
     cp environment.sample.sh environment.sh
     ${EDITOR} environment.sh
+    source environment.sh
+    ```
+
+    Edit the following environment variables. For additional env vars and a full description of each env var, see [Configuration](#configuration).
+
+    * `ADMIN_APIKEY=my-random-api-key`
+      * You can use the value of `hexdump -v -e '1/1 "%.2x"' -n 128 /dev/random`
+    * `STORAGE=remote`
+    * `RACKSPACE_USERNAME=my-rackspace-username`
+    * `RACKSPACE_APIKEY=my-rackspace-api-key`
+    * `RACKSPACE_REGION=IAD`
+    * `RACKSPACE_SERVICENET=false`
+    * `CONTENT_CONTAINER=deconst-${NODE_ENV}-content`
+    * `ASSET_CONTAINER=deconst-${NODE_ENV}-content`
+    * `MONGODB_URL=mongodb://mongo.deconst.svc.cluster.local:27017/content`
+    * `ELASTICSEARCH_HOST=http://elasticsearch.deconst.svc.cluster.local:9200/`
+
+    ```bash
     source environment.sh
     ```
 

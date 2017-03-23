@@ -49,7 +49,7 @@ spec:
             - name: RACKSPACE_REGION
               value: $RACKSPACE_REGION
             - name: RACKSPACE_SERVICENET
-              value: $RACKSPACE_SERVICENET
+              value: \"$RACKSPACE_SERVICENET\"
             - name: CONTENT_CONTAINER
               value: $CONTENT_CONTAINER
             - name: ASSET_CONTAINER
@@ -57,9 +57,9 @@ spec:
             - name: MONGODB_PREFIX
               value: $MONGODB_PREFIX
             - name: MONGODB_URL
-              value: mongodb://mongo.deconst.svc.cluster.local:27017/content
+              value: $MONGODB_URL
             - name: ELASTICSEARCH_HOST
-              value: http://elasticsearch.deconst.svc.cluster.local:9200/
+              value: $ELASTICSEARCH_HOST
             - name: CONTENT_LOG_LEVEL
               value: $CONTENT_LOG_LEVEL
             - name: CONTENT_LOG_COLOR

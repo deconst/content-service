@@ -1,5 +1,7 @@
 FROM node:4.3.1
 
+ENV NPM_CONFIG_LOGLEVEL=warn
+
 RUN useradd node
 RUN npm install -g nodemon
 

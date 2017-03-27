@@ -71,13 +71,14 @@ These instructions will create the resources necessary to run the deconst conten
     ```bash
     cp environment.sample.sh environment.sh
     ${EDITOR} environment.sh
-    source environment.sh
     ```
 
     Edit the following environment variables. For additional env vars and a full description of each env var, see [Configuration](#configuration).
 
     * `ADMIN_APIKEY=my-random-api-key`
       * You can use the value of `hexdump -v -e '1/1 "%.2x"' -n 128 /dev/random`
+    * `DOCKER_IMAGE=kube-registry.kube-system.svc.cluster.local:31000/content-service:dev`
+      * If you want to use the production image instead, keep the default value and skip the next step
     * `STORAGE=remote`
     * `RACKSPACE_USERNAME=my-rackspace-username`
     * `RACKSPACE_APIKEY=my-rackspace-api-key`
@@ -88,8 +89,17 @@ These instructions will create the resources necessary to run the deconst conten
     * `MONGODB_URL=mongodb://mongo.deconst.svc.cluster.local:27017/content`
     * `ELASTICSEARCH_HOST=http://elasticsearch.deconst.svc.cluster.local:9200/`
 
+
     ```bash
     source environment.sh
+    ```
+
+1. Build a development Docker image
+
+    ```bash
+    eval $(minikube docker-env)
+    docker build --tag kube-registry.kube-system.svc.cluster.local:31000/content-service:dev .
+    docker push kube-registry.kube-system.svc.cluster.local:31000/content-service
     ```
 
 1. Create resources

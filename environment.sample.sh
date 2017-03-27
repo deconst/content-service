@@ -4,6 +4,8 @@ export ADMIN_APIKEY=
 # Set to "production" to simulate production more closely.
 export NODE_ENV=development
 
+export DOCKER_IMAGE=quay.io/deconst/content-service
+
 # Set to "remote" to use remote storage.
 export STORAGE=memory
 

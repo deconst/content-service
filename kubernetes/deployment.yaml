@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: content
-          image: quay.io/deconst/content-service
+          image: $DOCKER_IMAGE
           ports:
             - name: content
               containerPort: 8080

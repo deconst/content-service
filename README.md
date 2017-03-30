@@ -66,6 +66,8 @@ These instructions will create the resources necessary to run the deconst conten
 
 1. Run through [Deconst Dev Env in Kubernetes with Minikube](https://github.com/deconst/deploy#deconst-dev-env-in-kubernetes-with-minikube)
 
+1. Open a new shell
+
 1. Customize your environment settings
 
     ```bash
@@ -85,9 +87,9 @@ These instructions will create the resources necessary to run the deconst conten
     * `RACKSPACE_REGION=IAD`
     * `RACKSPACE_SERVICENET=false`
     * `CONTENT_CONTAINER=deconst-${NODE_ENV}-content`
-    * `ASSET_CONTAINER=deconst-${NODE_ENV}-content`
+    * `ASSET_CONTAINER=deconst-${NODE_ENV}-asset`
     * `MONGODB_URL=mongodb://mongo.deconst.svc.cluster.local:27017/content`
-    * `ELASTICSEARCH_HOST=http://elasticsearch.deconst.svc.cluster.local:9200/`
+    * `ELASTICSEARCH_HOST=http://elasticsearch-logging.kube-system.svc.cluster.local:9200/`
 
 
     ```bash
@@ -99,7 +101,7 @@ These instructions will create the resources necessary to run the deconst conten
     ```bash
     eval $(minikube docker-env)
     docker build --tag kube-registry.kube-system.svc.cluster.local:31000/content-service:dev .
-    docker push kube-registry.kube-system.svc.cluster.local:31000/content-service
+    docker push kube-registry.kube-system.svc.cluster.local:31000/content-service:dev
     ```
 
 1. Create resources

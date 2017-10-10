@@ -103,7 +103,8 @@ exports.storeEnvelope = function (contentID, envelope, callback) {
     contentID,
     envelope,
     fingerprint,
-    lastUpdated: Date.now()
+    lastUpdated: Date.now(),
+    dateForTTL: new Date()
   };
 
   exports._storeEnvelope(contentID, doc, callback);

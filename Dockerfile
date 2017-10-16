@@ -1,8 +1,9 @@
-FROM node:4.3.1
+FROM node:6
+LABEL maintainer="Laura Santamaria <laura.santamaria@rackspace.com>"
 
 ENV NPM_CONFIG_LOGLEVEL=warn
 
-RUN useradd node
+RUN useradd nodeusr
 RUN npm install -g nodemon
 
 RUN mkdir -p /home/node /usr/src/app && chown -R node:node /home/node
@@ -14,5 +15,5 @@ COPY . /usr/src/app
 
 EXPOSE 8080
 
-USER node
+USER nodeusr
 CMD [ "npm", "start" ]

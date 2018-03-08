@@ -10,6 +10,7 @@ const stringify = require('json-stable-stringify');
 const config = require('../config');
 const memory = require('./memory');
 const remote = require('./remote');
+const hybrid = require('./hybrid');
 const logger = require('../logging').getLogger();
 
 // Methods to delegate to the activated storage driver.
@@ -72,6 +73,10 @@ exports.setup = function (callback) {
     driver = new memory.MemoryStorage();
     exports.memory = driver;
     logger.debug('In-memory storage driver active.');
+  } else if (driverName === 'hybrid') {
+    driver = new hybrid.HybridStorage();
+    exports.hybrid = driver;
+    logger.debug('Hybrid storage driver active.');
   } else {
     return callback(new Error('Invalid driver name: ' + driverName));
   }

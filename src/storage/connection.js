@@ -116,7 +116,7 @@ function elasticInit (callback) {
 
   const client = new elasticsearch.Client({
     host: config.elasticsearchHost(),
-    apiVersion: '1.7',
+    apiVersion: '6.2',
     ssl: { rejectUnauthorized: true }, // Plz no trivial MITM attacks
     log: ElasticLogs,
     maxRetries: Infinity

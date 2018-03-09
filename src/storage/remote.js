@@ -377,7 +377,7 @@ RemoteStorage.prototype.queryEnvelopes = function (query, categories, pageNumber
   } else {
     q.bool = {
       must: {
-        match: { all : query },
+        match: { all: query },
         filter: { terms: { categories: categories } }
       }
     };

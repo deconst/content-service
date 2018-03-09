@@ -1,7 +1,6 @@
 'use strict';
 
 const async = require('async');
-const request = require('request');
 const connection = require('./connection');
 const remote = require('./remote');
 const getRawBody = require('raw-body');

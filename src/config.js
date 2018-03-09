@@ -109,12 +109,14 @@ exports.configure = function (env) {
   // Normalize storage as a lower-case string
   configuration.storage.value = configuration.storage.value.toLowerCase();
 
-  // If storage is not remote, remove remote-only-mandatory settings from the missing list.
-  if (configuration.storage.value !== 'remote') {
+  // If storage is remote, remove remote-only-mandatory settings from the missing list.
+  if (configuration.storage.value === 'remote') {
     missing = _.without(missing,
       'RACKSPACE_USERNAME', 'RACKSPACE_APIKEY', 'RACKSPACE_REGION',
       'CONTENT_CONTAINER', 'ASSET_CONTAINER',
       'MONGODB_URL');
+  } else if (configuration.storage.value === 'hybrid') {
+    missing = _.without(missing, 'MONGODB_URL', 'ADMIN_APIKEY');
   }
 
   // Normalize rackspaceServiceNet, contentLogColor, and stagingMode as booleans.
@@ -135,8 +137,8 @@ exports.configure = function (env) {
   }
 
   // Ensure that STORAGE is a recognized value.
-  if (configuration.storage.value !== 'remote' && configuration.storage.value !== 'memory') {
-    console.error('STORAGE must be either "remote" or "memory".');
+  if (configuration.storage.value !== 'remote' && configuration.storage.value !== 'memory' && configuration.storage.value !== 'hybrid') {
+    console.error('STORAGE must be either "remote", "hybrid" or "memory".');
 
     throw new Error('Invalid configuration');
   }

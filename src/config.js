@@ -115,6 +115,8 @@ exports.configure = function (env) {
       'RACKSPACE_USERNAME', 'RACKSPACE_APIKEY', 'RACKSPACE_REGION',
       'CONTENT_CONTAINER', 'ASSET_CONTAINER',
       'MONGODB_URL');
+  } else if (configuration.storage.value === 'hybrid') {
+    missing = _.without(missing, 'RACKSPACE_USERNAME', 'RACKSPACE_APIKEY', 'RACKSPACE_REGION');
   }
 
   // Normalize rackspaceServiceNet, contentLogColor, and stagingMode as booleans.

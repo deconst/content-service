@@ -138,7 +138,7 @@ exports.configure = function (env) {
 
   // Ensure that STORAGE is a recognized value.
   if (configuration.storage.value !== 'remote' && configuration.storage.value !== 'memory' && configuration.storage.value !== 'hybrid') {
-    console.error('STORAGE must be either "remote", "hybrid" or "memory".');
+    console.error('STORAGE must be either "remote", "hybrid" or, "memory".');
 
     throw new Error('Invalid configuration');
   }

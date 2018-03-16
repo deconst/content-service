@@ -1,6 +1,6 @@
 {
   "name": "content-service",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A content service for storing and retreiving content",
   "main": "app.js",
   "scripts": {

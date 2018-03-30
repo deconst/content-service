@@ -64,7 +64,7 @@ function mongoInit (callback) {
     }
 
     logger.debug(`Connected to MongoDB database at [${config.mongodbURL()}].`);
-    exports.mongo = client.db(config.mongodbDatabase);
+    exports.mongo = client.db(config.mongodbDatabase());
     callback(null);
   });
 }

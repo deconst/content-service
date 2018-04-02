@@ -39,6 +39,10 @@ const configuration = {
   mongodbURL: {
     env: 'MONGODB_URL'
   },
+  mongodbDatabase: {
+    env: 'MONGODB_DATABASE',
+    def: 'content'
+  },
   mongodbPrefix: {
     env: 'MONGODB_PREFIX',
     def: ''

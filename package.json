@@ -15,7 +15,7 @@
     "elasticsearch": "^14.1.0",
     "json-stable-stringify": "^1.0.1",
     "lodash": "^3.8.0",
-    "mongodb": "2.0.27",
+    "mongodb": "3.0.4",
     "pkgcloud": "1.1.0",
     "raw-body": "2.1.6",
     "request": "^2.69.0",

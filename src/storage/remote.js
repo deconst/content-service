@@ -301,10 +301,10 @@ RemoteStorage.prototype.createNewIndex = function (indexName, callback) {
 
   let envelopeMapping = {
     properties: {
-      title: { type: 'string', index: 'analyzed' },
-      body: { type: 'string', index: 'analyzed' },
-      keywords: { type: 'string', index: 'analyzed' },
-      categories: { type: 'string', index: 'not_analyzed' }
+      title: { type: 'text', index: true, copy_to: 'all' },
+      body: { type: 'text', index: true, copy_to: 'all' },
+      keywords: { type: 'text', index: true, copy_to: 'all' },
+      categories: { type: 'text', index: false, copy_to: 'all' }
     }
   };
 
@@ -347,8 +347,7 @@ RemoteStorage.prototype.makeIndexActive = function (indexName, callback) {
 
     connection.elastic.indices.get({
       index: 'envelopes*',
-      ignoreUnavailable: true,
-      feature: '_settings'
+      ignoreUnavailable: true
     }, (err, response, status) => {
       if (err) return callback(err);
 
@@ -374,11 +373,13 @@ RemoteStorage.prototype.queryEnvelopes = function (query, categories, pageNumber
   const q = {};
 
   if (!categories) {
-    q.match = { _all: query };
+    q.match = { all: query };
   } else {
-    q.filtered = {
-      query: { match: { _all: query } },
-      filter: { terms: { categories: categories } }
+    q.bool = {
+      must: {
+        match: { all: query },
+        filter: { terms: { categories: categories } }
+      }
     };
   }
 

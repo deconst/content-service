@@ -169,3 +169,10 @@ exports.setup = function (callback) {
     ], callback);
   });
 };
+
+exports.setupStorageOnly = function (callback) {
+  async.parallel([
+    mongoInit,
+    elasticInit
+  ], callback);
+};

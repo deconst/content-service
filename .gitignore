@@ -2,3 +2,4 @@ node_modules
 npm-debug.log
 environment.sh
 environment-integration.sh
+api.key

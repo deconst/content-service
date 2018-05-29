@@ -28,7 +28,7 @@ docker-compose up
 
 The content service is configured by passing environment variables to the Docker container. These are the available configuration options:
 
- * `STORAGE`: *(default: `"remote"`)* Specify `memory` to use entirely in-memory storage, or `remote` to use external storage services.
+ * `STORAGE`: *(default: `"remote"`)* Specify `memory` to use entirely in-memory storage, `hybrid` to use external MongoDB and Elasticsearch but an in-memory CDN/asset storage, or `remote` to use external storage services.
  * `ADMIN_APIKEY`: **(required)** An API key that can be used by administrators or other internal services to issue and revoke API keys.
 
 ### Remote services
@@ -42,6 +42,12 @@ The content service is configured by passing environment variables to the Docker
  * `MONGODB_URL`: **(required if STORAGE=remote)** MongoDB connection string, including any required authentication information.
  * `MONGODB_PREFIX`: **(default: `""`)** Prefix used to partition MongoDB collection names from other services using the same MongoDB database.
  * `ELASTICSEARCH_HOST`: **(required if STORAGE=remote)** Elasticsearch connection string, including any required authentication information.
+
+### Remote services
+
+ * `MONGODB_URL`: **(required if STORAGE=hybrid)** MongoDB connection string, including any required authentication information.
+ * `MONGODB_PREFIX`: **(default: `""`)** Prefix used to partition MongoDB collection names from other services using the same MongoDB database.
+ * `ELASTICSEARCH_HOST`: **(required if STORAGE=hybrid)** Elasticsearch connection string, including any required authentication information.
 
 ### Memory storage
 

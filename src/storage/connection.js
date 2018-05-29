@@ -52,7 +52,7 @@ function makeContainerCreator (cloud, containerName, logicalName, cdn) {
  *   perform any necessary one-time initialization.
  */
 function mongoInit (callback) {
-  mongo.MongoClient.connect(config.mongodbURL(), (err, mongo) => {
+  mongo.MongoClient.connect(config.mongodbURL(), (err, client) => {
     if (err) {
       logger.warn('Error connecting to MongoDB database. Retrying in five seconds.', {
         mongodbURL: config.mongodbURL(),
@@ -64,7 +64,7 @@ function mongoInit (callback) {
     }
 
     logger.debug(`Connected to MongoDB database at [${config.mongodbURL()}].`);
-    exports.mongo = mongo;
+    exports.mongo = client.db(config.mongodbDatabase());
     callback(null);
   });
 }
@@ -116,7 +116,7 @@ function elasticInit (callback) {
 
   const client = new elasticsearch.Client({
     host: config.elasticsearchHost(),
-    apiVersion: '1.7',
+    apiVersion: '6.2',
     ssl: { rejectUnauthorized: true }, // Plz no trivial MITM attacks
     log: ElasticLogs,
     maxRetries: Infinity
@@ -168,4 +168,11 @@ exports.setup = function (callback) {
       elasticInit
     ], callback);
   });
+};
+
+exports.setupStorageOnly = function (callback) {
+  async.parallel([
+    mongoInit,
+    elasticInit
+  ], callback);
 };

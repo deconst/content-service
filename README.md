@@ -43,7 +43,7 @@ The content service is configured by passing environment variables to the Docker
  * `MONGODB_PREFIX`: **(default: `""`)** Prefix used to partition MongoDB collection names from other services using the same MongoDB database.
  * `ELASTICSEARCH_HOST`: **(required if STORAGE=remote)** Elasticsearch connection string, including any required authentication information.
 
-### Remote services
+### Hybrid services
 
  * `MONGODB_URL`: **(required if STORAGE=hybrid)** MongoDB connection string, including any required authentication information.
  * `MONGODB_PREFIX`: **(default: `""`)** Prefix used to partition MongoDB collection names from other services using the same MongoDB database.

@@ -113,7 +113,7 @@ exports.configure = function (env) {
   // Normalize storage as a lower-case string
   configuration.storage.value = configuration.storage.value.toLowerCase();
 
-  // If storage is remote, remove remote-only-mandatory settings from the missing list.
+  // If storage is either memory or hybrid, remove the non-mandatory settings from the missing list.
   if (configuration.storage.value === 'memory') {
     missing = _.without(missing,
       'RACKSPACE_USERNAME', 'RACKSPACE_APIKEY', 'RACKSPACE_REGION',

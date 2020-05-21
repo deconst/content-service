@@ -1,4 +1,6 @@
-# Content Service
+# DEPRECATED. Use https://gitlab.com/deconst-next/content-service
+
+## Content Service
 
 A content storage and retrieval service for deconst.
 
